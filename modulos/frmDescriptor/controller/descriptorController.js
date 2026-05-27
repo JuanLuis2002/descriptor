@@ -10,6 +10,15 @@ var DescriptorController = {
     
     loadForm: function() {
         var self = this;
+        
+        // Limpiar el contenedor
+        $('#contentContainer').empty();
+        
+        // Resetear la bandera global para permitir recarga
+        if (window._descriptorFormLoaded) {
+            window._descriptorFormLoaded = false;
+        }
+        
         $.get('modulos/frmDescriptor/view/descriptorForm.html', function(html) {
             $('#contentContainer').html(html);
             console.log('Formulario cargado correctamente');
