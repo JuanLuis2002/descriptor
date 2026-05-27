@@ -26,7 +26,7 @@ var DescriptorController = {
             if (self.descriptorIdToEdit) {
                 setTimeout(function() {
                     self.cargarDatosParaEdicion(self.descriptorIdToEdit);
-                }, 300);
+                }, 400);
             }
         }).fail(function() {
             $('#contentContainer').html(`
@@ -188,30 +188,33 @@ var DescriptorController = {
         window._isEditing = true;
         window._editingId = id;
         
-        // Actualizar actividades
+        // Actualizar actividades después de que se carguen las funciones
         setTimeout(function() {
             if (typeof window.actualizarActividadesGlobal === 'function') {
                 window.actualizarActividadesGlobal();
             }
             
+            // Cargar las actividades guardadas
             if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
-                for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
-                    var funcData = descriptor.actividadesPorFuncion[i];
-                    var actividades = funcData.actividades;
-                    if (actividades && actividades.length > 0) {
-                        for (var j = 0; j < actividades.length; j++) {
-                            if (typeof window.agregarActividadConTexto === 'function') {
-                                window.agregarActividadConTexto(i, actividades[j]);
+                setTimeout(function() {
+                    for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
+                        var funcData = descriptor.actividadesPorFuncion[i];
+                        var actividades = funcData.actividades;
+                        if (actividades && actividades.length > 0) {
+                            for (var j = 0; j < actividades.length; j++) {
+                                if (typeof window.agregarActividadConTexto === 'function') {
+                                    window.agregarActividadConTexto(i, actividades[j]);
+                                }
                             }
                         }
                     }
-                }
+                }, 200);
             }
         }, 500);
     }
 };
 
-// Funciones auxiliares
+// Funciones auxiliares para agregar filas con datos
 function addFuncionClaveRow() {
     $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
 }
