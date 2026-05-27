@@ -1,12 +1,10 @@
 // Servicio del Descriptor - Gestión de datos
-const DescriptorService = {
-    // Obtener todos los descriptores
+var DescriptorService = {
     getAll: function() {
         const data = localStorage.getItem('descriptores');
         return data ? JSON.parse(data) : [];
     },
     
-    // Guardar nuevo descriptor
     save: function(descriptor) {
         const descriptors = this.getAll();
         descriptor.id = descriptors.length + 1;
@@ -18,7 +16,6 @@ const DescriptorService = {
         return descriptor;
     },
     
-    // Actualizar descriptor
     update: function(id, data) {
         const descriptors = this.getAll();
         const index = descriptors.findIndex(d => d.id === id);
@@ -30,18 +27,17 @@ const DescriptorService = {
         return null;
     },
     
-    // Obtener por ID
     getById: function(id) {
         return this.getAll().find(d => d.id === id);
     },
     
-    // Obtener por estado
-    getByEstado: function(estado) {
-        return this.getAll().filter(d => d.estado === estado);
-    },
-    
-    // Obtener por creador
     getByCreador: function(creador) {
         return this.getAll().filter(d => d.creador === creador);
+    },
+    
+    getByEstado: function(estado) {
+        return this.getAll().filter(d => d.estado === estado);
     }
 };
+
+window.DescriptorService = DescriptorService;

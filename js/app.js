@@ -36,7 +36,6 @@ function loadUser() {
 
 // Configurar eventos
 function setupEvents() {
-    // Toggle sidebar
     $('#toggleSidebar').click(function() {
         if (isMobile) {
             openMobileSidebar();
@@ -46,12 +45,10 @@ function setupEvents() {
         }
     });
     
-    // Cerrar sidebar con overlay
     $('#sidebarOverlay').click(function() {
         closeMobileSidebar();
     });
     
-    // Logout
     $('#btnLogout').click(function(e) {
         e.preventDefault();
         Swal.fire({
@@ -70,7 +67,6 @@ function setupEvents() {
         });
     });
     
-    // Detectar resize para móvil
     $(window).resize(function() {
         checkMobile();
     });
@@ -81,14 +77,12 @@ function loadMenu() {
     const nav = $('#mainNav');
     nav.empty();
     
-    // Opción Dashboard (siempre visible)
     nav.append(`
         <a href="#" class="nav-link text-white px-3 py-2 active" data-modulo="dashboard">
             <i class="fas fa-tachometer-alt me-2"></i> <span>Dashboard</span>
         </a>
     `);
     
-    // Según el rol del usuario, mostrar opciones
     if (currentUser.rol === 'JEFE_INMEDIATO') {
         nav.append(`
             <a href="#" class="nav-link text-white px-3 py-2" data-modulo="nuevoDescriptor">
@@ -133,7 +127,7 @@ function loadMenu() {
         `);
     }
     
-    // Eventos de los módulos - USAR DELEGACIÓN DE EVENTOS
+    // Eventos de navegación
     $(document).on('click', '.nav-link[data-modulo]', function(e) {
         e.preventDefault();
         const modulo = $(this).data('modulo');
@@ -141,12 +135,10 @@ function loadMenu() {
         $('.nav-link').removeClass('active');
         $(this).addClass('active');
         
-        // Cerrar sidebar en móvil después de seleccionar
         if (isMobile) {
             closeMobileSidebar();
         }
         
-        // Cargar el módulo correspondiente
         cargarModulo(modulo);
     });
 }
@@ -190,14 +182,14 @@ function loadDashboard() {
                         <div class="info-card p-3 text-center h-100">
                             <i class="fas fa-user-graduate fa-2x mb-2"></i>
                             <h5 class="mb-1">Perfil de Puesto</h5>
-                            <p class="text-secondary small mb-0">Requisitos y competencias del puesto</p>
+                            <p class="text-secondary small mb-0">Requisitos y competencias</p>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="info-card p-3 text-center h-100">
                             <i class="fas fa-signature fa-2x mb-2"></i>
                             <h5 class="mb-1">Flujo de Firmas</h5>
-                            <p class="text-secondary small mb-0">Aprobación y validación digital</p>
+                            <p class="text-secondary small mb-0">Aprobación y validación</p>
                         </div>
                     </div>
                 </div>
@@ -206,63 +198,31 @@ function loadDashboard() {
     `);
 }
 
-// Cargar formulario de nuevo descriptor (solo Jefe Inmediato)
+// Cargar formulario de nuevo descriptor
 function cargarNuevoDescriptor() {
     $('#pageTitle').text('Nuevo Descriptor de Puesto');
-    $('#contentContainer').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Cargando formulario...</div>');
     
-    // Cargar los scripts en orden
-    $.when(
-        $.getScript('modulos/frmDescriptor/services/descriptorService.js'),
-        $.getScript('modulos/frmDescriptor/controller/descriptorController.js')
-    ).done(function() {
-        // Verificar que DescriptorController existe y tiene el método init
-        if (typeof DescriptorController !== 'undefined' && DescriptorController.init) {
-            DescriptorController.init(currentUser);
-        } else if (typeof window.DescriptorController !== 'undefined' && window.DescriptorController.init) {
-            window.DescriptorController.init(currentUser);
-        } else {
-            // Si no existe, intentar cargar directamente la vista
-            cargarVistaDescriptorDirecta();
-        }
-    }).fail(function(err) {
-        console.error('Error cargando scripts:', err);
-        // Fallback: cargar vista directamente
-        cargarVistaDescriptorDirecta();
-    });
-}
-
-// Fallback - Cargar vista directamente
-function cargarVistaDescriptorDirecta() {
-    $.get('modulos/frmDescriptor/view/descriptorForm.html')
-        .done(function(html) {
-            $('#contentContainer').html(html);
-            // Inicializar eventos del formulario si existen
-            if (typeof initFormularioDescriptor === 'function') {
-                initFormularioDescriptor();
-            }
-        })
-        .fail(function() {
-            $('#contentContainer').html(`
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Error al cargar el formulario. Verifique que el archivo existe en:<br>
-                    <strong>modulos/frmDescriptor/view/descriptorForm.html</strong>
-                </div>
-            `);
-        });
+    // Los scripts YA están cargados, solo llamamos al controlador
+    if (typeof DescriptorController !== 'undefined' && DescriptorController.init) {
+        DescriptorController.init(currentUser);
+    } else {
+        $('#contentContainer').html(`
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Error: No se pudo cargar el módulo del descriptor.
+            </div>
+        `);
+    }
 }
 
 // Cargar mis descriptores
 function cargarMisDescriptores() {
     $('#pageTitle').text('Mis Descriptores');
     
-    // Obtener descriptores del localStorage
     let descriptores = [];
     const data = localStorage.getItem('descriptores');
     if (data) {
         descriptores = JSON.parse(data);
-        // Filtrar por creador
         descriptores = descriptores.filter(d => d.creador === currentUser.nombre);
     }
     
@@ -307,11 +267,10 @@ function cargarMisDescriptores() {
         `;
     });
     
-    html += `</tbody></table></div>`;
+    html += `</tbody>}</table></div>`;
     $('#contentContainer').html(html);
 }
 
-// Función para obtener badge según estado
 function getEstadoBadge(estado) {
     const badges = {
         'BORRADOR': 'bg-secondary',
@@ -323,17 +282,8 @@ function getEstadoBadge(estado) {
     return badges[estado] || 'bg-secondary';
 }
 
-// Funciones auxiliares
 function verDescriptor(id) {
     Swal.fire('Información', `Ver descriptor ID: ${id}`, 'info');
-}
-
-function mostrarError(mensaje) {
-    $('#contentContainer').html(`
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i> ${mensaje}
-        </div>
-    `);
 }
 
 // Funciones para móvil
@@ -359,7 +309,7 @@ function closeMobileSidebar() {
     $('#sidebar').css('transform', 'translateX(-100%)');
 }
 
-// Variables globales
+// Exportar globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
 window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;

@@ -1,5 +1,5 @@
-// Controlador del Descriptor - Módulo frmDescriptor
-const DescriptorController = {
+// Controlador del Descriptor
+var DescriptorController = {
     currentUser: null,
     
     init: function(user) {
@@ -9,32 +9,25 @@ const DescriptorController = {
     },
     
     loadForm: function() {
-        const self = this;
-        // Cargar la vista del formulario
+        // Verificar si ya estamos en el formulario
+        if ($('#descriptorForm').length > 0) {
+            console.log('Formulario ya está cargado');
+            return;
+        }
+        
         $.get('modulos/frmDescriptor/view/descriptorForm.html', function(html) {
             $('#contentContainer').html(html);
             console.log('Formulario cargado correctamente');
-            // Inicializar eventos del formulario después de cargar
-            self.initFormEvents();
-        }).fail(function(err) {
-            console.error('Error cargando formulario:', err);
+        }).fail(function() {
             $('#contentContainer').html(`
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i> 
-                    Error al cargar el formulario. Verifique la ruta:<br>
-                    <strong>modulos/frmDescriptor/view/descriptorForm.html</strong>
+                    Error al cargar el formulario.<br>
+                    Verifique: <strong>modulos/frmDescriptor/view/descriptorForm.html</strong>
                 </div>
             `);
         });
-    },
-    
-    initFormEvents: function() {
-        // Inicializar el formulario si la función existe en el HTML
-        if (typeof initFormularioDescriptor === 'function') {
-            initFormularioDescriptor();
-        }
     }
 };
 
-// Hacer disponible globalmente
 window.DescriptorController = DescriptorController;
