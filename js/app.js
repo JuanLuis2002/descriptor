@@ -155,6 +155,9 @@ function cargarModulo(modulo) {
         case 'misDescriptores':
             cargarMisDescriptores();
             break;
+        case 'pendientesAprobar':
+            cargarPendientesAprobar();
+            break;
         default:
             loadDashboard();
     }
@@ -281,6 +284,26 @@ function editarDescriptor(id) {
         DescriptorController.init(currentUser, id);
     } else {
         Swal.fire('Error', 'No se puede editar el descriptor', 'error');
+    }
+}
+
+// Cargar pendientes de aprobación (Jefe Superior)
+function cargarPendientesAprobar() {
+    $('#pageTitle').text('Pendientes de Aprobación');
+    
+    if (typeof AprobacionController !== 'undefined' && AprobacionController.init) {
+        AprobacionController.init(currentUser);
+    } else {
+        // Cargar scripts del módulo
+        $.getScript('modulos/frmAprobacion/services/aprobacionService.js')
+            .done(function() {
+                $.getScript('modulos/frmAprobacion/controller/aprobacionController.js')
+                    .done(function() {
+                        if (typeof AprobacionController !== 'undefined') {
+                            AprobacionController.init(currentUser);
+                        }
+                    });
+            });
     }
 }
 
