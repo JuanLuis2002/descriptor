@@ -44,291 +44,123 @@
             text-align: center;
             border-right: 1px solid #dee2e6;
         }
-        .stat-item:last-child {
-            border-right: none;
-        }
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0d6efd;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #6c757d;
-        }
-        @media (max-width: 768px) {
-            .stat-item {
-                border-right: none;
-                margin-bottom: 10px;
-            }
-        }
+        .stat-item:last-child { border-right: none; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #0d6efd; }
+        .stat-label { font-size: 12px; color: #6c757d; }
+        @media (max-width: 768px) { .stat-item { border-right: none; margin-bottom: 10px; } }
     </style>
 </head>
 <body>
-<!-- Barra de estadísticas -->
+
 <div class="stats-bar" id="statsBar">
     <div class="row text-center">
-        <div class="col-6 col-md-2 stat-item">
-            <div class="stat-number" id="statTotal">0</div>
-            <div class="stat-label">Total</div>
-        </div>
-        <div class="col-6 col-md-2 stat-item">
-            <div class="stat-number" id="statBorradores">0</div>
-            <div class="stat-label">Borradores</div>
-        </div>
-        <div class="col-6 col-md-2 stat-item">
-            <div class="stat-number" id="statEnviados">0</div>
-            <div class="stat-label">Enviados a TH</div>
-        </div>
-        <div class="col-6 col-md-2 stat-item">
-            <div class="stat-number" id="statActivos">0</div>
-            <div class="stat-label">Activos</div>
-        </div>
-        <div class="col-6 col-md-2 stat-item">
-            <div class="stat-number" id="statFirmados">0</div>
-            <div class="stat-label">Firmados</div>
-        </div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statBorradores">0</div><div class="stat-label">Borradores</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviados">0</div><div class="stat-label">Enviados a TH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmados">0</div><div class="stat-label">Firmados</div></div>
     </div>
 </div>
 
-<!-- Filtros -->
 <div class="filtro-busqueda">
     <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label small">Buscar</label>
-            <input type="text" class="form-control" id="searchInput" placeholder="Por puesto, código o área...">
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small">Estado</label>
-            <select class="form-select" id="estadoFilter">
-                <option value="">Todos</option>
-                <option value="BORRADOR">Borrador</option>
-                <option value="ENVIADO_TH">Enviado a TH</option>
-                <option value="OBSERVADO">Observado</option>
-                <option value="ACTIVO">Activo</option>
-                <option value="FIRMADO">Firmado</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small">Ordenar por</label>
-            <select class="form-select" id="sortBy">
-                <option value="fecha">Fecha (reciente primero)</option>
-                <option value="puesto">Puesto (A-Z)</option>
-                <option value="estado">Estado</option>
-            </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-primary w-100" id="btnNuevoDescriptor">
-                <i class="fas fa-plus"></i> Nuevo
-            </button>
-        </div>
+        <div class="col-md-4"><label class="form-label small">Buscar</label><input type="text" class="form-control" id="searchInput" placeholder="Por puesto, código o área..."></div>
+        <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="ENVIADO_TH">Enviado a TH</option><option value="OBSERVADO">Observado</option><option value="ACTIVO">Activo</option><option value="FIRMADO">Firmado</option></select></div>
+        <div class="col-md-3"><label class="form-label small">Ordenar por</label><select class="form-select" id="sortBy"><option value="fecha">Fecha (reciente)</option><option value="puesto">Puesto (A-Z)</option><option value="estado">Estado</option></select></div>
+        <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" id="btnNuevoDescriptor"><i class="fas fa-plus"></i> Nuevo</button></div>
     </div>
 </div>
 
-<!-- Lista de descriptores -->
 <div id="descriptoresListContainer">
-    <div class="text-center py-5">
-        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-        <p class="mt-2">Cargando descriptores...</p>
-    </div>
+    <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2">Cargando descriptores...</p></div>
 </div>
 
 <script>
-let allDescriptors = [];
-let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-
-function cargarDescriptores() {
-    if (typeof DescriptorListService !== 'undefined') {
-        allDescriptors = DescriptorListService.getByCreador(currentUser.nombre);
-        actualizarEstadisticas();
-        filtrarYMostrar();
-    } else {
-        $('#descriptoresListContainer').html(`
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> Error al cargar los descriptores
-            </div>
-        `);
-    }
-}
-
-function actualizarEstadisticas() {
-    const stats = DescriptorListService.getEstadisticas(currentUser.nombre);
-    $('#statTotal').text(stats.total);
-    $('#statBorradores').text(stats.borradores);
-    $('#statEnviados').text(stats.enviados);
-    $('#statActivos').text(stats.activos);
-    $('#statFirmados').text(stats.firmados);
-}
-
-function filtrarYMostrar() {
-    let filtered = [...allDescriptors];
+(function() {
+    if (window.descriptorListInitialized) return;
+    window.descriptorListInitialized = true;
     
-    // Buscar
-    const searchTerm = $('#searchInput').val();
-    if (searchTerm) {
-        filtered = DescriptorListService.search(filtered, searchTerm);
-    }
+    let allDescriptors = [];
+    const currentUserList = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
-    // Filtrar por estado
-    const estado = $('#estadoFilter').val();
-    filtered = DescriptorListService.filterByEstado(filtered, estado);
-    
-    // Ordenar
-    const sortBy = $('#sortBy').val();
-    filtered = DescriptorListService.sort(filtered, sortBy);
-    
-    mostrarLista(filtered);
-}
-
-function mostrarLista(descriptores) {
-    const container = $('#descriptoresListContainer');
-    
-    if (descriptores.length === 0) {
-        container.html(`
-            <div class="text-center py-5">
-                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                <h5>No hay descriptores</h5>
-                <p class="text-muted">No se encontraron descriptores con los filtros seleccionados.</p>
-                <button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()">
-                    <i class="fas fa-plus"></i> Crear primer descriptor
-                </button>
-            </div>
-        `);
-        return;
-    }
-    
-    let html = '<div class="row">';
-    descriptores.forEach(d => {
-        const fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-        html += `
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="descriptor-card" data-id="${d.id}">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h6 class="mb-0">${d.codigo || 'DES-' + d.id}</h6>
-                            <small class="text-muted">${fecha}</small>
-                        </div>
-                        <span class="status-badge status-${(d.estado || 'BORRADOR').toLowerCase()}">${d.estado || 'BORRADOR'}</span>
-                    </div>
-                    <h5 class="mb-2">${d.puesto || 'Sin título'}</h5>
-                    <p class="text-muted small mb-3">
-                        <i class="fas fa-building"></i> ${d.area || 'N/A'}<br>
-                        <i class="fas fa-chart-line"></i> Reporta a: ${d.reportaA || 'N/A'}
-                    </p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button class="btn btn-sm btn-outline-info btn-ver" data-id="${d.id}">
-                            <i class="fas fa-eye"></i> Ver
-                        </button>
-                        ${d.estado === 'BORRADOR' ? `
-                            <button class="btn btn-sm btn-outline-warning btn-editar" data-id="${d.id}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-primary btn-enviar" data-id="${d.id}">
-                                <i class="fas fa-paper-plane"></i> Enviar
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    
-    container.html(html);
-    
-    // Eventos
-    $('.btn-ver').click(function(e) {
-        e.stopPropagation();
-        verDescriptorDetalle($(this).data('id'));
-    });
-    
-    $('.btn-editar').click(function(e) {
-        e.stopPropagation();
-        editarDescriptor($(this).data('id'));
-    });
-    
-    $('.btn-enviar').click(function(e) {
-        e.stopPropagation();
-        enviarATH($(this).data('id'));
-    });
-    
-    $('.descriptor-card').click(function(e) {
-        if (!$(e.target).closest('.btn').length) {
-            verDescriptorDetalle($(this).data('id'));
+    function cargarDescriptores() {
+        if (typeof DescriptorListService !== 'undefined') {
+            allDescriptors = DescriptorListService.getByCreador(currentUserList.nombre);
+            actualizarEstadisticas();
+            filtrarYMostrar();
+        } else {
+            $('#descriptoresListContainer').html('<div class="alert alert-danger">Error al cargar los descriptores</div>');
         }
-    });
-}
-
-function verDescriptorDetalle(id) {
-    const descriptor = DescriptorService.getById(id);
-    if (!descriptor) return;
+    }
     
-    let html = `
-        <div class="text-start" style="max-height: 500px; overflow-y: auto;">
-            <h6 class="border-bottom pb-2">Información General</h6>
-            <p><strong>Código:</strong> ${descriptor.codigo || 'DES-' + id}</p>
-            <p><strong>Puesto:</strong> ${descriptor.puesto || '-'}</p>
-            <p><strong>Área:</strong> ${descriptor.area || '-'}</p>
-            <p><strong>Reporta a:</strong> ${descriptor.reportaA || '-'}</p>
-            <p><strong>Estado:</strong> ${descriptor.estado || 'BORRADOR'}</p>
-            <hr>
-            <h6 class="border-bottom pb-2">Objetivo</h6>
-            <p>${descriptor.objetivo || '-'}</p>
-            <hr>
-            <h6 class="border-bottom pb-2">Funciones Claves</h6>
-            <ul>${(descriptor.funcionesClaves || []).map(f => `<li><strong>${f.codigo}</strong> - ${f.nombre}</li>`).join('') || '<li>No registradas</li>'}</ul>
-        </div>
-    `;
+    function actualizarEstadisticas() {
+        if (typeof DescriptorListService !== 'undefined') {
+            const stats = DescriptorListService.getEstadisticas(currentUserList.nombre);
+            $('#statTotal').text(stats.total);
+            $('#statBorradores').text(stats.borradores);
+            $('#statEnviados').text(stats.enviados);
+            $('#statActivos').text(stats.activos);
+            $('#statFirmados').text(stats.firmados);
+        }
+    }
     
-    Swal.fire({
-        title: `Descriptor: ${descriptor.puesto}`,
-        html: html,
-        width: '600px',
-        confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#0d6efd'
-    });
-}
-
-function editarDescriptor(id) {
-    Swal.fire('Información', 'Funcionalidad de edición en desarrollo', 'info');
-}
-
-function enviarATH(id) {
-    Swal.fire({
-        title: '¿Enviar a Talento Humano?',
-        text: 'Una vez enviado, no podrá modificar el descriptor hasta que TH lo revise.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, enviar',
-        confirmButtonColor: '#0d6efd'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const updated = DescriptorService.update(id, { estado: 'ENVIADO_TH' });
-            if (updated) {
+    function filtrarYMostrar() {
+        let filtered = [...allDescriptors];
+        const searchTerm = $('#searchInput').val();
+        if (searchTerm && typeof DescriptorListService !== 'undefined') filtered = DescriptorListService.search(filtered, searchTerm);
+        const estado = $('#estadoFilter').val();
+        if (estado && typeof DescriptorListService !== 'undefined') filtered = DescriptorListService.filterByEstado(filtered, estado);
+        const sortBy = $('#sortBy').val();
+        if (typeof DescriptorListService !== 'undefined') filtered = DescriptorListService.sort(filtered, sortBy);
+        mostrarLista(filtered);
+    }
+    
+    function mostrarLista(descriptores) {
+        const container = $('#descriptoresListContainer');
+        if (descriptores.length === 0) {
+            container.html(`<div class="text-center py-5"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No hay descriptores</h5><p class="text-muted">No se encontraron descriptores con los filtros seleccionados.</p><button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()"><i class="fas fa-plus"></i> Crear primer descriptor</button></div>`);
+            return;
+        }
+        
+        let html = '<div class="row">';
+        descriptores.forEach(d => {
+            const fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
+            html += `<div class="col-12 col-md-6 col-lg-4"><div class="descriptor-card" data-id="${d.id}"><div class="d-flex justify-content-between align-items-start mb-3"><div><h6 class="mb-0">${d.codigo || 'DES-' + d.id}</h6><small class="text-muted">${fecha}</small></div><span class="status-badge status-${(d.estado || 'BORRADOR').toLowerCase()}">${d.estado || 'BORRADOR'}</span></div><h5 class="mb-2">${d.puesto || 'Sin título'}</h5><p class="text-muted small mb-3"><i class="fas fa-building"></i> ${d.area || 'N/A'}<br><i class="fas fa-chart-line"></i> Reporta a: ${d.reportaA || 'N/A'}</p><div class="d-flex justify-content-end gap-2"><button class="btn btn-sm btn-outline-info btn-ver" data-id="${d.id}"><i class="fas fa-eye"></i> Ver</button>${d.estado === 'BORRADOR' ? `<button class="btn btn-sm btn-outline-warning btn-editar" data-id="${d.id}"><i class="fas fa-edit"></i> Editar</button><button class="btn btn-sm btn-outline-primary btn-enviar" data-id="${d.id}"><i class="fas fa-paper-plane"></i> Enviar</button>` : ''}</div></div></div>`;
+        });
+        html += '</div>';
+        container.html(html);
+        
+        $('.btn-ver').click(function(e) { e.stopPropagation(); verDescriptorDetalle($(this).data('id')); });
+        $('.btn-editar').click(function(e) { e.stopPropagation(); Swal.fire('Info', 'Edición en desarrollo', 'info'); });
+        $('.btn-enviar').click(function(e) { e.stopPropagation(); enviarATH($(this).data('id')); });
+        $('.descriptor-card').click(function(e) { if (!$(e.target).closest('.btn').length) verDescriptorDetalle($(this).data('id')); });
+    }
+    
+    function verDescriptorDetalle(id) {
+        if (typeof DescriptorService === 'undefined') return;
+        const descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        let html = `<div class="text-start" style="max-height: 500px; overflow-y: auto;"><h6 class="border-bottom pb-2">Información General</h6><p><strong>Código:</strong> ${descriptor.codigo || 'DES-' + id}</p><p><strong>Puesto:</strong> ${descriptor.puesto || '-'}</p><p><strong>Área:</strong> ${descriptor.area || '-'}</p><p><strong>Reporta a:</strong> ${descriptor.reportaA || '-'}</p><p><strong>Estado:</strong> ${descriptor.estado || 'BORRADOR'}</p><hr><h6 class="border-bottom pb-2">Objetivo</h6><p>${descriptor.objetivo || '-'}</p><hr><h6 class="border-bottom pb-2">Funciones Claves</h6><ul>${(descriptor.funcionesClaves || []).map(f => `<li><strong>${f.codigo}</strong> - ${f.nombre}</li>`).join('') || '<li>No registradas</li>'}</ul></div>`;
+        Swal.fire({ title: `Descriptor: ${descriptor.puesto}`, html: html, width: '600px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
+    }
+    
+    function enviarATH(id) {
+        Swal.fire({ title: '¿Enviar a Talento Humano?', text: 'Una vez enviado, no podrá modificar el descriptor hasta que TH lo revise.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#0d6efd' }).then((result) => {
+            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
+                DescriptorService.update(id, { estado: 'ENVIADO_TH' });
                 Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
                 cargarDescriptores();
             }
-        }
-    });
-}
-
-// Eventos
-$(document).ready(function() {
-    cargarDescriptores();
+        });
+    }
     
     $('#searchInput').on('keyup', filtrarYMostrar);
     $('#estadoFilter').on('change', filtrarYMostrar);
     $('#sortBy').on('change', filtrarYMostrar);
-    $('#btnNuevoDescriptor').click(() => {
-        if (typeof window.cargarNuevoDescriptor === 'function') {
-            window.cargarNuevoDescriptor();
-        }
-    });
-});
-
-window.verDescriptorDetalle = verDescriptorDetalle;
-window.editarDescriptor = editarDescriptor;
-window.enviarATH = enviarATH;
+    $('#btnNuevoDescriptor').click(() => { if (typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor(); });
+    
+    cargarDescriptores();
+})();
 </script>
 </body>
 </html>
