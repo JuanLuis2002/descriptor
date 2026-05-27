@@ -10,8 +10,18 @@ var DescriptorListController = {
     
     loadList: function() {
         var self = this;
+        
+        // Limpiar el contenedor
+        $('#contentContainer').empty();
+        
+        // Resetear la bandera global de la lista
+        if (window._listInitialized) {
+            window._listInitialized = false;
+        }
+        
         $.get('modulos/frmDescriptor/view/descriptorList.html', function(html) {
             $('#contentContainer').html(html);
+            console.log('Lista de descriptores cargada correctamente');
             // Inicializar la lista después de cargar el HTML
             self.initList();
         }).fail(function() {
@@ -26,10 +36,19 @@ var DescriptorListController = {
     },
     
     initList: function() {
-        // Esta función se ejecuta después de cargar el HTML
-        if (typeof window.initDescriptorList === 'function') {
-            window.initDescriptorList();
-        }
+        // Esperar un poco para asegurar que el DOM esté listo
+        setTimeout(function() {
+            if (typeof window.initDescriptorList === 'function') {
+                window.initDescriptorList();
+            } else {
+                console.log('initDescriptorList no está disponible aún, reintentando...');
+                setTimeout(function() {
+                    if (typeof window.initDescriptorList === 'function') {
+                        window.initDescriptorList();
+                    }
+                }, 100);
+            }
+        }, 50);
     }
 };
 
