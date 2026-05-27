@@ -1,4 +1,4 @@
-// Controlador para listar descriptores
+// Controlador para Listar Descriptores
 var DescriptorListController = {
     currentUser: null,
     
@@ -15,7 +15,8 @@ var DescriptorListController = {
             $('#contentContainer').html(`
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i> 
-                    Error al cargar la lista de descriptores.
+                    Error al cargar la lista de descriptores.<br>
+                    Verifique: <strong>modulos/frmDescriptor/view/descriptorList.html</strong>
                 </div>
             `);
         });
