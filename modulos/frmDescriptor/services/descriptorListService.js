@@ -1,0 +1,53 @@
+// Servicio para Listar Descriptores
+var DescriptorListService = {
+    getByCreador: function(creador) {
+        return DescriptorService.getAll().filter(d => d.creador === creador);
+    },
+    
+    getByEstado: function(estado) {
+        return DescriptorService.getAll().filter(d => d.estado === estado);
+    },
+    
+    search: function(descriptores, termino) {
+        var term = termino.toLowerCase();
+        return descriptores.filter(function(d) {
+            return (d.codigo || '').toLowerCase().includes(term) ||
+                   (d.puesto || '').toLowerCase().includes(term) ||
+                   (d.area || '').toLowerCase().includes(term);
+        });
+    },
+    
+    filterByEstado: function(descriptores, estado) {
+        if (!estado) return descriptores;
+        return descriptores.filter(function(d) { return d.estado === estado; });
+    },
+    
+    sort: function(descriptores, criterio) {
+        var sorted = [...descriptores];
+        if (criterio === 'fecha') {
+            return sorted.sort(function(a, b) {
+                var fechaA = a.fechaEmision || (a.fechaCreacion ? a.fechaCreacion.split('T')[0] : '');
+                var fechaB = b.fechaEmision || (b.fechaCreacion ? b.fechaCreacion.split('T')[0] : '');
+                return new Date(fechaB) - new Date(fechaA);
+            });
+        } else if (criterio === 'puesto') {
+            return sorted.sort(function(a, b) { return (a.puesto || '').localeCompare(b.puesto || ''); });
+        } else if (criterio === 'estado') {
+            return sorted.sort(function(a, b) { return (a.estado || '').localeCompare(b.estado || ''); });
+        }
+        return sorted;
+    },
+    
+    getEstadisticas: function(creador) {
+        var descriptores = this.getByCreador(creador);
+        return {
+            total: descriptores.length,
+            borradores: descriptores.filter(function(d) { return d.estado === 'BORRADOR'; }).length,
+            enviados: descriptores.filter(function(d) { return d.estado === 'ENVIADO_TH'; }).length,
+            activos: descriptores.filter(function(d) { return d.estado === 'ACTIVO'; }).length,
+            firmados: descriptores.filter(function(d) { return d.estado === 'FIRMADO'; }).length
+        };
+    }
+};
+
+window.DescriptorListService = DescriptorListService;
