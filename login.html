@@ -48,6 +48,7 @@
     </div>
 
     <script>
+        // Mapeo estricto de la estructura organizativa UEES
         const usuariosDemo = {
             "1": {
                 nombre: "Ing. Juan Hércules",
@@ -87,16 +88,20 @@
             const usr = usuariosDemo[id];
 
             if (usr) {
+                // Forzar limpieza antes de registrar la nueva sesión para evitar residuos de caché
                 sessionStorage.clear();
+                
                 sessionStorage.setItem('sesion_activa', 'true');
                 sessionStorage.setItem('usuario_nombre', usr.nombre);
                 sessionStorage.setItem('usuario_rol', usr.rol);
                 sessionStorage.setItem('usuario_cargo', usr.cargo);
                 sessionStorage.setItem('usuario_permisos', JSON.stringify(usr.permisos));
+                
                 window.location.href = 'index.html';
             }
         });
 
+        // Guardia preventiva en el login
         window.onload = () => {
             if (sessionStorage.getItem('sesion_activa') === 'true') {
                 window.location.href = 'index.html';
