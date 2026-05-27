@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Descriptor de Puesto</title>
+    <style>
+        .step-wizard {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .step .step-circle {
+            width: 40px;
+            height: 40px;
+            background: #dee2e6;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            color: white;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.3);
+        }
+        
+        .step.completed .step-circle {
+            background: #198754;
+            color: white;
+        }
+        
+        .step .step-label {
+            font-size: 12px;
+            margin-top: 8px;
+            color: #6c757d;
+        }
+        
+        .step.active .step-label {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+        
+        .step.completed .step-label {
+            color: #198754;
+        }
+        
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .form-section.active-section {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .dynamic-row {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .remove-row {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        
+        .section-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .competencia-card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .competencia-card:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .requerido-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="step-wizard">
+        <div class="step-indicator" id="stepIndicator">
+            <div class="step" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Generalidades</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Objetivo</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Funciones Claves</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Actividades</div>
+            </div>
+            <div class="step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Funciones Secundarias</div>
+            </div>
+            <div class="step" data-step="6">
+                <div class="step-circle">6</div>
+                <div class="step-label">KPIs</div>
+            </div>
+            <div class="step" data-step="7">
+                <div class="step-circle">7</div>
+                <div class="step-label">Perfil</div>
+            </div>
+            <div class="step" data-step="8">
+                <div class="step-circle">8</div>
+                <div class="step-label">Educación</div>
+            </div>
+            <div class="step" data-step="9">
+                <div class="step-circle">9</div>
+                <div class="step-label">Experiencia</div>
+            </div>
+            <div class="step" data-step="10">
+                <div class="step-circle">10</div>
+                <div class="step-label">Competencias</div>
+            </div>
+            <div class="step" data-step="11">
+                <div class="step-circle">11</div>
+                <div class="step-label">Inducción</div>
+            </div>
+            <div class="step" data-step="12">
+                <div class="step-circle">12</div>
+                <div class="step-label">Resumen</div>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <form id="descriptorForm">
+            <!-- SECTION 1: GENERALIDADES -->
+            <div class="form-section" data-section="1">
+                <h5 class="mb-4"><i class="fas fa-building me-2 text-primary"></i>Generalidades del Puesto</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Título del Puesto *</label>
+                        <input type="text" class="form-control" name="puesto" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Área / Departamento *</label>
+                        <input type="text" class="form-control" name="area" id="areaUsuario" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Puesto al que reporta *</label>
+                        <input type="text" class="form-control" name="reportaA" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Supervisa a (Personal a cargo)</label>
+                        <input type="number" class="form-control" name="personalCargo" value="0">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha de Emisión</label>
+                        <input type="date" class="form-control" name="fechaEmision" id="fechaEmision">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: OBJETIVO -->
+            <div class="form-section" data-section="2">
+                <h5 class="mb-4"><i class="fas fa-bullseye me-2 text-primary"></i>Objetivo del Puesto</h5>
+                <textarea class="form-control" name="objetivo" rows="6" placeholder="Describa el objetivo general del puesto..." required></textarea>
+            </div>
+
+            <!-- SECTION 3: FUNCIONES CLAVES -->
+            <div class="form-section" data-section="3">
+                <h5 class="mb-4"><i class="fas fa-tasks me-2 text-primary"></i>Funciones Claves (Mínimo 4, Máximo 6)</h5>
+                <div id="funcionesClavesContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addFuncionClave">
+                    <i class="fas fa-plus"></i> Agregar Función Clave
+                </button>
+                <small class="text-muted d-block mt-2">Cada función clave debe tener un código y nombre</small>
+            </div>
+
+            <!-- SECTION 4: ACTIVIDADES POR FUNCIÓN -->
+            <div class="form-section" data-section="4">
+                <h5 class="mb-4"><i class="fas fa-list-check me-2 text-primary"></i>Actividades por Función Clave</h5>
+                <div id="actividadesContainer"></div>
+                <small class="text-muted">Para cada función clave, liste las actividades específicas que la componen</small>
+            </div>
+
+            <!-- SECTION 5: FUNCIONES SECUNDARIAS -->
+            <div class="form-section" data-section="5">
+                <h5 class="mb-4"><i class="fas fa-chart-simple me-2 text-primary"></i>Funciones Secundarias (Mínimo 4, Máximo 6)</h5>
+                <div id="funcionesSecundariasContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addFuncionSecundaria">
+                    <i class="fas fa-plus"></i> Agregar Función Secundaria
+                </button>
+            </div>
+
+            <!-- SECTION 6: KPIs -->
+            <div class="form-section" data-section="6">
+                <h5 class="mb-4"><i class="fas fa-chart-line me-2 text-primary"></i>Indicadores de Desempeño (KPIs)</h5>
+                <div id="kpisContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addKPI">
+                    <i class="fas fa-plus"></i> Agregar KPI
+                </button>
+                <small class="text-muted d-block mt-2">Máximo 5 indicadores</small>
+            </div>
+
+            <!-- SECTION 7: PERFIL DEL PUESTO -->
+            <div class="form-section" data-section="7">
+                <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil del Puesto</h5>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Edad Mínima</label>
+                        <input type="number" class="form-control" name="edadMin" value="18">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Edad Máxima</label>
+                        <input type="number" class="form-control" name="edadMax" value="65">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Sexo</label>
+                        <select class="form-select" name="sexo">
+                            <option value="INDIFERENTE">Indiferente</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMENINO">Femenino</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Estado Familiar</label>
+                        <select class="form-select" name="estadoFamiliar">
+                            <option value="INDIFERENTE">Indiferente</option>
+                            <option value="SOLTERO">Soltero</option>
+                            <option value="CASADO">Casado</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Disponibilidad Horaria</label>
+                        <select class="form-select" name="disponibilidadHorario">
+                            <option value="TIEMPO_COMPLETO">Tiempo Completo</option>
+                            <option value="MEDIO_TIEMPO">Medio Tiempo</option>
+                            <option value="POR_HORAS">Por Horas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Modalidad de Trabajo</label>
+                        <select class="form-select" name="modalidadTrabajo">
+                            <option value="PRESENCIAL">Presencial</option>
+                            <option value="HIBRIDO">Híbrido</option>
+                            <option value="REMOTO">Remoto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Poseer Licencia (Conducir)</label>
+                        <select class="form-select" name="poseerLicencia">
+                            <option value="0">No</option>
+                            <option value="1">Sí</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: EDUCACIÓN -->
+            <div class="form-section" data-section="8">
+                <h5 class="mb-4"><i class="fas fa-graduation-cap me-2 text-primary"></i>Educación</h5>
+                <div id="educacionContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addEducacion">
+                    <i class="fas fa-plus"></i> Agregar Requisito Educativo
+                </button>
+            </div>
+
+            <!-- SECTION 9: EXPERIENCIA -->
+            <div class="form-section" data-section="9">
+                <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Experiencia</h5>
+                <div id="experienciaContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addExperiencia">
+                    <i class="fas fa-plus"></i> Agregar Requisito de Experiencia
+                </button>
+            </div>
+
+            <!-- SECTION 10: COMPETENCIAS -->
+            <div class="form-section" data-section="10">
+                <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>Competencias</h5>
+                
+                <!-- Competencias Técnicas -->
+                <div class="mb-4">
+                    <h6 class="mb-3">Competencias Técnicas</h6>
+                    <div id="competenciasTecnicasContainer"></div>
+                </div>
+                
+                <!-- Competencias Conductuales -->
+                <div>
+                    <h6 class="mb-3">Competencias Conductuales</h6>
+                    <div id="competenciasConductualesContainer"></div>
+                </div>
+            </div>
+
+            <!-- SECTION 11: INDUCCIÓN E IMPACTO -->
+            <div class="form-section" data-section="11">
+                <h5 class="mb-4"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Inducción e Impacto Económico</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Duración de Inducción</label>
+                        <select class="form-select" name="duracionInduccion">
+                            <option value="15 DIAS">15 días (Puestos Operativos)</option>
+                            <option value="30 DIAS">30 días (Puestos de Liderazgo)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Responsable de Inducción</label>
+                        <input type="text" class="form-control" name="responsableInduccion" placeholder="Nombre del responsable">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Impacto Económico Institucional</label>
+                        <select class="form-select" name="impactoEconomico">
+                            <option value="POCO_SIGNIFICATIVO">Poco significativo (menor a $50,000)</option>
+                            <option value="SIGNIFICATIVO">Significativo ($50,000 - $200,000)</option>
+                            <option value="MUY_SIGNIFICATIVO">Muy significativo (mayor a $200,000)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 12: RESUMEN -->
+            <div class="form-section" data-section="12">
+                <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-primary"></i>Resumen del Descriptor</h5>
+                <div id="resumenContent" class="p-3 bg-light rounded"></div>
+            </div>
+
+            <!-- Botones de navegación -->
+            <div class="section-buttons">
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Anterior
+                </button>
+                <button type="button" class="btn btn-primary" id="nextBtn">
+                    Siguiente <i class="fas fa-arrow-right"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="saveBtn" style="display: none;">
+                    <i class="fas fa-save"></i> Guardar Borrador
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentStep = 1;
+        let totalSteps = 12;
+        let funcionesClaves = [];
+        let funcionesSecundarias = [];
+        let kpis = [];
+        let educacion = [];
+        let experiencia = [];
+        
+        // Datos de competencias desde el diccionario
+        const competenciasTecnicas = [
+            { id: 1, codigo: 'T001', nombre: 'Programación Java', nivelDominio: 'Avanzado' },
+            { id: 2, codigo: 'T002', nombre: 'SQL Server', nivelDominio: 'Intermedio' },
+            { id: 3, codigo: 'T003', nombre: 'JavaScript/React', nivelDominio: 'Avanzado' },
+            { id: 4, codigo: 'T004', nombre: 'Metodologías Ágiles', nivelDominio: 'Intermedio' },
+            { id: 5, codigo: 'T005', nombre: 'Gestión de Proyectos', nivelDominio: 'Básico' }
+        ];
+        
+        const competenciasConductuales = [
+            { id: 1, codigo: 'C001', nombre: 'Trabajo en Equipo', descripcion: 'Capacidad para colaborar efectivamente' },
+            { id: 2, codigo: 'C002', nombre: 'Comunicación Efectiva', descripcion: 'Exprimir ideas claramente' },
+            { id: 3, codigo: 'C003', nombre: 'Liderazgo', descripcion: 'Guiar y motivar al equipo' },
+            { id: 4, codigo: 'C004', nombre: 'Resolución de Problemas', descripcion: 'Analizar y solucionar conflictos' },
+            { id: 5, codigo: 'C005', nombre: 'Orientación al Cliente', descripcion: 'Enfocado en satisfacer necesidades' }
+        ];
+        
+        // Inicialización
+        $(document).ready(function() {
+            // Cargar área del usuario actual
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            $('#areaUsuario').val(currentUser.area || '');
+            
+            // Fecha por defecto
+            $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
+            
+            // Inicializar secciones dinámicas
+            initFuncionesClaves();
+            initFuncionesSecundarias();
+            initKPIs();
+            initEducacion();
+            initExperiencia();
+            initCompetencias();
+            
+            updateStepDisplay();
+            
+            // Eventos de navegación
+            $('#nextBtn').click(nextStep);
+            $('#prevBtn').click(prevStep);
+            $('#saveBtn').click(saveDescriptor);
+            
+            // Click en los pasos del indicador
+            $('.step').click(function() {
+                const step = parseInt($(this).data('step'));
+                if (step < currentStep) {
+                    goToStep(step);
+                }
+            });
+            
+            // Eventos para agregar filas dinámicas
+            $('#addFuncionClave').click(() => addFuncionClaveRow());
+            $('#addFuncionSecundaria').click(() => addFuncionSecundariaRow());
+            $('#addKPI').click(() => addKPIRow());
+            $('#addEducacion').click(() => addEducacionRow());
+            $('#addExperiencia').click(() => addExperienciaRow());
+        });
+        
+        function initFuncionesClaves() {
+            for(let i = 1; i <= 4; i++) {
+                addFuncionClaveRow(i);
+            }
+        }
+        
+        function addFuncionClaveRow(index = null) {
+            const container = $('#funcionesClavesContainer');
+            const rowId = Date.now() + Math.random();
+            const rowNumber = container.children().length + 1;
+            
+            const html = `
+                <div class="dynamic-row" data-id="${rowId}">
+                    <div class="remove-row" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small">Código</label>
+                            <input type="text" class="form-control form-control-sm" name="funcionCodigo[]" placeholder="Ej: FC001">
+                        </div>
+                        <div class="col-md-9 mb-2">
+                            <label class="form-label small">Nombre de la Función Clave</label>
+                            <input type="text" class="form-control form-control-sm" name="funcionNombre[]" placeholder="Nombre de la función">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(html);
+        }
+        
+        function initFuncionesSecundarias() {
+            for(let i = 1; i <= 4; i++) {
+                addFuncionSecundariaRow();
+            }
+        }
+        
+        function addFuncionSecundariaRow() {
+            const container = $('#funcionesSecundariasContainer');
+            const rowId = Date.now() + Math.random();
+            
+            const html = `
+                <div class="dynamic-row" data-id="${rowId}">
+                    <div class="remove-row" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea>
+                </div>
+            `;
+            container.append(html);
+        }
+        
+        function initKPIs() {
+            for(let i = 1; i <= 3; i++) {
+                addKPIRow();
+            }
+        }
+        
+        function addKPIRow() {
+            const container = $('#kpisContainer');
+            if (container.children().length >= 5) {
+                Swal.fire('Límite alcanzado', 'Máximo 5 indicadores de desempeño', 'warning');
+                return;
+            }
+            
+            const rowId = Date.now() + Math.random();
+            const html = `
+                <div class="dynamic-row" data-id="${rowId}">
+                    <div class="remove-row" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5 mb-2">
+                            <label class="form-label small">Indicador</label>
+                            <input type="text" class="form-control form-control-sm" name="kpiIndicador[]" placeholder="Nombre del indicador">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Frecuencia</label>
+                            <select class="form-select form-select-sm" name="kpiFrecuencia[]">
+                                <option value="Diaria">Diaria</option>
+                                <option value="Semanal">Semanal</option>
+                                <option value="Mensual">Mensual</option>
+                                <option value="Trimestral">Trimestral</option>
+                                <option value="Semestral">Semestral</option>
+                                <option value="Anual">Anual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small">Meta</label>
+                            <input type="text" class="form-control form-control-sm" name="kpiMeta[]" placeholder="Meta">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(html);
+        }
+        
+        function initEducacion() {
+            for(let i = 1; i <= 2; i++) {
+                addEducacionRow();
+            }
+        }
+        
+        function addEducacionRow() {
+            const container = $('#educacionContainer');
+            const rowId = Date.now() + Math.random();
+            
+            const html = `
+                <div class="dynamic-row" data-id="${rowId}">
+                    <div class="remove-row" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5 mb-2">
+                            <label class="form-label small">Requisito</label>
+                            <input type="text" class="form-control form-control-sm" name="eduRequisito[]" placeholder="Ej: Bachillerato, Licenciatura, etc.">
+                        </div>
+                        <div class="col-md-5 mb-2">
+                            <label class="form-label small">Especificaciones</label>
+                            <input type="text" class="form-control form-control-sm" name="eduEspecificaciones[]" placeholder="Especialidad, área, etc.">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label small">Requerido</label>
+                            <select class="form-select form-select-sm" name="eduRequerido[]">
+                                <option value="1">Sí</option>
+                                <option value="0">Deseable</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(html);
+        }
+        
+        function initExperiencia() {
+            for(let i = 1; i <= 2; i++) {
+                addExperienciaRow();
+            }
+        }
+        
+        function addExperienciaRow() {
+            const container = $('#experienciaContainer');
+            const rowId = Date.now() + Math.random();
+            
+            const html = `
+                <div class="dynamic-row" data-id="${rowId}">
+                    <div class="remove-row" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-9 mb-2">
+                            <label class="form-label small">Requisito de Experiencia</label>
+                            <textarea class="form-control form-control-sm" name="expRequisito[]" rows="2" placeholder="Ej: 3 años en posiciones similares"></textarea>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small">Requerido</label>
+                            <select class="form-select form-select-sm" name="expRequerido[]">
+                                <option value="1">Sí</option>
+                                <option value="0">Deseable</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(html);
+        }
+        
+        function initCompetencias() {
+            // Competencias Técnicas
+            const techContainer = $('#competenciasTecnicasContainer');
+            competenciasTecnicas.forEach(comp => {
+                techContainer.append(`
+                    <div class="competencia-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${comp.codigo}</strong> - ${comp.nombre}
+                                <small class="text-muted d-block">Nivel: ${comp.nivelDominio}</small>
+                            </div>
+                            <div>
+                                <select class="form-select form-select-sm" name="competenciaTecnica_${comp.id}" style="width: 120px;">
+                                    <option value="SI">Sí (Requerida)</option>
+                                    <option value="NO">No aplica</option>
+                                    <option value="DESEABLE">Deseable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+            
+            // Competencias Conductuales
+            const conductualContainer = $('#competenciasConductualesContainer');
+            competenciasConductuales.forEach(comp => {
+                conductualContainer.append(`
+                    <div class="competencia-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${comp.codigo}</strong> - ${comp.nombre}
+                                <small class="text-muted d-block">${comp.descripcion}</small>
+                            </div>
+                            <div>
+                                <select class="form-select form-select-sm" name="competenciaConductual_${comp.id}" style="width: 120px;">
+                                    <option value="SI">Sí (Requerida)</option>
+                                    <option value="NO">No aplica</option>
+                                    <option value="DESEABLE">Deseable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+        
+        function removeRow(element) {
+            $(element).closest('.dynamic-row').remove();
+        }
+        
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStepDisplay();
+                }
+                
+                if (currentStep === totalSteps) {
+                    updateResumen();
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+        
+        function goToStep(step) {
+            if (step < currentStep) {
+                currentStep = step;
+                updateStepDisplay();
+            }
+        }
+        
+        function validateCurrentStep() {
+            const currentSection = $(`.form-section[data-section="${currentStep}"]`);
+            const requiredFields = currentSection.find('[required]');
+            let valid = true;
+            
+            requiredFields.each(function() {
+                if (!$(this).val()) {
+                    $(this).addClass('is-invalid');
+                    valid = false;
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+            
+            // Validar funciones claves mínimo 4
+            if (currentStep === 3) {
+                const count = $('#funcionesClavesContainer .dynamic-row').length;
+                if (count < 4) {
+                    Swal.fire('Validación', 'Debe tener mínimo 4 funciones claves', 'warning');
+                    valid = false;
+                } else if (count > 6) {
+                    Swal.fire('Validación', 'Máximo 6 funciones claves', 'warning');
+                    valid = false;
+                }
+            }
+            
+            // Validar funciones secundarias mínimo 4
+            if (currentStep === 5) {
+                const count = $('#funcionesSecundariasContainer .dynamic-row').length;
+                if (count < 4) {
+                    Swal.fire('Validación', 'Debe tener mínimo 4 funciones secundarias', 'warning');
+                    valid = false;
+                }
+            }
+            
+            if (!valid) {
+                Swal.fire('Campos incompletos', 'Por favor complete todos los campos requeridos', 'error');
+            }
+            
+            return valid;
+        }
+        
+        function updateStepDisplay() {
+            // Ocultar todas las secciones
+            $('.form-section').removeClass('active-section');
+            $(`.form-section[data-section="${currentStep}"]`).addClass('active-section');
+            
+            // Actualizar indicador de pasos
+            $('.step').removeClass('active completed');
+            for(let i = 1; i <= totalSteps; i++) {
+                if (i < currentStep) {
+                    $(`.step[data-step="${i}"]`).addClass('completed');
+                } else if (i === currentStep) {
+                    $(`.step[data-step="${i}"]`).addClass('active');
+                }
+            }
+            
+            // Mostrar/ocultar botones
+            $('#prevBtn').toggle(currentStep > 1);
+            $('#nextBtn').toggle(currentStep < totalSteps);
+            $('#saveBtn').toggle(currentStep === totalSteps);
+            
+            // Actualizar resumen si estamos en la última sección
+            if (currentStep === totalSteps) {
+                updateResumen();
+            }
+        }
+        
+        function updateResumen() {
+            const resumen = $('#resumenContent');
+            
+            // Recolectar datos básicos
+            const puesto = $('input[name="puesto"]').val() || 'No especificado';
+            const area = $('input[name="area"]').val() || 'No especificado';
+            const objetivo = $('textarea[name="objetivo"]').val() || 'No especificado';
+            
+            const funcionesCount = $('#funcionesClavesContainer .dynamic-row').length;
+            const secundariasCount = $('#funcionesSecundariasContainer .dynamic-row').length;
+            const kpisCount = $('#kpisContainer .dynamic-row').length;
+            
+            resumen.html(`
+                <h6 class="mb-3">Datos del Descriptor</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Puesto:</strong></td><td>${puesto}</td></tr>
+                    <tr><td><strong>Área:</strong></td><td>${area}</td></tr>
+                    <tr><td><strong>Reporta a:</strong></td><td>${$('input[name="reportaA"]').val() || 'N/A'}</td></tr>
+                    <tr><td><strong>Personal a cargo:</strong></td><td>${$('input[name="personalCargo"]').val() || '0'}</td></tr>
+                    <tr><td><strong>Objetivo:</strong></td><td>${objetivo.substring(0, 100)}${objetivo.length > 100 ? '...' : ''}</td></tr>
+                    <tr><td><strong>Funciones Claves:</strong></td><td>${funcionesCount}</td></tr>
+                    <tr><td><strong>Funciones Secundarias:</strong></td><td>${secundariasCount}</td></tr>
+                    <tr><td><strong>KPIs definidos:</strong></td><td>${kpisCount}</td></tr>
+                </table>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> Una vez guardado, el descriptor pasará al flujo de aprobación.
+                </div>
+            `);
+        }
+        
+        function saveDescriptor() {
+            // Recolectar todos los datos del formulario
+            const formData = {
+                puesto: $('input[name="puesto"]').val(),
+                area: $('input[name="area"]').val(),
+                reportaA: $('input[name="reportaA"]').val(),
+                personalCargo: $('input[name="personalCargo"]').val(),
+                fechaEmision: $('input[name="fechaEmision"]').val(),
+                objetivo: $('textarea[name="objetivo"]').val(),
+                funcionesClaves: [],
+                funcionesSecundarias: [],
+                kpis: [],
+                perfil: {
+                    edadMin: $('input[name="edadMin"]').val(),
+                    edadMax: $('input[name="edadMax"]').val(),
+                    sexo: $('select[name="sexo"]').val(),
+                    estadoFamiliar: $('select[name="estadoFamiliar"]').val(),
+                    disponibilidadHorario: $('select[name="disponibilidadHorario"]').val(),
+                    modalidadTrabajo: $('select[name="modalidadTrabajo"]').val(),
+                    poseerLicencia: $('select[name="poseerLicencia"]').val()
+                },
+                educacion: [],
+                experiencia: [],
+                competenciasTecnicas: {},
+                competenciasConductuales: {},
+                induccion: {
+                    duracion: $('select[name="duracionInduccion"]').val(),
+                    responsable: $('input[name="responsableInduccion"]').val()
+                },
+                impactoEconomico: $('select[name="impactoEconomico"]').val()
+            };
+            
+            // Recolectar funciones claves
+            $('#funcionesClavesContainer .dynamic-row').each(function(index) {
+                formData.funcionesClaves.push({
+                    codigo: $(this).find('input[name="funcionCodigo[]"]').val(),
+                    nombre: $(this).find('input[name="funcionNombre[]"]').val()
+                });
+            });
+            
+            // Recolectar funciones secundarias
+            $('#funcionesSecundariasContainer textarea[name="funcionSecundaria[]"]').each(function() {
+                if ($(this).val()) {
+                    formData.funcionesSecundarias.push($(this).val());
+                }
+            });
+            
+            // Recolectar KPIs
+            $('#kpisContainer .dynamic-row').each(function() {
+                formData.kpis.push({
+                    indicador: $(this).find('input[name="kpiIndicador[]"]').val(),
+                    frecuencia: $(this).find('select[name="kpiFrecuencia[]"]').val(),
+                    meta: $(this).find('input[name="kpiMeta[]"]').val()
+                });
+            });
+            
+            // Recolectar educación
+            $('#educacionContainer .dynamic-row').each(function() {
+                formData.educacion.push({
+                    requisito: $(this).find('input[name="eduRequisito[]"]').val(),
+                    especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(),
+                    requerido: $(this).find('select[name="eduRequerido[]"]').val()
+                });
+            });
+            
+            // Recolectar experiencia
+            $('#experienciaContainer .dynamic-row').each(function() {
+                formData.experiencia.push({
+                    requisito: $(this).find('textarea[name="expRequisito[]"]').val(),
+                    requerido: $(this).find('select[name="expRequerido[]"]').val()
+                });
+            });
+            
+            // Recolectar competencias técnicas
+            competenciasTecnicas.forEach(comp => {
+                formData.competenciasTecnicas[comp.id] = $(`select[name="competenciaTecnica_${comp.id}"]`).val();
+            });
+            
+            // Recolectar competencias conductuales
+            competenciasConductuales.forEach(comp => {
+                formData.competenciasConductuales[comp.id] = $(`select[name="competenciaConductual_${comp.id}"]`).val();
+            });
+            
+            console.log('Datos guardados:', formData);
+            
+            // Guardar en localStorage
+            let descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
+            const newDescriptor = {
+                id: descriptores.length + 1,
+                codigo: `DES-${(descriptores.length + 1).toString().padStart(4, '0')}`,
+                ...formData,
+                estado: 'BORRADOR',
+                creador: JSON.parse(sessionStorage.getItem('currentUser') || '{}').nombre,
+                fechaCreacion: new Date().toISOString()
+            };
+            
+            descriptores.push(newDescriptor);
+            localStorage.setItem('descriptores', JSON.stringify(descriptores));
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Descriptor Guardado!',
+                text: `El descriptor ${newDescriptor.codigo} ha sido guardado como borrador`,
+                confirmButtonColor: '#0d6efd'
+            }).then(() => {
+                // Limpiar formulario o redirigir
+                window.location.reload();
+            });
+        }
+        
+        // Exportar funciones globales
+        window.removeRow = removeRow;
+    </script>
+</body>
+</html>

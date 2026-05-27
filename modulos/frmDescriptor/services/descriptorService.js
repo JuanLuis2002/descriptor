@@ -1,44 +1,47 @@
-export const descriptorService = {
-    obtenerBBDD: () => {
-        const data = localStorage.getItem('SC_DESCRIPTOR_PUESTO');
+// Servicio del Descriptor - Gestión de datos
+const DescriptorService = {
+    // Obtener todos los descriptores
+    getAll: function() {
+        const data = localStorage.getItem('descriptores');
         return data ? JSON.parse(data) : [];
     },
-
-    registrarPropuestaPaso1: (payload) => {
-        const db = descriptorService.obtenerBBDD();
-
-        // Construcción del registro respetando las llaves primarias compuestas y campos de auditoría
-        const nuevoPuesto = {
-            CORR_EMPRESA: 1, 
-            CORR_PUESTO: db.length > 0 ? Math.max(...db.map(p => p.CORR_PUESTO)) + 1 : 1,
-            NOMBRE_PUESTO: payload.NOMBRE_PUESTO,
-            SUPERVISA_A: payload.SUPERVISA_A,
-            MODALIDAD_TRABAJO: payload.MODALIDAD_TRABAJO,
-            IMPACTO_ECONOMICO: payload.IMPACTO_ECONOMICO,
-            PERFIL_EDAD: payload.PERFIL_EDAD,
-            INDUCCION_DURACION: payload.INDUCCION_DURACION,
-            INDUCCION_RESPONSABLE: payload.INDUCCION_RESPONSABLE,
-            OBJETIVO_PUESTO: payload.OBJETIVO_PUESTO,
-            REQUISITO_EDUCACION: payload.REQUISITO_EDUCACION,
-            REQUISITO_EXPERIENCIA: payload.REQUISITO_EXPERIENCIA,
-            
-            // ESTADO DE FLUJO: Enviado a revisión del Jefe Superior inmediato (Gerente General)
-            ESTADO_FLUJO: 'ENVIADO_A_SUPERIOR',
-            
-            // Sub-colecciones hijas normalizadas (Relaciones 1:N)
-            funcionesClaves: payload.funcionesClaves,
-            funcionesSecundarias: payload.funcionesSecundarias,
-            indicadores: payload.indicadores,
-            competencias: payload.competencias,
-
-            // Auditoría técnica
-            USUARIO_CREA: sessionStorage.getItem('usuario_nombre') || 'ING_LUIS_GALDAMEZ',
-            FECHA_CREA: new Date().toISOString(),
-            ESTACION_CREA: "LOCALHOST_WIN10"
-        };
-
-        db.push(nuevoPuesto);
-        localStorage.setItem('SC_DESCRIPTOR_PUESTO', JSON.stringify(db));
-        return nuevoPuesto;
+    
+    // Guardar nuevo descriptor
+    save: function(descriptor) {
+        const descriptors = this.getAll();
+        descriptor.id = descriptors.length + 1;
+        descriptor.codigo = `DES-${(descriptors.length + 1).toString().padStart(4, '0')}`;
+        descriptor.estado = 'BORRADOR';
+        descriptor.fechaCreacion = new Date().toISOString();
+        descriptors.push(descriptor);
+        localStorage.setItem('descriptores', JSON.stringify(descriptors));
+        return descriptor;
+    },
+    
+    // Actualizar descriptor
+    update: function(id, data) {
+        const descriptors = this.getAll();
+        const index = descriptors.findIndex(d => d.id === id);
+        if (index !== -1) {
+            descriptors[index] = { ...descriptors[index], ...data };
+            localStorage.setItem('descriptores', JSON.stringify(descriptors));
+            return descriptors[index];
+        }
+        return null;
+    },
+    
+    // Obtener por ID
+    getById: function(id) {
+        return this.getAll().find(d => d.id === id);
+    },
+    
+    // Obtener por estado
+    getByEstado: function(estado) {
+        return this.getAll().filter(d => d.estado === estado);
+    },
+    
+    // Obtener por creador
+    getByCreador: function(creador) {
+        return this.getAll().filter(d => d.creador === creador);
     }
 };
