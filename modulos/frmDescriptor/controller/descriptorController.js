@@ -1,4 +1,4 @@
-// Controlador para Crear/Editar Descriptor
+// Controlador del Descriptor
 var DescriptorController = {
     currentUser: null,
     
