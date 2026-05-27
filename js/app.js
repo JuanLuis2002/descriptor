@@ -89,62 +89,52 @@ function loadMenu() {
     `);
     
     // Según el rol del usuario, mostrar opciones
-    switch(currentUser.rol) {
-        case 'JEFE_INMEDIATO':
-            nav.append(`
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="nuevoDescriptor">
-                    <i class="fas fa-plus-circle me-2"></i> <span>Nuevo Descriptor</span>
-                </a>
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misDescriptores">
-                    <i class="fas fa-list me-2"></i> <span>Mis Descriptores</span>
-                </a>
-            `);
-            break;
-            
-        case 'JEFE_SUPERIOR':
-            nav.append(`
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="pendientesAprobar">
-                    <i class="fas fa-clock me-2"></i> <span>Pendientes de Aprobación</span>
-                </a>
-            `);
-            break;
-            
-        case 'TH_GENERALISTA':
-            nav.append(`
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="revisionTH">
-                    <i class="fas fa-check-double me-2"></i> <span>Revisión Técnica</span>
-                </a>
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="complementarTH">
-                    <i class="fas fa-pen me-2"></i> <span>Complementar Descriptor</span>
-                </a>
-            `);
-            break;
-            
-        case 'JEFE_TH':
-            nav.append(`
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="validacionFinal">
-                    <i class="fas fa-gavel me-2"></i> <span>Validación Final</span>
-                </a>
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="competencias">
-                    <i class="fas fa-graduation-cap me-2"></i> <span>Diccionario Competencias</span>
-                </a>
-            `);
-            break;
-            
-        case 'COLABORADOR':
-            nav.append(`
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misFirmas">
-                    <i class="fas fa-signature me-2"></i> <span>Pendientes de Firma</span>
-                </a>
-                <a href="#" class="nav-link text-white px-3 py-2" data-modulo="miDescriptor">
-                    <i class="fas fa-file-alt me-2"></i> <span>Mi Descriptor</span>
-                </a>
-            `);
-            break;
+    if (currentUser.rol === 'JEFE_INMEDIATO') {
+        nav.append(`
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="nuevoDescriptor">
+                <i class="fas fa-plus-circle me-2"></i> <span>Nuevo Descriptor</span>
+            </a>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misDescriptores">
+                <i class="fas fa-list me-2"></i> <span>Mis Descriptores</span>
+            </a>
+        `);
+    } else if (currentUser.rol === 'JEFE_SUPERIOR') {
+        nav.append(`
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="pendientesAprobar">
+                <i class="fas fa-clock me-2"></i> <span>Pendientes de Aprobación</span>
+            </a>
+        `);
+    } else if (currentUser.rol === 'TH_GENERALISTA') {
+        nav.append(`
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="revisionTH">
+                <i class="fas fa-check-double me-2"></i> <span>Revisión Técnica</span>
+            </a>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="complementarTH">
+                <i class="fas fa-pen me-2"></i> <span>Complementar Descriptor</span>
+            </a>
+        `);
+    } else if (currentUser.rol === 'JEFE_TH') {
+        nav.append(`
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="validacionFinal">
+                <i class="fas fa-gavel me-2"></i> <span>Validación Final</span>
+            </a>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="competencias">
+                <i class="fas fa-graduation-cap me-2"></i> <span>Diccionario Competencias</span>
+            </a>
+        `);
+    } else if (currentUser.rol === 'COLABORADOR') {
+        nav.append(`
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misFirmas">
+                <i class="fas fa-signature me-2"></i> <span>Pendientes de Firma</span>
+            </a>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="miDescriptor">
+                <i class="fas fa-file-alt me-2"></i> <span>Mi Descriptor</span>
+            </a>
+        `);
     }
     
-    // Eventos de los módulos
-    $('.nav-link[data-modulo]').click(function(e) {
+    // Eventos de los módulos - USAR DELEGACIÓN DE EVENTOS
+    $(document).on('click', '.nav-link[data-modulo]', function(e) {
         e.preventDefault();
         const modulo = $(this).data('modulo');
         
@@ -172,27 +162,6 @@ function cargarModulo(modulo) {
             break;
         case 'misDescriptores':
             cargarMisDescriptores();
-            break;
-        case 'pendientesAprobar':
-            cargarPendientesAprobar();
-            break;
-        case 'revisionTH':
-            cargarRevisionTH();
-            break;
-        case 'complementarTH':
-            cargarComplementarTH();
-            break;
-        case 'validacionFinal':
-            cargarValidacionFinal();
-            break;
-        case 'competencias':
-            cargarCompetencias();
-            break;
-        case 'misFirmas':
-            cargarMisFirmas();
-            break;
-        case 'miDescriptor':
-            cargarMiDescriptor();
             break;
         default:
             loadDashboard();
@@ -240,40 +209,68 @@ function loadDashboard() {
 // Cargar formulario de nuevo descriptor (solo Jefe Inmediato)
 function cargarNuevoDescriptor() {
     $('#pageTitle').text('Nuevo Descriptor de Puesto');
+    $('#contentContainer').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Cargando formulario...</div>');
     
-    // Verificar que el módulo existe y cargarlo dinámicamente
-    if (typeof DescriptorController !== 'undefined') {
-        DescriptorController.init(currentUser);
-    } else {
-        // Cargar scripts del módulo frmDescriptor
-        $.getScript('modulos/frmDescriptor/services/descriptorService.js')
-            .done(function() {
-                $.getScript('modulos/frmDescriptor/controller/descriptorController.js')
-                    .done(function() {
-                        if (typeof DescriptorController !== 'undefined') {
-                            DescriptorController.init(currentUser);
-                        }
-                    })
-                    .fail(function() {
-                        mostrarError('Error al cargar el controlador del descriptor');
-                    });
-            })
-            .fail(function() {
-                mostrarError('Error al cargar el servicio del descriptor');
-            });
-    }
+    // Cargar los scripts en orden
+    $.when(
+        $.getScript('modulos/frmDescriptor/services/descriptorService.js'),
+        $.getScript('modulos/frmDescriptor/controller/descriptorController.js')
+    ).done(function() {
+        // Verificar que DescriptorController existe y tiene el método init
+        if (typeof DescriptorController !== 'undefined' && DescriptorController.init) {
+            DescriptorController.init(currentUser);
+        } else if (typeof window.DescriptorController !== 'undefined' && window.DescriptorController.init) {
+            window.DescriptorController.init(currentUser);
+        } else {
+            // Si no existe, intentar cargar directamente la vista
+            cargarVistaDescriptorDirecta();
+        }
+    }).fail(function(err) {
+        console.error('Error cargando scripts:', err);
+        // Fallback: cargar vista directamente
+        cargarVistaDescriptorDirecta();
+    });
 }
 
-// Cargar mis descriptores (Jefe Inmediato)
+// Fallback - Cargar vista directamente
+function cargarVistaDescriptorDirecta() {
+    $.get('modulos/frmDescriptor/view/descriptorForm.html')
+        .done(function(html) {
+            $('#contentContainer').html(html);
+            // Inicializar eventos del formulario si existen
+            if (typeof initFormularioDescriptor === 'function') {
+                initFormularioDescriptor();
+            }
+        })
+        .fail(function() {
+            $('#contentContainer').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Error al cargar el formulario. Verifique que el archivo existe en:<br>
+                    <strong>modulos/frmDescriptor/view/descriptorForm.html</strong>
+                </div>
+            `);
+        });
+}
+
+// Cargar mis descriptores
 function cargarMisDescriptores() {
     $('#pageTitle').text('Mis Descriptores');
-    const descriptores = DescriptorService ? DescriptorService.getByCreador(currentUser.nombre) : [];
+    
+    // Obtener descriptores del localStorage
+    let descriptores = [];
+    const data = localStorage.getItem('descriptores');
+    if (data) {
+        descriptores = JSON.parse(data);
+        // Filtrar por creador
+        descriptores = descriptores.filter(d => d.creador === currentUser.nombre);
+    }
     
     if (descriptores.length === 0) {
         $('#contentContainer').html(`
             <div class="alert alert-info text-center">
                 <i class="fas fa-info-circle"></i> No tiene descriptores creados aún.
-                <a href="#" onclick="cargarNuevoDescriptor()" class="alert-link">Crear nuevo descriptor</a>
+                <a href="#" onclick="cargarNuevoDescriptor(); return false;" class="alert-link">Crear nuevo descriptor</a>
             </div>
         `);
         return;
@@ -301,11 +298,10 @@ function cargarMisDescriptores() {
                 <td>${d.codigo || 'DES-' + d.id}</td>
                 <td>${d.puesto}</td>
                 <td>${d.area}</td>
-                <td>${d.fechaEmision || d.fechaCreacion?.split('T')[0] || '-'}</td>
+                <td>${d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-')}</td>
                 <td><span class="badge ${getEstadoBadge(d.estado)}">${d.estado || 'BORRADOR'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-info" onclick="verDescriptor(${d.id})"><i class="fas fa-eye"></i></button>
-                    ${d.estado === 'BORRADOR' ? `<button class="btn btn-sm btn-warning" onclick="editarDescriptor(${d.id})"><i class="fas fa-edit"></i></button>` : ''}
                 </td>
             </tr>
         `;
@@ -327,71 +323,11 @@ function getEstadoBadge(estado) {
     return badges[estado] || 'bg-secondary';
 }
 
-// Funciones placeholder para otros módulos
-function cargarPendientesAprobar() {
-    $('#pageTitle').text('Pendientes de Aprobación');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí aparecerán los descriptores pendientes de aprobación.
-        </div>
-    `);
-}
-
-function cargarRevisionTH() {
-    $('#pageTitle').text('Revisión Técnica');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí aparecerán los descriptores para revisión técnica.
-        </div>
-    `);
-}
-
-function cargarComplementarTH() {
-    $('#pageTitle').text('Complementar Descriptor');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí se complementarán relaciones laborales, requerimientos y riesgos.
-        </div>
-    `);
-}
-
-function cargarValidacionFinal() {
-    $('#pageTitle').text('Validación Final');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí aparecerán los descriptores para validación final.
-        </div>
-    `);
-}
-
-function cargarCompetencias() {
-    $('#pageTitle').text('Diccionario de Competencias');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Gestión del diccionario de competencias técnicas y conductuales.
-        </div>
-    `);
-}
-
-function cargarMisFirmas() {
-    $('#pageTitle').text('Pendientes de Firma');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí aparecerán los descriptores pendientes de su firma.
-        </div>
-    `);
-}
-
-function cargarMiDescriptor() {
-    $('#pageTitle').text('Mi Descriptor');
-    $('#contentContainer').html(`
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Módulo en desarrollo. Aquí podrá ver el descriptor de su puesto.
-        </div>
-    `);
-}
-
 // Funciones auxiliares
+function verDescriptor(id) {
+    Swal.fire('Información', `Ver descriptor ID: ${id}`, 'info');
+}
+
 function mostrarError(mensaje) {
     $('#contentContainer').html(`
         <div class="alert alert-danger">
@@ -423,13 +359,8 @@ function closeMobileSidebar() {
     $('#sidebar').css('transform', 'translateX(-100%)');
 }
 
-// Funciones globales para usar en onclick
+// Variables globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
-window.verDescriptor = function(id) {
-    Swal.fire('Información', `Ver descriptor ID: ${id}`, 'info');
-};
-window.editarDescriptor = function(id) {
-    Swal.fire('Información', `Editar descriptor ID: ${id}`, 'info');
-};
+window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
