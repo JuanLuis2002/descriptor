@@ -1,4 +1,4 @@
-// Servicio del Descriptor - Gestión de datos
+// Servicio Base del Descriptor
 var DescriptorService = {
     getAll: function() {
         const data = localStorage.getItem('descriptores');
@@ -12,7 +12,7 @@ var DescriptorService = {
         descriptor.estado = 'BORRADOR';
         descriptor.fechaCreacion = new Date().toISOString();
         descriptors.push(descriptor);
-        localStorage.setItem('descriptores', JSON.stringify(descriptors));
+        localStorage.setItem('descriptores', JSON.stringify(descriptores));
         return descriptor;
     },
     
@@ -21,7 +21,7 @@ var DescriptorService = {
         const index = descriptors.findIndex(d => d.id === id);
         if (index !== -1) {
             descriptors[index] = { ...descriptors[index], ...data };
-            localStorage.setItem('descriptores', JSON.stringify(descriptors));
+            localStorage.setItem('descriptores', JSON.stringify(descriptores));
             return descriptors[index];
         }
         return null;
@@ -31,13 +31,10 @@ var DescriptorService = {
         return this.getAll().find(d => d.id === id);
     },
     
-    getByCreador: function(creador) {
-        return this.getAll().filter(d => d.creador === creador);
-    },
-    
-    getByEstado: function(estado) {
-        return this.getAll().filter(d => d.estado === estado);
+    delete: function(id) {
+        let descriptors = this.getAll();
+        descriptors = descriptors.filter(d => d.id !== id);
+        localStorage.setItem('descriptores', JSON.stringify(descriptores));
+        return true;
     }
 };
-
-window.DescriptorService = DescriptorService;
