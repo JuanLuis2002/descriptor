@@ -3,110 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGUEES - Login Autorización</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>Login - Gestor de Descriptor y Perfil de Puesto</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f4f6f9; }
-        .login-card { max-width: 480px; width: 100%; border-radius: 12px; }
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .login-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .login-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+
+        .login-body {
+            padding: 40px;
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating label {
+            color: #6c757d;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .user-info-card h6 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .user-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .badge-jefe { background: #0d6efd; color: white; }
+        .badge-th { background: #198754; color: white; }
+        .badge-colaborador { background: #ffc107; color: #000; }
+
+        .alert-demo {
+            background: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
-<body class="d-flex align-items-center justify-content-center vh-100">
-
-    <div class="card login-card shadow border-0">
-        <div class="card-body p-5">
-            <div class="text-center mb-4">
-                <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
-                <h4 class="fw-bold mt-2 text-dark">Portal SGUEES</h4>
-                <p class="text-muted small">Gestión de Descriptores y Perfiles de Puesto</p>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                <h3>Gestión de Descriptor y Perfil de Puesto</h3>
+                <p>Sistema Integrado de Talento Humano</p>
             </div>
-            
-            <form id="formLogin">
-                <div class="mb-4">
-                    <label for="usuarioSelect" class="form-label fw-bold text-secondary small text-uppercase">Seleccione su Rol e Identidad (UEES)</label>
-                    <select class="form-select form-select-lg fs-6" id="usuarioSelect" required>
-                        <option value="" disabled selected>Elegir usuario para el simulador...</option>
-                        <optgroup label="Línea Jerárquica TI / Operaciones">
-                            <option value="1">Ing. Juan Hércules (Jefe de Subgerencia de TI - Creador)</option>
-                            <option value="2">Dr. Roberto Chang (Gerente General - Jefe Superior)</option>
-                        </optgroup>
-                        <optgroup label="Talento Humano (Revisión Legal y Técnica)">
-                            <option value="3">Licda. Ana López (TH Generalista - Revisor)</option>
-                            <option value="4">Lic. Carlos Gómez (Jefe de Talento Humano - Validador)</option>
-                        </optgroup>
-                        <optgroup label="Titulares de Puesto">
-                            <option value="5">Ing. Juan Pérez (Analista Programador - Empleado / Firma)</option>
-                        </optgroup>
-                    </select>
+            <div class="login-body">
+                <div class="alert-demo">
+                    <i class="fas fa-info-circle"></i> <strong>Demo sin base de datos</strong><br>
+                    Utilice cualquiera de las siguientes credenciales para ingresar:
                 </div>
-                
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                    Ingresar al Sistema <i class="bi bi-box-arrow-in-right ms-1"></i>
-                </button>
-            </form>
+
+                <div class="user-info-card">
+                    <h6><i class="fas fa-users"></i> Usuarios del sistema:</h6>
+                    <div>
+                        <span class="user-badge badge-jefe"><i class="fas fa-user-tie"></i> Jefe Inmediato</span>
+                        <span class="user-badge badge-jefe"><i class="fas fa-chart-line"></i> Jefe Superior</span>
+                        <span class="user-badge badge-th"><i class="fas fa-handshake"></i> TH Generalista</span>
+                        <span class="user-badge badge-th"><i class="fas fa-gavel"></i> Jefe de TH</span>
+                        <span class="user-badge badge-colaborador"><i class="fas fa-user"></i> Colaborador</span>
+                    </div>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="username" placeholder="Usuario" required>
+                        <label for="username"><i class="fas fa-user me-2"></i>Usuario</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+                        <label for="password"><i class="fas fa-lock me-2"></i>Contraseña</label>
+                    </div>
+                    <button type="submit" class="btn btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Ingresar al Sistema
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-key"></i> Credenciales de prueba:<br>
+                        <strong>Usuario:</strong> juan.hercules | <strong>Contraseña:</strong> 123456<br>
+                        <strong>Usuario:</strong> ana.lopez | <strong>Contraseña:</strong> 123456
+                    </small>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Mapeo estricto de la estructura organizativa UEES
-        const usuariosDemo = {
-            "1": {
-                nombre: "Ing. Juan Hércules",
-                rol: "JEFE_INMEDIATO",
-                cargo: "Jefe de Subgerencia de TI",
-                permisos: ["CREAR_BORRADOR", "VER_FORMATO_CORTO", "ENVIAR_A_SUPERIOR"]
+        // Usuarios del sistema (mock data)
+        const users = {
+            'juan.hercules': {
+                id: 1,
+                nombre: 'Ing. Juan Hércules',
+                usuario: 'juan.hercules',
+                password: '123456',
+                rol: 'JEFE_INMEDIATO',
+                rolNombre: 'Jefe Inmediato',
+                area: 'Subgerencia de TI',
+                email: 'juan.hercules@uees.edu.sv'
             },
-            "2": {
-                nombre: "Dr. Roberto Chang",
-                rol: "JEFE_SUPERIOR",
-                cargo: "Gerente General",
-                permisos: ["VER_FORMATO_CORTO", "APROBAR_JEFE_SUPERIOR", "RECHAZAR_A_BORRADOR"]
+            'roberto.chang': {
+                id: 2,
+                nombre: 'Dr. Roberto Chang',
+                usuario: 'roberto.chang',
+                password: '123456',
+                rol: 'JEFE_SUPERIOR',
+                rolNombre: 'Jefe Superior',
+                area: 'Gerencia General',
+                email: 'roberto.chang@uees.edu.sv'
             },
-            "3": {
-                nombre: "Licda. Ana López",
-                rol: "TALENTO_HUMANO_REVISOR",
-                cargo: "TH Generalista",
-                permisos: ["VER_FORMATO_LARGO", "EDITAR_INTEGRADO", "COMPLEMENTAR_REVISION"]
+            'ana.lopez': {
+                id: 3,
+                nombre: 'Licda. Ana López',
+                usuario: 'ana.lopez',
+                password: '123456',
+                rol: 'TH_GENERALISTA',
+                rolNombre: 'TH Generalista',
+                area: 'Talento Humano',
+                email: 'ana.lopez@uees.edu.sv'
             },
-            "4": {
-                nombre: "Lic. Carlos Gómez",
-                rol: "JEFE_TALENTO_HUMANO",
-                cargo: "Jefe de Talento Humano",
-                permisos: ["VER_FORMATO_LARGO", "VALIDAR_TECNICA", "FIRMA_DIGITAL_TH"]
+            'carlos.gomez': {
+                id: 4,
+                nombre: 'Lic. Carlos Gómez',
+                usuario: 'carlos.gomez',
+                password: '123456',
+                rol: 'JEFE_TH',
+                rolNombre: 'Jefe de Talento Humano',
+                area: 'Talento Humano',
+                email: 'carlos.gomez@uees.edu.sv'
             },
-            "5": {
-                nombre: "Ing. Juan Pérez",
-                rol: "COLABORADOR",
-                cargo: "Analista Programador",
-                permisos: ["VER_FORMATO_CORTO", "FIRMA_DIGITAL_TITULAR"]
+            'juan.perez': {
+                id: 5,
+                nombre: 'Ing. Juan Pérez',
+                usuario: 'juan.perez',
+                password: '123456',
+                rol: 'COLABORADOR',
+                rolNombre: 'Colaborador/Titular',
+                area: 'Analista Programador',
+                email: 'juan.perez@uees.edu.sv'
             }
         };
 
-        document.getElementById('formLogin').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const id = document.getElementById('usuarioSelect').value;
-            const usr = usuariosDemo[id];
-
-            if (usr) {
-                // Forzar limpieza antes de registrar la nueva sesión para evitar residuos de caché
-                sessionStorage.clear();
+            
+            const username = document.getElementById('username').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            
+            // Validar credenciales
+            if (users[username] && users[username].password === password) {
+                const user = users[username];
                 
-                sessionStorage.setItem('sesion_activa', 'true');
-                sessionStorage.setItem('usuario_nombre', usr.nombre);
-                sessionStorage.setItem('usuario_rol', usr.rol);
-                sessionStorage.setItem('usuario_cargo', usr.cargo);
-                sessionStorage.setItem('usuario_permisos', JSON.stringify(usr.permisos));
+                // Guardar usuario en sessionStorage
+                sessionStorage.setItem('currentUser', JSON.stringify({
+                    id: user.id,
+                    nombre: user.nombre,
+                    usuario: user.usuario,
+                    rol: user.rol,
+                    rolNombre: user.rolNombre,
+                    area: user.area,
+                    email: user.email
+                }));
                 
+                // Redirigir al dashboard
                 window.location.href = 'index.html';
+            } else {
+                // Mostrar error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de autenticación',
+                    text: 'Usuario o contraseña incorrectos',
+                    confirmButtonColor: '#0d6efd'
+                });
             }
         });
 
-        // Guardia preventiva en el login
-        window.onload = () => {
-            if (sessionStorage.getItem('sesion_activa') === 'true') {
-                window.location.href = 'index.html';
-            }
-        };
+        // SweetAlert para errores
+        const swalScript = document.createElement('script');
+        swalScript.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+        document.head.appendChild(swalScript);
     </script>
 </body>
 </html>
