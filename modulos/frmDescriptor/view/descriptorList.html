@@ -96,6 +96,7 @@ window.initDescriptorList = function() {
         mostrarLista(filtered);
     }
     
+    // Reemplaza la función mostrarLista completa
     function mostrarLista(descriptores) {
         var container = $('#descriptoresListContainer');
         if (descriptores.length === 0) {
@@ -116,16 +117,34 @@ window.initDescriptorList = function() {
                 '<i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p>' +
                 '<div class="d-flex justify-content-end gap-2">' +
                 '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>' +
+                // BOTÓN EDITAR - solo para estado BORRADOR
+                (d.estado === 'BORRADOR' ? '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>' : '') +
                 (d.estado === 'BORRADOR' ? '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar</button>' : '') +
                 '</div></div></div>';
         }
         html += '</div>';
         container.html(html);
         
-        // Usar event delegation para los botones
+        // Eventos
         $('.btn-ver').off('click').on('click', function(e) { e.stopPropagation(); verDescriptor($(this).data('id')); });
+        $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
+    }
+
+    // Agrega esta función después de enviarDescriptor
+    function editarDescriptor(id) {
+        console.log('Editando descriptor ID:', id);
+        // Llamar al controlador con el ID para editar
+        if (typeof DescriptorController !== 'undefined') {
+            // Cambiar la pestaña activa a Nuevo Descriptor
+            $('.nav-link').removeClass('active');
+            $('.nav-link[data-modulo="nuevoDescriptor"]').addClass('active');
+            // Inicializar el controlador en modo edición
+            DescriptorController.init(currentUser, id);
+        } else {
+            Swal.fire('Error', 'No se puede editar el descriptor', 'error');
+        }
     }
     
     function verDescriptor(id) {

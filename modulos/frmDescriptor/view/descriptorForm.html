@@ -330,17 +330,46 @@
             estado: 'BORRADOR'
         };
         
-        var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
-        formData.id = descriptores.length + 1;
-        formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');
-        formData.fechaCreacion = new Date().toISOString();
-        descriptores.push(formData);
-        localStorage.setItem('descriptores', JSON.stringify(descriptores));
-        
-        Swal.fire('Éxito', 'Descriptor ' + formData.codigo + ' guardado', 'success').then(function() {
-            if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
-            else location.reload();
-        });
+        // Verificar si estamos en modo edición
+        if (window._isEditing && window._editingId) {
+            // Modo edición - actualizar descriptor existente
+            var existingDescriptor = DescriptorService.getById(window._editingId);
+            if (existingDescriptor) {
+                formData.id = existingDescriptor.id;
+                formData.codigo = existingDescriptor.codigo;
+                formData.fechaCreacion = existingDescriptor.fechaCreacion;
+                formData.estado = 'BORRADOR';
+                
+                DescriptorService.update(window._editingId, formData);
+                Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
+                    // Resetear banderas
+                    window._isEditing = false;
+                    window._editingId = null;
+                    // Recargar la lista de descriptores
+                    if (typeof window.cargarMisDescriptores === 'function') {
+                        window.cargarMisDescriptores();
+                    } else if (typeof window.cargarNuevoDescriptor === 'function') {
+                        window.cargarNuevoDescriptor();
+                    } else {
+                        location.reload();
+                    }
+                });
+            }
+        } else {
+            // Modo nuevo - guardar nuevo descriptor
+            var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
+            formData.id = descriptores.length + 1;
+            formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');
+            formData.fechaCreacion = new Date().toISOString();
+            formData.estado = 'BORRADOR';
+            descriptores.push(formData);
+            localStorage.setItem('descriptores', JSON.stringify(descriptores));
+            
+            Swal.fire('Éxito', 'Descriptor ' + formData.codigo + ' guardado', 'success').then(function() {
+                if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
+                else location.reload();
+            });
+        }
     }
     
     $('#nextBtn').off('click').click(nextStep);

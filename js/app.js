@@ -269,8 +269,24 @@ function closeMobileSidebar() {
     $('#sidebar').css('transform', 'translateX(-100%)');
 }
 
+// Función para editar descriptor (llamada desde la lista)
+function editarDescriptor(id) {
+    console.log('Editando descriptor ID:', id);
+    $('#pageTitle').text('Editar Descriptor');
+    // Cambiar la pestaña activa a Nuevo Descriptor
+    $('.nav-link').removeClass('active');
+    $('.nav-link[data-modulo="nuevoDescriptor"]').addClass('active');
+    // Inicializar el controlador en modo edición
+    if (typeof DescriptorController !== 'undefined') {
+        DescriptorController.init(currentUser, id);
+    } else {
+        Swal.fire('Error', 'No se puede editar el descriptor', 'error');
+    }
+}
+
 // Exportar globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
 window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
+window.editarDescriptor = editarDescriptor;
