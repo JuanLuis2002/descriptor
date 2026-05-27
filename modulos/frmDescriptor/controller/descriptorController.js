@@ -188,29 +188,20 @@ var DescriptorController = {
         window._isEditing = true;
         window._editingId = id;
         
+        // Guardar las actividades para cargarlas después de que se actualicen las funciones
+        if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
+            // Guardar actividades temporalmente
+            window._savedActividades = descriptor.actividadesPorFuncion;
+        }
+        
         // Actualizar actividades después de que se carguen las funciones
         setTimeout(function() {
             if (typeof window.actualizarActividadesGlobal === 'function') {
                 window.actualizarActividadesGlobal();
+            } else if (typeof actualizarActividades === 'function') {
+                actualizarActividades();
             }
-            
-            // Cargar las actividades guardadas
-            if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
-                setTimeout(function() {
-                    for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
-                        var funcData = descriptor.actividadesPorFuncion[i];
-                        var actividades = funcData.actividades;
-                        if (actividades && actividades.length > 0) {
-                            for (var j = 0; j < actividades.length; j++) {
-                                if (typeof window.agregarActividadConTexto === 'function') {
-                                    window.agregarActividadConTexto(i, actividades[j]);
-                                }
-                            }
-                        }
-                    }
-                }, 200);
-            }
-        }, 500);
+        }, 600);
     }
 };
 
