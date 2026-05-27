@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .descriptor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .descriptor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-borrador { background: #6c757d; color: white; }
+        .status-enviado_th { background: #0dcaf0; color: #000; }
+        .status-observado { background: #ffc107; color: #000; }
+        .status-activo { background: #198754; color: white; }
+        .status-firmado { background: #0d6efd; color: white; }
+        .btn-accion {
+            padding: 5px 12px;
+            margin: 3px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .filtro-busqueda {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="filtro-busqueda">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label small">Buscar</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Por puesto, código o área...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Estado</label>
+            <select class="form-select" id="estadoFilter">
+                <option value="">Todos</option>
+                <option value="BORRADOR">Borrador</option>
+                <option value="ENVIADO_TH">Enviado a TH</option>
+                <option value="OBSERVADO">Observado</option>
+                <option value="ACTIVO">Activo</option>
+                <option value="FIRMADO">Firmado</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Ordenar por</label>
+            <select class="form-select" id="sortBy">
+                <option value="fecha">Fecha (reciente primero)</option>
+                <option value="puesto">Puesto (A-Z)</option>
+                <option value="estado">Estado</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" id="btnNuevoDescriptor">
+                <i class="fas fa-plus"></i> Nuevo
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="descriptoresListContainer">
+    <div class="text-center py-5">
+        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+        <p class="mt-2">Cargando descriptores...</p>
+    </div>
+</div>
+
+<script>
+let allDescriptors = [];
+
+function cargarDescriptores() {
+    if (typeof DescriptorService !== 'undefined') {
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        allDescriptors = DescriptorService.getByCreador(currentUser.nombre);
+        filtrarYMostrar();
+    } else {
+        $('#descriptoresListContainer').html(`
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> Error al cargar los descriptores
+            </div>
+        `);
+    }
+}
+
+function filtrarYMostrar() {
+    let filtered = [...allDescriptors];
+    
+    // Filtrar por búsqueda
+    const searchTerm = $('#searchInput').val().toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(d => 
+            d.codigo?.toLowerCase().includes(searchTerm) ||
+            d.puesto?.toLowerCase().includes(searchTerm) ||
+            d.area?.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Filtrar por estado
+    const estado = $('#estadoFilter').val();
+    if (estado) {
+        filtered = filtered.filter(d => d.estado === estado);
+    }
+    
+    // Ordenar
+    const sortBy = $('#sortBy').val();
+    if (sortBy === 'fecha') {
+        filtered.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+    } else if (sortBy === 'puesto') {
+        filtered.sort((a, b) => (a.puesto || '').localeCompare(b.puesto || ''));
+    } else if (sortBy === 'estado') {
+        filtered.sort((a, b) => (a.estado || '').localeCompare(b.estado || ''));
+    }
+    
+    mostrarLista(filtered);
+}
+
+function mostrarLista(descriptores) {
+    const container = $('#descriptoresListContainer');
+    
+    if (descriptores.length === 0) {
+        container.html(`
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <h5>No hay descriptores</h5>
+                <p class="text-muted">No se encontraron descriptores con los filtros seleccionados.</p>
+                <button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()">
+                    <i class="fas fa-plus"></i> Crear primer descriptor
+                </button>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '<div class="row">';
+    descriptores.forEach(d => {
+        const fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
+        html += `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="descriptor-card" data-id="${d.id}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-0">${d.codigo || 'DES-' + d.id}</h6>
+                            <small class="text-muted">${fecha}</small>
+                        </div>
+                        <span class="status-badge status-${(d.estado || 'BORRADOR').toLowerCase()}">${d.estado || 'BORRADOR'}</span>
+                    </div>
+                    <h5 class="mb-2">${d.puesto || 'Sin título'}</h5>
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-building"></i> ${d.area || 'N/A'}<br>
+                        <i class="fas fa-chart-line"></i> Reporta a: ${d.reportaA || 'N/A'}
+                    </p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-info btn-ver" data-id="${d.id}">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        ${d.estado === 'BORRADOR' ? `
+                            <button class="btn btn-sm btn-outline-warning btn-editar" data-id="${d.id}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-enviar" data-id="${d.id}">
+                                <i class="fas fa-paper-plane"></i> Enviar a TH
+                            </button>
+                        ` : ''}
+                        ${d.estado === 'OBSERVADO' ? `
+                            <button class="btn btn-sm btn-outline-warning btn-editar" data-id="${d.id}">
+                                <i class="fas fa-edit"></i> Corregir
+                            </button>
+                        ` : ''}
+                        ${d.estado === 'ACTIVO' && window.currentUser?.rol === 'COLABORADOR' ? `
+                            <button class="btn btn-sm btn-outline-primary btn-firmar" data-id="${d.id}">
+                                <i class="fas fa-signature"></i> Firmar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.html(html);
+    
+    // Eventos de los botones
+    $('.btn-ver').click(function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        verDescriptorDetalle(id);
+    });
+    
+    $('.btn-editar').click(function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        editarDescriptor(id);
+    });
+    
+    $('.btn-enviar').click(function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        enviarATH(id);
+    });
+    
+    $('.btn-firmar').click(function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        firmarDescriptor(id);
+    });
+    
+    // Click en la tarjeta para ver detalle
+    $('.descriptor-card').click(function(e) {
+        if (!$(e.target).closest('.btn').length) {
+            const id = $(this).data('id');
+            verDescriptorDetalle(id);
+        }
+    });
+}
+
+function verDescriptorDetalle(id) {
+    const descriptor = DescriptorService.getById(id);
+    if (!descriptor) return;
+    
+    let html = `
+        <div class="text-start" style="max-height: 500px; overflow-y: auto;">
+            <h6 class="border-bottom pb-2">Información General</h6>
+            <p><strong>Código:</strong> ${descriptor.codigo || 'DES-' + id}</p>
+            <p><strong>Puesto:</strong> ${descriptor.puesto || '-'}</p>
+            <p><strong>Área:</strong> ${descriptor.area || '-'}</p>
+            <p><strong>Reporta a:</strong> ${descriptor.reportaA || '-'}</p>
+            <p><strong>Estado:</strong> ${descriptor.estado || 'BORRADOR'}</p>
+            <p><strong>Fecha Emisión:</strong> ${descriptor.fechaEmision || (descriptor.fechaCreacion ? descriptor.fechaCreacion.split('T')[0] : '-')}</p>
+            <hr>
+            <h6 class="border-bottom pb-2">Objetivo</h6>
+            <p>${descriptor.objetivo || '-'}</p>
+            <hr>
+            <h6 class="border-bottom pb-2">Funciones Claves</h6>
+            <ul>${(descriptor.funcionesClaves || []).map(f => `<li><strong>${f.codigo}</strong> - ${f.nombre}</li>`).join('') || '<li>No registradas</li>'}</ul>
+            <hr>
+            <h6 class="border-bottom pb-2">Funciones Secundarias</h6>
+            <ul>${(descriptor.funcionesSecundarias || []).map(f => `<li>${f}</li>`).join('') || '<li>No registradas</li>'}</ul>
+        </div>
+    `;
+    
+    Swal.fire({
+        title: `Descriptor: ${descriptor.puesto}`,
+        html: html,
+        width: '600px',
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#0d6efd'
+    });
+}
+
+function editarDescriptor(id) {
+    Swal.fire('Información', 'Funcionalidad de edición en desarrollo', 'info');
+}
+
+function enviarATH(id) {
+    Swal.fire({
+        title: '¿Enviar a Talento Humano?',
+        text: 'Una vez enviado, no podrá modificar el descriptor hasta que TH lo revise.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, enviar',
+        confirmButtonColor: '#0d6efd'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const updated = DescriptorService.update(id, { estado: 'ENVIADO_TH' });
+            if (updated) {
+                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano para revisión', 'success');
+                cargarDescriptores();
+            }
+        }
+    });
+}
+
+function firmarDescriptor(id) {
+    Swal.fire({
+        title: 'Firma Digital',
+        html: `<input type="password" id="pinFirma" class="swal2-input" placeholder="Ingrese PIN (123456)">`,
+        showCancelButton: true,
+        confirmButtonText: 'Firmar',
+        preConfirm: () => {
+            const pin = document.getElementById('pinFirma').value;
+            if (pin === '123456') return true;
+            Swal.showValidationMessage('PIN incorrecto');
+            return false;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const updated = DescriptorService.update(id, { estado: 'FIRMADO' });
+            if (updated) {
+                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
+                cargarDescriptores();
+            }
+        }
+    });
+}
+
+// Eventos
+$(document).ready(function() {
+    cargarDescriptores();
+    
+    $('#searchInput').on('keyup', filtrarYMostrar);
+    $('#estadoFilter').on('change', filtrarYMostrar);
+    $('#sortBy').on('change', filtrarYMostrar);
+    $('#btnNuevoDescriptor').click(() => {
+        if (typeof window.cargarNuevoDescriptor === 'function') {
+            window.cargarNuevoDescriptor();
+        }
+    });
+});
+
+window.verDescriptorDetalle = verDescriptorDetalle;
+window.editarDescriptor = editarDescriptor;
+window.enviarATH = enviarATH;
+window.firmarDescriptor = firmarDescriptor;
+</script>
+</body>
+</html>

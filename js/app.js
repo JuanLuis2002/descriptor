@@ -22,6 +22,7 @@ function checkAuth() {
         return;
     }
     currentUser = JSON.parse(userStr);
+    window.currentUser = currentUser; // Para acceso global
 }
 
 // Cargar usuario en UI
@@ -202,7 +203,6 @@ function loadDashboard() {
 function cargarNuevoDescriptor() {
     $('#pageTitle').text('Nuevo Descriptor de Puesto');
     
-    // Los scripts YA están cargados, solo llamamos al controlador
     if (typeof DescriptorController !== 'undefined' && DescriptorController.init) {
         DescriptorController.init(currentUser);
     } else {
@@ -210,80 +210,27 @@ function cargarNuevoDescriptor() {
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle"></i> 
                 Error: No se pudo cargar el módulo del descriptor.
+                <br>Verifique que los scripts estén cargados correctamente.
             </div>
         `);
     }
 }
 
-// Cargar mis descriptores
+// Cargar mis descriptores (lista)
 function cargarMisDescriptores() {
     $('#pageTitle').text('Mis Descriptores');
     
-    let descriptores = [];
-    const data = localStorage.getItem('descriptores');
-    if (data) {
-        descriptores = JSON.parse(data);
-        descriptores = descriptores.filter(d => d.creador === currentUser.nombre);
-    }
-    
-    if (descriptores.length === 0) {
+    if (typeof DescriptorListController !== 'undefined' && DescriptorListController.init) {
+        DescriptorListController.init(currentUser);
+    } else {
         $('#contentContainer').html(`
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle"></i> No tiene descriptores creados aún.
-                <a href="#" onclick="cargarNuevoDescriptor(); return false;" class="alert-link">Crear nuevo descriptor</a>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Error: No se pudo cargar la lista de descriptores.
+                <br>Verifique que los scripts estén cargados correctamente.
             </div>
         `);
-        return;
     }
-    
-    let html = `
-        <div class="table-responsive">
-            <table class="table table-hover bg-white rounded">
-                <thead class="table-light">
-                    <tr>
-                        <th>Código</th>
-                        <th>Puesto</th>
-                        <th>Área</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    descriptores.forEach(d => {
-        html += `
-            <tr>
-                <td>${d.codigo || 'DES-' + d.id}</td>
-                <td>${d.puesto}</td>
-                <td>${d.area}</td>
-                <td>${d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-')}</td>
-                <td><span class="badge ${getEstadoBadge(d.estado)}">${d.estado || 'BORRADOR'}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="verDescriptor(${d.id})"><i class="fas fa-eye"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    html += `</tbody>}</table></div>`;
-    $('#contentContainer').html(html);
-}
-
-function getEstadoBadge(estado) {
-    const badges = {
-        'BORRADOR': 'bg-secondary',
-        'ENVIADO_TH': 'bg-info',
-        'OBSERVADO': 'bg-warning',
-        'ACTIVO': 'bg-success',
-        'FIRMADO': 'bg-primary'
-    };
-    return badges[estado] || 'bg-secondary';
-}
-
-function verDescriptor(id) {
-    Swal.fire('Información', `Ver descriptor ID: ${id}`, 'info');
 }
 
 // Funciones para móvil
@@ -309,8 +256,7 @@ function closeMobileSidebar() {
     $('#sidebar').css('transform', 'translateX(-100%)');
 }
 
-// Exportar globales
+// Exportar funciones globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
-window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
