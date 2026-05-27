@@ -1,10 +1,11 @@
-// app.js - Kernel principal de la aplicación
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificación de seguridad básica
+    // 1. Verificación de seguridad: si no hay sesión, al login
     if (sessionStorage.getItem('sesion_activa') !== 'true') {
         window.location.href = 'login.html';
         return;
     }
+    
+    // 2. Inicializar sistema
     initKernel();
 });
 
@@ -18,21 +19,32 @@ function initKernel() {
         permisos = JSON.parse(sessionStorage.getItem('usuario_permisos') || '[]');
     } catch (e) { permisos = []; }
 
+    // Inyectar datos de usuario
     document.getElementById('txtNombreUsuario').innerText = nombre;
-    document.getElementById('txtCargoUsuario').innerHTML = `<i class="bi bi-briefcase-fill me-1"></i> ${cargo}`;
+
+    // Configurar botón de logout
+    document.getElementById('btn-logout').addEventListener('click', cerrarSesion);
 
     renderizarMenu(rol, permisos);
     cargarBandejaPrincipal();
 }
 
+function cerrarSesion() {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+}
+
 function renderizarMenu(rol, permisos) {
     const menu = document.getElementById('menu-lateral');
+    if (!menu) return;
+
     let html = `
         <a href="#" class="list-group-item list-group-item-action active" id="lnk-dashboard">
             <i class="bi bi-mailbox2 me-2"></i> Bandeja de Entrada
         </a>
     `;
 
+    // Lógica de menús
     if (rol === 'JEFE_INMEDIATO' || permisos.includes('CREAR_BORRADOR')) {
         html += `<a href="#" class="list-group-item list-group-item-action" id="lnk-crear-puesto">
                     <i class="bi bi-file-earmark-plus-fill me-2"></i> Nuevo Descriptor
@@ -64,18 +76,17 @@ function asignarEventos() {
     document.getElementById('lnk-crear-puesto')?.addEventListener('click', async (e) => {
         e.preventDefault();
         try {
-            // Ajusta la ruta si es necesario al subir a Netlify
             const { descriptorController } = await import('./modulos/frmDescriptor/controller/descriptorController.js');
             descriptorController.inicializar('NUEVO_BORRADOR');
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Error cargando módulo:", err); }
     });
 }
 
 function cargarBandejaPrincipal() {
     document.getElementById('content-area').innerHTML = `
-        <div class="card p-4">
-            <h4>Bandeja de Gestión</h4>
-            <p>Bienvenido al sistema de descriptores UEES.</p>
+        <div class="card p-4 shadow-sm border-0">
+            <h4 class="fw-bold">Bandeja de Entrada</h4>
+            <p class="text-muted">Sistema de Gestión de Descriptores UEES.</p>
         </div>
     `;
 }
