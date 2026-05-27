@@ -1,7 +1,7 @@
 // Controlador del Descriptor
 var DescriptorController = {
     currentUser: null,
-    descriptorIdToEdit: null,  // NUEVO: guardar ID para edición
+    descriptorIdToEdit: null,
     
     init: function(user, idToEdit) {
         this.currentUser = user;
@@ -13,10 +13,8 @@ var DescriptorController = {
     loadForm: function() {
         var self = this;
         
-        // Limpiar el contenedor
         $('#contentContainer').empty();
         
-        // Resetear la bandera global para permitir recarga
         if (window._descriptorFormLoaded) {
             window._descriptorFormLoaded = false;
         }
@@ -25,7 +23,6 @@ var DescriptorController = {
             $('#contentContainer').html(html);
             console.log('Formulario cargado correctamente');
             
-            // Si hay un ID para editar, cargar los datos después de que el formulario esté listo
             if (self.descriptorIdToEdit) {
                 setTimeout(function() {
                     self.cargarDatosParaEdicion(self.descriptorIdToEdit);
@@ -42,7 +39,6 @@ var DescriptorController = {
         });
     },
     
-    // NUEVO: Cargar datos del descriptor para edición
     cargarDatosParaEdicion: function(id) {
         if (typeof DescriptorService === 'undefined') return;
         
@@ -51,18 +47,17 @@ var DescriptorController = {
         
         console.log('Cargando datos del descriptor:', descriptor.codigo);
         
-        // Cambiar título y botón
         $('#pageTitle').text('Editar Descriptor');
         $('#saveBtn').text('Actualizar Descriptor');
         
-        // Cargar datos básicos
+        // Datos básicos
         $('select[name="puesto"]').val(descriptor.puesto);
         $('#areaUsuario').val(descriptor.area);
         $('input[name="reportaA"]').val(descriptor.reportaA);
         $('input[name="fechaEmision"]').val(descriptor.fechaEmision);
         $('textarea[name="objetivo"]').val(descriptor.objetivo);
         
-        // Cargar funciones claves
+        // Funciones claves
         $('#funcionesClavesContainer').empty();
         if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
             for (var i = 0; i < descriptor.funcionesClaves.length; i++) {
@@ -72,7 +67,7 @@ var DescriptorController = {
             for(var i = 1; i <= 4; i++) addFuncionClaveRow();
         }
         
-        // Cargar funciones secundarias
+        // Funciones secundarias
         $('#funcionesSecundariasContainer').empty();
         if (descriptor.funcionesSecundarias && descriptor.funcionesSecundarias.length > 0) {
             for (var i = 0; i < descriptor.funcionesSecundarias.length; i++) {
@@ -82,7 +77,7 @@ var DescriptorController = {
             for(var i = 1; i <= 4; i++) addFuncionSecundariaRow();
         }
         
-        // Cargar KPIs
+        // KPIs
         $('#kpisContainer').empty();
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             for (var i = 0; i < descriptor.kpis.length; i++) {
@@ -92,7 +87,7 @@ var DescriptorController = {
             for(var i = 1; i <= 3; i++) addKPIRow();
         }
         
-        // Cargar perfil
+        // Perfil
         if (descriptor.perfil) {
             $('input[name="edadMin"]').val(descriptor.perfil.edadMin || 18);
             $('input[name="edadMax"]').val(descriptor.perfil.edadMax || 65);
@@ -103,7 +98,76 @@ var DescriptorController = {
             $('select[name="poseerLicencia"]').val(descriptor.perfil.poseerLicencia || '0');
         }
         
-        // Cargar responsabilidades
+        // Educación
+        $('#educacionContainer').empty();
+        if (descriptor.educacion && descriptor.educacion.length > 0) {
+            for (var i = 0; i < descriptor.educacion.length; i++) {
+                addEducacionRowWithData(descriptor.educacion[i].requisito, descriptor.educacion[i].especificaciones, descriptor.educacion[i].requerido);
+            }
+        } else {
+            for(var i = 1; i <= 2; i++) addEducacionRow();
+        }
+        
+        // Experiencia
+        $('#experienciaContainer').empty();
+        if (descriptor.experiencia && descriptor.experiencia.length > 0) {
+            for (var i = 0; i < descriptor.experiencia.length; i++) {
+                addExperienciaRowWithData(descriptor.experiencia[i].requisito, descriptor.experiencia[i].requerido);
+            }
+        } else {
+            for(var i = 1; i <= 2; i++) addExperienciaRow();
+        }
+        
+        // Competencias Técnicas
+        $('#competenciasTecnicasContainer').empty();
+        if (descriptor.competenciasTecnicas && descriptor.competenciasTecnicas.length > 0) {
+            for (var i = 0; i < descriptor.competenciasTecnicas.length; i++) {
+                addCompetenciaTecnicaRowWithData(
+                    descriptor.competenciasTecnicas[i].nombre,
+                    descriptor.competenciasTecnicas[i].nivel,
+                    descriptor.competenciasTecnicas[i].aplicabilidad
+                );
+            }
+        } else {
+            addCompetenciaTecnicaRow();
+            addCompetenciaTecnicaRow();
+        }
+        
+        // Competencias Conductuales
+        $('#competenciasConductualesContainer').empty();
+        if (descriptor.competenciasConductuales && descriptor.competenciasConductuales.length > 0) {
+            for (var i = 0; i < descriptor.competenciasConductuales.length; i++) {
+                addCompetenciaConductualRowWithData(
+                    descriptor.competenciasConductuales[i].nombre,
+                    descriptor.competenciasConductuales[i].descripcion,
+                    descriptor.competenciasConductuales[i].aplicabilidad
+                );
+            }
+        } else {
+            addCompetenciaConductualRow();
+            addCompetenciaConductualRow();
+        }
+        
+        // Relaciones Laborales
+        $('#relacionesInternasContainer').empty();
+        if (descriptor.relacionesLaborales && descriptor.relacionesLaborales.internas && descriptor.relacionesLaborales.internas.length > 0) {
+            for (var i = 0; i < descriptor.relacionesLaborales.internas.length; i++) {
+                addRelacionInternaRowWithData(descriptor.relacionesLaborales.internas[i].puesto, descriptor.relacionesLaborales.internas[i].razon);
+            }
+        } else {
+            for(var i = 1; i <= 2; i++) addRelacionInternaRow();
+        }
+        
+        $('#relacionesExternasContainer').empty();
+        if (descriptor.relacionesLaborales && descriptor.relacionesLaborales.externas && descriptor.relacionesLaborales.externas.length > 0) {
+            for (var i = 0; i < descriptor.relacionesLaborales.externas.length; i++) {
+                addRelacionExternaRowWithData(descriptor.relacionesLaborales.externas[i].entidad, descriptor.relacionesLaborales.externas[i].razon);
+            }
+        } else {
+            for(var i = 1; i <= 2; i++) addRelacionExternaRow();
+        }
+        
+        // Responsabilidades
         if (descriptor.responsabilidades) {
             $('select[name="respEquipo"]').val(descriptor.responsabilidades.equipo);
             $('textarea[name="respFondos"]').val(descriptor.responsabilidades.fondos);
@@ -113,7 +177,7 @@ var DescriptorController = {
             $('select[name="impactoEconomico"]').val(descriptor.responsabilidades.impactoEconomico);
         }
         
-        // Cargar entrenamiento
+        // Entrenamiento
         if (descriptor.entrenamiento) {
             $('input[name="personalCargo"]').val(descriptor.entrenamiento.personalCargo || 0);
             $('select[name="tipoEntrenamiento"]').val(descriptor.entrenamiento.tipoEntrenamiento);
@@ -121,18 +185,16 @@ var DescriptorController = {
             $('input[name="puestosResponsables"]').val(descriptor.entrenamiento.puestosResponsables);
         }
         
-        // Marcar que estamos en modo edición
         window._isEditing = true;
         window._editingId = id;
         
-        // Actualizar actividades si hay función global
-        if (typeof window.actualizarActividadesGlobal === 'function') {
-            window.actualizarActividadesGlobal();
-        }
-        
-        // Cargar actividades por función
-        if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
-            setTimeout(function() {
+        // Actualizar actividades
+        setTimeout(function() {
+            if (typeof window.actualizarActividadesGlobal === 'function') {
+                window.actualizarActividadesGlobal();
+            }
+            
+            if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
                 for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
                     var funcData = descriptor.actividadesPorFuncion[i];
                     var actividades = funcData.actividades;
@@ -144,18 +206,30 @@ var DescriptorController = {
                         }
                     }
                 }
-            }, 500);
-        }
+            }
+        }, 500);
     }
 };
 
-// Funciones auxiliares para agregar filas con datos
+// Funciones auxiliares
+function addFuncionClaveRow() {
+    $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
+}
+
 function addFuncionClaveRowWithData(codigo, nombre) {
     $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código" value="' + (codigo || '') + '"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre" value="' + (nombre || '') + '"></div></div></div>');
 }
 
+function addFuncionSecundariaRow() {
+    $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
+}
+
 function addFuncionSecundariaRowWithData(texto) {
     $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria">' + (texto || '') + '</textarea></div>');
+}
+
+function addKPIRow() {
+    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
 }
 
 function addKPIRowWithData(indicador, frecuencia, meta) {
@@ -163,6 +237,57 @@ function addKPIRowWithData(indicador, frecuencia, meta) {
     if (frecuencia) {
         $('#kpisContainer .dynamic-row:last select[name="kpiFrecuencia[]"]').val(frecuencia);
     }
+}
+
+function addEducacionRow() {
+    $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+}
+
+function addEducacionRowWithData(requisito, especificaciones, requerido) {
+    $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito" value="' + (requisito || '') + '"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones" value="' + (especificaciones || '') + '"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+}
+
+function addExperienciaRow() {
+    $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito"></textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+}
+
+function addExperienciaRowWithData(requisito, requerido) {
+    $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito">' + (requisito || '') + '</textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+}
+
+function addCompetenciaTecnicaRow() {
+    $('#competenciasTecnicasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compTecNombre[]" placeholder="Competencia técnica"></div><div class="col-md-4"><select class="form-select" name="compTecNivel[]"><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select></div><div class="col-md-3"><select class="form-select" name="compTecAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
+}
+
+function addCompetenciaTecnicaRowWithData(nombre, nivel, aplicabilidad) {
+    $('#competenciasTecnicasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compTecNombre[]" placeholder="Competencia técnica" value="' + (nombre || '') + '"></div><div class="col-md-4"><select class="form-select" name="compTecNivel[]"><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select></div><div class="col-md-3"><select class="form-select" name="compTecAplicabilidad[]"><option value="SI" ' + (aplicabilidad === 'SI' ? 'selected' : '') + '>Requerida</option><option value="NO" ' + (aplicabilidad === 'NO' ? 'selected' : '') + '>No aplica</option><option value="DESEABLE" ' + (aplicabilidad === 'DESEABLE' ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+    if (nivel) {
+        $('#competenciasTecnicasContainer .dynamic-row:last select[name="compTecNivel[]"]').val(nivel);
+    }
+}
+
+function addCompetenciaConductualRow() {
+    $('#competenciasConductualesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compCondNombre[]" placeholder="Competencia conductual"></div><div class="col-md-4"><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción"></div><div class="col-md-3"><select class="form-select" name="compCondAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
+}
+
+function addCompetenciaConductualRowWithData(nombre, descripcion, aplicabilidad) {
+    $('#competenciasConductualesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compCondNombre[]" placeholder="Competencia conductual" value="' + (nombre || '') + '"></div><div class="col-md-4"><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción" value="' + (descripcion || '') + '"></div><div class="col-md-3"><select class="form-select" name="compCondAplicabilidad[]"><option value="SI" ' + (aplicabilidad === 'SI' ? 'selected' : '') + '>Requerida</option><option value="NO" ' + (aplicabilidad === 'NO' ? 'selected' : '') + '>No aplica</option><option value="DESEABLE" ' + (aplicabilidad === 'DESEABLE' ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+}
+
+function addRelacionInternaRow() {
+    $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón"></div></div></div>');
+}
+
+function addRelacionInternaRowWithData(puesto, razon) {
+    $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área" value="' + (puesto || '') + '"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón" value="' + (razon || '') + '"></div></div></div>');
+}
+
+function addRelacionExternaRow() {
+    $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón"></div></div></div>');
+}
+
+function addRelacionExternaRowWithData(entidad, razon) {
+    $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa" value="' + (entidad || '') + '"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón" value="' + (razon || '') + '"></div></div></div>');
 }
 
 window.DescriptorController = DescriptorController;
