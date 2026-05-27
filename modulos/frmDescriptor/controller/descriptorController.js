@@ -9,12 +9,7 @@ var DescriptorController = {
     },
     
     loadForm: function() {
-        // Verificar si ya estamos en el formulario
-        if ($('#descriptorForm').length > 0) {
-            console.log('Formulario ya está cargado');
-            return;
-        }
-        
+        var self = this;
         $.get('modulos/frmDescriptor/view/descriptorForm.html', function(html) {
             $('#contentContainer').html(html);
             console.log('Formulario cargado correctamente');
