@@ -1,0 +1,173 @@
+<div class="container-fluid px-0 animate-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Formato 2026: Propuesta de Descriptor de Puesto</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item text-primary fw-semibold">Paso 1 (Flujo Inicial)</li>
+                    <li class="breadcrumb-item active" aria-current="page">Registro de Propuesta por Jefatura</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="badge bg-warning text-dark p-2 px-3 fw-bold shadow-sm text-uppercase">
+            <i class="bi bi-file-earmark-diff me-1"></i> Estado: Borrador Jefatura
+        </div>
+    </div>
+
+    <form id="formDescriptor2026">
+        
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h6 class="card-title fw-bold text-secondary mb-0">
+                    <i class="bi bi-card-text text-primary me-2"></i>I. Identificación General del Cargo
+                </h6>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Nombre del Puesto Propuesto</label>
+                        <input type="text" class="form-control" id="NOMBRE_PUESTO" required placeholder="Ej. Analista Programador">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Supervisa a (Puestos Subordinados)</label>
+                        <input type="text" class="form-control" id="SUPERVISA_A" required placeholder="Ej. N/A o Desarrolladores Junior">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Modalidad de Trabajo</label>
+                        <select class="form-select" id="MODALIDAD_TRABAJO" required>
+                            <option value="P">Presencial (P)</option>
+                            <option value="H">Home Office / Teletrabajo (H)</option>
+                            <option value="I">Híbrido (I)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Impacto Económico Institucional</label>
+                        <select class="form-select" id="IMPACTO_ECONOMICO" required>
+                            <option value="Poco significativo">Poco significativo (menor a $50,000.00)</option>
+                            <option value="Significativo">Significativo ($50,000.00 a $150,000.00)</option>
+                            <option value="Alto">Alto (Mayor a $150,000.00)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Rango de Edad Requerido</label>
+                        <input type="text" class="form-control" id="PERFIL_EDAD" placeholder="Ej. 25 a 45 años / Indiferente">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Inducción Específica (Duración)</label>
+                        <input type="text" class="form-control" id="INDUCCION_DURACION" value="2 semanas" placeholder="Ej. 2 semanas">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Responsable de Inducción</label>
+                        <input type="text" class="form-control" id="INDUCCION_RESPONSABLE" placeholder="Ej. Jefe de Subgerencia de TI">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Objetivo Principal del Puesto</label>
+                        <textarea class="form-control" id="OBJETIVO_PUESTO" rows="3" required placeholder="Escriba la razón de ser del puesto y su aporte fundamental..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h6 class="card-title fw-bold text-secondary mb-0">
+                    <i class="bi bi-mortarboard-fill text-primary me-2"></i>II. Requisitos de Formación Académica y Experiencia
+                </h6>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Educación Mínima Exigida</label>
+                        <textarea class="form-control" id="REQUISITO_EDUCACION" rows="2" required placeholder="Ej. Graduado de Ingeniería de Sistemas o Computación."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Experiencia Laboral Requerida</label>
+                        <textarea class="form-control" id="REQUISITO_EXPERIENCIA" rows="2" required placeholder="Ej. 2 a 3 años en desarrollo de software utilizando arquitecturas limpias y bases de datos relacionales."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                <h6 class="card-title fw-bold text-secondary mb-0">
+                    <i class="bi bi-list-stars text-primary me-2"></i>III. Bloque de Funciones del Cargo
+                </h6>
+            </div>
+            <div class="card-body pt-0">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label small fw-bold text-dark mb-0">Funciones Claves con Responsabilidad</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnFncClave"><i class="bi bi-plus"></i> Añadir</button>
+                    </div>
+                    <div class="list-group gap-2" id="boxFuncionesClaves"></div>
+                </div>
+                <hr class="text-muted opacity-25">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label small fw-bold text-dark mb-0">Funciones Secundarias</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnFncSecundaria"><i class="bi bi-plus"></i> Añadir</button>
+                    </div>
+                    <div class="list-group gap-2" id="boxFuncionesSecundarias"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h6 class="card-title fw-bold text-secondary mb-0">
+                    <i class="bi bi-graph-up-arrow text-primary me-2"></i>IV. Rendimiento y Competencias Requeridas
+                </h6>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small fw-bold text-muted mb-0">Indicadores de Desempeño</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" id="btnAgregarKPI"><i class="bi bi-plus"></i> KPI</button>
+                        </div>
+                        <div class="table-responsive border rounded bg-light p-2" style="max-height: 220px; overflow-y:auto;">
+                            <table class="table table-sm table-bordered bg-white mb-0 align-middle">
+                                <thead class="small text-secondary table-light">
+                                    <tr>
+                                        <th>Descripción del Indicador</th>
+                                        <th style="width: 140px;">Frecuencia / Meta</th>
+                                        <th style="width: 45px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyKPIs"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small fw-bold text-muted mb-0">Competencias Técnicas y Conductuales</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" id="btnAgregarComp"><i class="bi bi-plus"></i> Item</button>
+                        </div>
+                        <div class="table-responsive border rounded bg-light p-2" style="max-height: 220px; overflow-y:auto;">
+                            <table class="table table-sm table-bordered bg-white mb-0 align-middle">
+                                <thead class="small text-secondary table-light">
+                                    <tr>
+                                        <th>Competencia Requerida</th>
+                                        <th style="width: 130px;">Nivel Dominio</th>
+                                        <th style="width: 45px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyCompetencias"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <button type="button" class="btn btn-light border fw-semibold px-4" id="btnRegresarBandeja">Cancelar</button>
+            <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">
+                <i class="bi bi-send-check-fill me-1"></i> Enviar a Gerencia General (Jefe Superior)
+            </button>
+        </div>
+
+    </form>
+</div>
