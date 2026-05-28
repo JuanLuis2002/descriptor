@@ -84,6 +84,7 @@ var AprobacionController = {
         
         var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
         
+        // Funciones Claves
         var funcionesHtml = '';
         if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
             funcionesHtml = '<ul class="mb-0">';
@@ -95,6 +96,7 @@ var AprobacionController = {
             funcionesHtml = '<p class="text-muted">No registradas</p>';
         }
         
+        // Actividades
         var actividadesHtml = '';
         if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
             for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
@@ -113,6 +115,7 @@ var AprobacionController = {
             actividadesHtml = '<p class="text-muted">No hay actividades registradas</p>';
         }
         
+        // KPIs
         var kpisHtml = '';
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
@@ -128,12 +131,15 @@ var AprobacionController = {
             kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
         }
         
+        // Perfil del Puesto - CORREGIDO
         var perfilHtml = '';
         if (descriptor.perfil) {
-            perfilHtml = '<table class="table table-sm"><tr><th>Edad:</th><td>' + (descriptor.perfil.edadMin || '-') + ' - ' + (descriptor.perfil.edadMax || '-') + ' años</td><th>Sexo:</th><td>' + (descriptor.perfil.sexo || '-') + '</td></tr>' +
-                '<tr><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar || '-') + '</td><th>Disponibilidad:</th><td>' + (descriptor.perfil.disponibilidadHorario || '-') + 'NonNulloNonNull' +
-                '<tr><th>Modalidad:</th><td>' + (descriptor.perfil.modalidadTrabajo || '-') + 'NonNulloNonNull<th>Licencia:</th><td>' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + 'NonNulloNonNull' +
-                '</tr></table>';
+            perfilHtml = '<table class="table table-sm">' +
+                '<tr><th style="width: 40%;">Edad Mínima:</th><td>' + (descriptor.perfil.edadMin || '-') + ' años</td><th style="width: 40%;">Edad Máxima:</th><td>' + (descriptor.perfil.edadMax || '-') + ' años</td></tr>' +
+                '<tr><th>Sexo:</th><td>' + (descriptor.perfil.sexo === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.sexo === 'MASCULINO' ? 'Masculino' : 'Femenino')) + '</td><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar === 'INDIFERENTE' ? 'Indiferente' : descriptor.perfil.estadoFamiliar || '-') + '</td></tr>' +
+                '<tr><th>Disponibilidad Horaria:</th><td>' + (descriptor.perfil.disponibilidadHorario === 'TIEMPO_COMPLETO' ? 'Tiempo Completo' : (descriptor.perfil.disponibilidadHorario === 'MEDIO_TIEMPO' ? 'Medio Tiempo' : descriptor.perfil.disponibilidadHorario || '-')) + '</td><th>Modalidad de Trabajo:</th><td>' + (descriptor.perfil.modalidadTrabajo === 'PRESENCIAL' ? 'Presencial' : (descriptor.perfil.modalidadTrabajo === 'HIBRIDO' ? 'Híbrido' : (descriptor.perfil.modalidadTrabajo === 'REMOTO' ? 'Remoto' : descriptor.perfil.modalidadTrabajo || '-'))) + '</td></tr>' +
+                '<tr><th>Poseer Licencia:</th><td colspan="3">' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</td></tr>' +
+                '</table>';
         } else {
             perfilHtml = '<p class="text-muted">No hay perfil registrado</p>';
         }
@@ -176,9 +182,9 @@ var AprobacionController = {
                 <hr>
                 <h6 class="border-bottom pb-2">Entrenamiento</h6>
                 <p><strong>Personal a cargo:</strong> ${descriptor.entrenamiento?.personalCargo || '0'}</p>
-                <p><strong>Tipo:</strong> ${descriptor.entrenamiento?.tipoEntrenamiento || '-'}</p>
+                <p><strong>Tipo de entrenamiento:</strong> ${descriptor.entrenamiento?.tipoEntrenamiento || '-'}</p>
                 <p><strong>Duración:</strong> ${descriptor.entrenamiento?.duracion || '-'}</p>
-                <p><strong>Responsables:</strong> ${descriptor.entrenamiento?.puestosResponsables || '-'}</p>
+                <p><strong>Puestos responsables:</strong> ${descriptor.entrenamiento?.puestosResponsables || '-'}</p>
             </div>
         `;
         
