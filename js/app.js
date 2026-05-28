@@ -158,6 +158,9 @@ function cargarModulo(modulo) {
         case 'pendientesAprobar':
             cargarPendientesAprobar();
             break;
+        case 'revisionTH':
+            cargarRevisionTH();
+            break;
         default:
             loadDashboard();
     }
@@ -301,6 +304,26 @@ function cargarPendientesAprobar() {
                     .done(function() {
                         if (typeof AprobacionController !== 'undefined') {
                             AprobacionController.init(currentUser);
+                        }
+                    });
+            });
+    }
+}
+
+// Cargar revisión TH (TH Generalista)
+function cargarRevisionTH() {
+    $('#pageTitle').text('Revisión Técnica - TH');
+    
+    if (typeof THController !== 'undefined' && THController.init) {
+        THController.init(currentUser);
+    } else {
+        // Cargar scripts del módulo
+        $.getScript('modulos/frmAprobacionTH/services/thService.js')
+            .done(function() {
+                $.getScript('modulos/frmAprobacionTH/controller/thController.js')
+                    .done(function() {
+                        if (typeof THController !== 'undefined') {
+                            THController.init(currentUser);
                         }
                     });
             });
