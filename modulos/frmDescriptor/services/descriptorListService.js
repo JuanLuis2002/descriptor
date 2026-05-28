@@ -45,6 +45,8 @@ var DescriptorListService = {
             borradores: descriptores.filter(function(d) { return d.estado === 'BORRADOR'; }).length,
             enviados: descriptores.filter(function(d) { return d.estado === 'ENVIADO_JF'; }).length,
             observados: descriptores.filter(function(d) { return d.estado === 'OBSERVADO'; }).length,
+            aprobados: descriptores.filter(function(d) { return d.estado === 'APROBADO_POR_JF'; }).length,
+            enviadosTH: descriptores.filter(function(d) { return d.estado === 'ENVIADO_TH'; }).length,
             activos: descriptores.filter(function(d) { return d.estado === 'ACTIVO'; }).length,
             firmados: descriptores.filter(function(d) { return d.estado === 'FIRMADO'; }).length
         };
