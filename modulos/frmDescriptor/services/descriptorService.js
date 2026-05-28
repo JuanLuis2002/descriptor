@@ -2,7 +2,10 @@
 var DescriptorService = {
     getAll: function() {
         var data = localStorage.getItem('descriptores');
-        return data ? JSON.parse(data) : [];
+        if (data) {
+            return JSON.parse(data);
+        }
+        return [];
     },
     
     save: function(descriptor) {
@@ -16,7 +19,7 @@ var DescriptorService = {
             creado: {
                 fecha: new Date().toISOString(),
                 usuario: descriptor.creador,
-                rol: descriptor.creadorRol || 'JEFE_INMEDIATO',
+                rol: 'JEFE_INMEDIATO',
                 accion: 'CREACIÓN DEL DESCRIPTOR',
                 estado: 'BORRADOR'
             },
@@ -38,7 +41,10 @@ var DescriptorService = {
             }
         }
         if (index !== -1) {
-            descriptors[index] = { ...descriptors[index], ...data };
+            // Actualizar el descriptor con los nuevos datos
+            for (var clave in data) {
+                descriptors[index][clave] = data[clave];
+            }
             localStorage.setItem('descriptores', JSON.stringify(descriptors));
             return descriptors[index];
         }
@@ -78,7 +84,7 @@ var DescriptorService = {
     },
     
     registrarEvento: function(id, evento) {
-        var descriptors = this.getAll();
+        var descriptors = this.getAll();  // CORREGIDO: usar this.getAll()
         var index = -1;
         for (var i = 0; i < descriptors.length; i++) {
             if (descriptors[i].id === id) {
@@ -96,14 +102,17 @@ var DescriptorService = {
             
             descriptors[index].auditoria.historial.push({
                 fecha: new Date().toISOString(),
-                ...evento
+                accion: evento.accion || 'Evento',
+                usuario: evento.usuario || 'Sistema',
+                rol: evento.rol || '',
+                estado: evento.estado || descriptors[index].estado
             });
             
             if (evento.estado) {
                 descriptors[index].estado = evento.estado;
             }
             
-            localStorage.setItem('descriptores', JSON.stringify(descriptores));
+            localStorage.setItem('descriptores', JSON.stringify(descriptors));
             return true;
         }
         return false;
@@ -111,8 +120,8 @@ var DescriptorService = {
     
     getAuditoria: function(id) {
         var descriptor = this.getById(id);
-        if (descriptor) {
-            return descriptor.auditoria || { historial: [] };
+        if (descriptor && descriptor.auditoria) {
+            return descriptor.auditoria;
         }
         return { historial: [] };
     }
