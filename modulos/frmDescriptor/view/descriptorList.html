@@ -215,7 +215,6 @@ window.initDescriptorList = function() {
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
     }
     
-    // Función para ver auditoría completa
     function verAuditoria(id) {
         if (typeof DescriptorService === 'undefined') return;
         var descriptor = DescriptorService.getById(id);
@@ -224,7 +223,6 @@ window.initDescriptorList = function() {
         var auditoria = descriptor.auditoria || { historial: [] };
         var historial = auditoria.historial || [];
         
-        // Ordenar historial por fecha (más antiguo primero)
         historial.sort(function(a, b) {
             return new Date(a.fecha) - new Date(b.fecha);
         });
@@ -258,7 +256,6 @@ window.initDescriptorList = function() {
             }
         }
         
-        // Mostrar resumen de firmas
         html += '<hr><h6 class="border-bottom pb-2">Resumen de Firmas</h6>';
         
         var firmas = [
@@ -314,7 +311,7 @@ window.initDescriptorList = function() {
         
         var observacionesHtml = '';
         if (descriptor.estado === 'OBSERVADO' && descriptor.observaciones) {
-            observacionesHtml = '<hr><div class="alert alert-warning"><i class="fas fa-comment"></i> <strong>Observaciones del Jefe Superior:</strong><br>' + descriptor.observaciones + '</div>';
+            observacionesHtml = '<hr><div class="alert alert-warning"><i class="fas fa-comment"></i> <strong>Observaciones:</strong><br>' + descriptor.observaciones + '</div>';
         }
         
         var html = '<div class="text-start">' +
@@ -343,17 +340,22 @@ window.initDescriptorList = function() {
             confirmButtonText: 'Sí, enviar', 
             confirmButtonColor: '#0d6efd' 
         }).then(function(result) {
-            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
+            if (result.isConfirmed) {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.update(id, { estado: 'ENVIADO_JF' });
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ENVÍO A JEFE SUPERIOR',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: 'ENVIADO_JF'
-                });
-                Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior para revisión', 'success');
-                cargarDescriptores();
+                // Actualizar estado
+                var descriptorActual = DescriptorService.getById(id);
+                if (descriptorActual) {
+                    descriptorActual.estado = 'ENVIADO_JF';
+                    DescriptorService.update(id, descriptorActual);
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'ENVÍO A JEFE SUPERIOR',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'ENVIADO_JF'
+                    });
+                    Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior para revisión', 'success');
+                    cargarDescriptores();
+                }
             }
         });
     }
@@ -367,17 +369,21 @@ window.initDescriptorList = function() {
             confirmButtonText: 'Sí, enviar', 
             confirmButtonColor: '#198754' 
         }).then(function(result) {
-            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
+            if (result.isConfirmed) {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.update(id, { estado: 'ENVIADO_TH' });
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ENVÍO A TALENTO HUMANO',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: 'ENVIADO_TH'
-                });
-                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano para revisión', 'success');
-                cargarDescriptores();
+                var descriptorActual = DescriptorService.getById(id);
+                if (descriptorActual) {
+                    descriptorActual.estado = 'ENVIADO_TH';
+                    DescriptorService.update(id, descriptorActual);
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'ENVÍO A TALENTO HUMANO',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'ENVIADO_TH'
+                    });
+                    Swal.fire('Enviado', 'Descriptor enviado a Talento Humano para revisión', 'success');
+                    cargarDescriptores();
+                }
             }
         });
     }
@@ -441,15 +447,21 @@ window.initDescriptorList = function() {
                 firmasGuardadas['ji_' + id] = result.value;
                 localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
                 
-                DescriptorService.update(id, { estado: 'FIRMADO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
-                DescriptorService.registrarEvento(id, {
-                    accion: 'FIRMA DEL JEFE INMEDIATO',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: 'FIRMADO'
-                });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
-                cargarDescriptores();
+                var descriptorActual = DescriptorService.getById(id);
+                if (descriptorActual) {
+                    descriptorActual.estado = 'FIRMADO';
+                    descriptorActual.firmaJI = result.value;
+                    descriptorActual.fechaFirmaJI = new Date().toISOString();
+                    DescriptorService.update(id, descriptorActual);
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'FIRMA DEL JEFE INMEDIATO',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'FIRMADO'
+                    });
+                    Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
+                    cargarDescriptores();
+                }
             }
         });
     }
