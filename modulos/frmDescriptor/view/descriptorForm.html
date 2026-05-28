@@ -175,413 +175,410 @@
 </div>
 
 <script>
-(function() {
-    if (window._descriptorFormLoaded === true) {
-        console.log('Formulario ya inicializado, omitiendo');
-        return;
-    }
-    window._descriptorFormLoaded = true;
-    
-    // ========== VARIABLES LOCALES ==========
-    var funcionesClavesList = [];
-    var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-    var currentStep = 1;
-    var totalSteps = 14;
-    
-    // Variable para guardar actividades temporalmente (persiste entre pasos)
-    var actividadesBackup = null;
-    
-    // ========== FUNCIONES PARA AGREGAR FILAS ==========
-    function addFuncionClaveRow() {
-        $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
-    }
-    
-    function addFuncionSecundariaRow() {
-        $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
-    }
-    
-    function addKPIRow() {
-        $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
-    }
-    
-    function addEducacionRow() {
-        $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
-    }
-    
-    function addExperienciaRow() {
-        $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito"></textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
-    }
-    
-    function addCompetenciaTecnicaRow() {
-        $('#competenciasTecnicasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compTecNombre[]" placeholder="Competencia técnica"></div><div class="col-md-4"><select class="form-select" name="compTecNivel[]"><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select></div><div class="col-md-3"><select class="form-select" name="compTecAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
-    }
-    
-    function addCompetenciaConductualRow() {
-        $('#competenciasConductualesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compCondNombre[]" placeholder="Competencia conductual"></div><div class="col-md-4"><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción"></div><div class="col-md-3"><select class="form-select" name="compCondAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
-    }
-    
-    function addRelacionInternaRow() {
-        $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón"></div></div></div>');
-    }
-    
-    function addRelacionExternaRow() {
-        $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón"></div></div></div>');
-    }
-    
-    // ========== INICIALIZAR FILAS ==========
-    for(var i = 1; i <= 4; i++) addFuncionClaveRow();
-    for(var i = 1; i <= 4; i++) addFuncionSecundariaRow();
-    for(var i = 1; i <= 3; i++) addKPIRow();
-    for(var i = 1; i <= 2; i++) addEducacionRow();
-    for(var i = 1; i <= 2; i++) addExperienciaRow();
-    for(var i = 1; i <= 2; i++) addRelacionInternaRow();
-    for(var i = 1; i <= 2; i++) addRelacionExternaRow();
-    addCompetenciaTecnicaRow();
-    addCompetenciaTecnicaRow();
-    addCompetenciaConductualRow();
-    addCompetenciaConductualRow();
-    
-    $('#areaUsuario').val(currentUser.area || '');
-    $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
-    
-    // ========== FUNCIÓN PARA GUARDAR ACTIVIDADES ACTUALES ==========
-    function guardarActividadesActuales() {
-        if (funcionesClavesList.length === 0) return;
-        
-        var actividadesGuardadas = [];
-        for(var f = 0; f < funcionesClavesList.length; f++) {
-            var actividades = [];
-            $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
-                var val = $(this).val();
-                if(val && val.trim() !== '') actividades.push(val.trim());
-            });
-            actividadesGuardadas.push({ 
-                funcionNombre: funcionesClavesList[f].nombre, 
-                actividades: actividades 
-            });
+    (function() {
+        if (window._descriptorFormLoaded === true) {
+            console.log('Formulario ya inicializado, omitiendo');
+            return;
         }
-        actividadesBackup = actividadesGuardadas;
-    }
-    
-    // ========== FUNCIÓN PARA RESTAURAR ACTIVIDADES ==========
-    function restaurarActividades() {
-        if (!actividadesBackup || actividadesBackup.length === 0) return;
+        window._descriptorFormLoaded = true;
         
-        for(var f = 0; f < actividadesBackup.length; f++) {
-            var saved = actividadesBackup[f];
-            if (saved.actividades && saved.actividades.length > 0) {
-                for(var a = 0; a < saved.actividades.length; a++) {
-                    agregarActividadConTexto(f, saved.actividades[a]);
+        // ========== VARIABLES LOCALES ==========
+        var funcionesClavesList = [];
+        var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        var currentStep = 1;
+        var totalSteps = 14;
+        
+        // ========== FUNCIONES PARA AGREGAR FILAS ==========
+        function addFuncionClaveRow() {
+            $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
+        }
+        
+        function addFuncionSecundariaRow() {
+            $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
+        }
+        
+        function addKPIRow() {
+            $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
+        }
+        
+        function addEducacionRow() {
+            $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+        }
+        
+        function addExperienciaRow() {
+            $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito"></textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+        }
+        
+        function addCompetenciaTecnicaRow() {
+            $('#competenciasTecnicasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compTecNombre[]" placeholder="Competencia técnica"></div><div class="col-md-4"><select class="form-select" name="compTecNivel[]"><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select></div><div class="col-md-3"><select class="form-select" name="compTecAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
+        }
+        
+        function addCompetenciaConductualRow() {
+            $('#competenciasConductualesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compCondNombre[]" placeholder="Competencia conductual"></div><div class="col-md-4"><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción"></div><div class="col-md-3"><select class="form-select" name="compCondAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
+        }
+        
+        function addRelacionInternaRow() {
+            $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón"></div></div></div>');
+        }
+        
+        function addRelacionExternaRow() {
+            $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón"></div></div></div>');
+        }
+        
+        // ========== INICIALIZAR FILAS ==========
+        for(var i = 1; i <= 4; i++) addFuncionClaveRow();
+        for(var i = 1; i <= 4; i++) addFuncionSecundariaRow();
+        for(var i = 1; i <= 3; i++) addKPIRow();
+        for(var i = 1; i <= 2; i++) addEducacionRow();
+        for(var i = 1; i <= 2; i++) addExperienciaRow();
+        for(var i = 1; i <= 2; i++) addRelacionInternaRow();
+        for(var i = 1; i <= 2; i++) addRelacionExternaRow();
+        addCompetenciaTecnicaRow();
+        addCompetenciaTecnicaRow();
+        addCompetenciaConductualRow();
+        addCompetenciaConductualRow();
+        
+        $('#areaUsuario').val(currentUser.area || '');
+        $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
+        
+        // ========== FUNCIÓN PARA GUARDAR ACTIVIDADES ACTUALES EN VARIABLE GLOBAL ==========
+        function guardarActividadesActuales() {
+            if (funcionesClavesList.length === 0) return;
+            
+            var actividadesGuardadas = [];
+            for(var f = 0; f < funcionesClavesList.length; f++) {
+                var actividades = [];
+                $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
+                    var val = $(this).val();
+                    if(val && val.trim() !== '') actividades.push(val.trim());
+                });
+                actividadesGuardadas.push({ 
+                    funcionNombre: funcionesClavesList[f].nombre, 
+                    actividades: actividades 
+                });
+            }
+            window._savedActividades = actividadesGuardadas;
+        }
+        
+        // ========== FUNCIÓN PARA RESTAURAR ACTIVIDADES DESDE VARIABLE GLOBAL ==========
+        function restaurarActividades() {
+            if (!window._savedActividades || window._savedActividades.length === 0) return;
+            
+            for(var f = 0; f < window._savedActividades.length; f++) {
+                var saved = window._savedActividades[f];
+                if (saved.actividades && saved.actividades.length > 0) {
+                    for(var a = 0; a < saved.actividades.length; a++) {
+                        agregarActividadConTexto(f, saved.actividades[a]);
+                    }
                 }
             }
         }
-    }
-    
-    // ========== FUNCIÓN PARA ACTUALIZAR ACTIVIDADES ==========
-    function actualizarActividades() {
-        // Guardar actividades actuales antes de regenerar
-        if (funcionesClavesList.length > 0) {
-            guardarActividadesActuales();
+        
+        // ========== FUNCIÓN PARA LIMPIAR ACTIVIDADES GUARDADAS ==========
+        function limpiarActividadesGuardadas() {
+            window._savedActividades = null;
         }
         
-        funcionesClavesList = [];
-        var funcionIndex = 0;
-        $('#funcionesClavesContainer .dynamic-row').each(function() {
-            var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || 'FC' + (funcionIndex+1);
-            var nombre = $(this).find('input[name="funcionNombre[]"]').val() || 'Función ' + (funcionIndex+1);
-            funcionesClavesList.push({ id: funcionIndex, codigo: codigo, nombre: nombre });
-            funcionIndex++;
-        });
-        
-        if (funcionesClavesList.length === 0) {
-            $('#actividadesContainer').html('<div class="alert alert-warning">No hay funciones claves registradas. Regrese al paso anterior.</div>');
-            return;
+        // ========== FUNCIÓN PARA ACTUALIZAR ACTIVIDADES ==========
+        function actualizarActividades() {
+            if (funcionesClavesList.length > 0) {
+                guardarActividadesActuales();
+            }
+            
+            funcionesClavesList = [];
+            var funcionIndex = 0;
+            $('#funcionesClavesContainer .dynamic-row').each(function() {
+                var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || 'FC' + (funcionIndex+1);
+                var nombre = $(this).find('input[name="funcionNombre[]"]').val() || 'Función ' + (funcionIndex+1);
+                funcionesClavesList.push({ id: funcionIndex, codigo: codigo, nombre: nombre });
+                funcionIndex++;
+            });
+            
+            if (funcionesClavesList.length === 0) {
+                $('#actividadesContainer').html('<div class="alert alert-warning">No hay funciones claves registradas. Regrese al paso anterior.</div>');
+                return;
+            }
+            
+            var html = '';
+            for(var f = 0; f < funcionesClavesList.length; f++) {
+                var funcion = funcionesClavesList[f];
+                html += '<div class="funcion-actividad-card mb-3" data-funcion-id="' + funcion.id + '">' +
+                    '<div class="card-header bg-primary text-white p-2"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
+                    '<div class="card-body p-3 bg-light">' +
+                    '<div id="actividades-funcion-' + funcion.id + '"></div>' +
+                    '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
+                    '</div></div>';
+            }
+            $('#actividadesContainer').html(html);
+            
+            restaurarActividades();
         }
         
-        var html = '';
-        for(var f = 0; f < funcionesClavesList.length; f++) {
-            var funcion = funcionesClavesList[f];
-            html += '<div class="funcion-actividad-card mb-3" data-funcion-id="' + funcion.id + '">' +
-                '<div class="card-header bg-primary text-white p-2"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
-                '<div class="card-body p-3 bg-light">' +
-                '<div id="actividades-funcion-' + funcion.id + '"></div>' +
-                '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
-                '</div></div>';
-        }
-        $('#actividadesContainer').html(html);
-        
-        // Restaurar actividades guardadas
-        restaurarActividades();
-    }
-    
-    // Función para agregar actividad vacía
-    window.agregarActividad = function(funcionId) {
-        var container = $('#actividades-funcion-' + funcionId);
-        if (container.length === 0) return;
-        container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-    };
-    
-    // Función para agregar actividad con texto
-    function agregarActividadConTexto(funcionId, texto) {
-        var container = $('#actividades-funcion-' + funcionId);
-        if (container.length === 0) return;
-        if (texto && texto.trim() !== '') {
-            container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-        }
-    }
-    
-    window.agregarActividadConTexto = agregarActividadConTexto;
-    
-    // ========== NAVEGACIÓN DE PASOS ==========
-    function updateStepDisplay() {
-        $('.form-section').removeClass('active-section');
-        $('.form-section[data-section="' + currentStep + '"]').addClass('active-section');
-        $('.step').removeClass('active completed');
-        for(var i = 1; i <= totalSteps; i++) {
-            if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
-            else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
-        }
-        $('#prevBtn').toggle(currentStep > 1);
-        $('#nextBtn').toggle(currentStep < totalSteps);
-        $('#saveBtn').toggle(currentStep === totalSteps);
-        
-        // Cuando SALIMOS de la sección 4, guardamos actividades
-        if (currentStep !== 4 && funcionesClavesList.length > 0) {
-            guardarActividadesActuales();
-        }
-        
-        // Cuando ENTRAMOS a la sección 4, actualizamos y restauramos
-        if (currentStep === 4) {
-            actualizarActividades();
-        }
-        if (currentStep === totalSteps) {
-            updateResumen();
-        }
-    }
-    
-    function nextStep() { 
-        if (currentStep < totalSteps) { 
-            currentStep++; 
-            updateStepDisplay(); 
-        } 
-    }
-    
-    function prevStep() { 
-        if (currentStep > 1) { 
-            currentStep--; 
-            updateStepDisplay(); 
-        } 
-    }
-    
-    function updateResumen() {
-        $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm"><tr><td><strong>Puesto:</strong></td><td>' + ($('select[name="puesto"]').val() || '-') + '</td></tr>' +
-            '<tr><td><strong>Funciones Claves:</strong></td><td>' + $('#funcionesClavesContainer .dynamic-row').length + '</td></tr>' +
-            '<tr><td><strong>KPIs:</strong></td><td>' + $('#kpisContainer .dynamic-row').length + '</td></tr></table>' +
-            '<div class="alert alert-info">Revise antes de guardar</div>');
-    }
-    
-    // ========== FUNCIÓN PARA GUARDAR ==========
-    function saveDescriptor() {
-        // Funciones Claves
-        var funcionesClaves = [];
-        $('#funcionesClavesContainer .dynamic-row').each(function() {
-            funcionesClaves.push({ 
-                codigo: $(this).find('input[name="funcionCodigo[]"]').val(), 
-                nombre: $(this).find('input[name="funcionNombre[]"]').val() 
-            });
-        });
-        
-        // Actividades por función
-        var actividadesPorFuncion = [];
-        for(var f = 0; f < funcionesClavesList.length; f++) {
-            var actividades = [];
-            $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
-                var val = $(this).val();
-                if(val && val.trim() !== '') actividades.push(val.trim());
-            });
-            actividadesPorFuncion.push({ 
-                funcionNombre: funcionesClavesList[f].nombre, 
-                actividades: actividades 
-            });
-        }
-        
-        // Funciones Secundarias
-        var funcionesSecundarias = [];
-        $('#funcionesSecundariasContainer textarea').each(function() { 
-            if($(this).val()) funcionesSecundarias.push($(this).val()); 
-        });
-        
-        // KPIs
-        var kpis = [];
-        $('#kpisContainer .dynamic-row').each(function() {
-            kpis.push({ 
-                indicador: $(this).find('input[name="kpiIndicador[]"]').val(), 
-                frecuencia: $(this).find('select[name="kpiFrecuencia[]"]').val(), 
-                meta: $(this).find('input[name="kpiMeta[]"]').val() 
-            });
-        });
-        
-        // Educación
-        var educacion = [];
-        $('#educacionContainer .dynamic-row').each(function() {
-            educacion.push({ 
-                requisito: $(this).find('input[name="eduRequisito[]"]').val(), 
-                especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(), 
-                requerido: $(this).find('select[name="eduRequerido[]"]').val() 
-            });
-        });
-        
-        // Experiencia
-        var experiencia = [];
-        $('#experienciaContainer .dynamic-row').each(function() {
-            experiencia.push({ 
-                requisito: $(this).find('textarea[name="expRequisito[]"]').val(), 
-                requerido: $(this).find('select[name="expRequerido[]"]').val() 
-            });
-        });
-        
-        // Competencias Técnicas
-        var competenciasTecnicas = [];
-        $('#competenciasTecnicasContainer .dynamic-row').each(function() {
-            competenciasTecnicas.push({ 
-                nombre: $(this).find('input[name="compTecNombre[]"]').val(), 
-                nivel: $(this).find('select[name="compTecNivel[]"]').val(), 
-                aplicabilidad: $(this).find('select[name="compTecAplicabilidad[]"]').val() 
-            });
-        });
-        
-        // Competencias Conductuales
-        var competenciasConductuales = [];
-        $('#competenciasConductualesContainer .dynamic-row').each(function() {
-            competenciasConductuales.push({ 
-                nombre: $(this).find('input[name="compCondNombre[]"]').val(), 
-                descripcion: $(this).find('input[name="compCondDescripcion[]"]').val(), 
-                aplicabilidad: $(this).find('select[name="compCondAplicabilidad[]"]').val() 
-            });
-        });
-        
-        // Relaciones Internas
-        var relacionesInternas = [];
-        $('#relacionesInternasContainer .relacion-row').each(function() {
-            relacionesInternas.push({ 
-                puesto: $(this).find('input[name="relInternaPuesto[]"]').val(), 
-                razon: $(this).find('input[name="relInternaRazon[]"]').val() 
-            });
-        });
-        
-        // Relaciones Externas
-        var relacionesExternas = [];
-        $('#relacionesExternasContainer .relacion-row').each(function() {
-            relacionesExternas.push({ 
-                entidad: $(this).find('input[name="relExternaEntidad[]"]').val(), 
-                razon: $(this).find('input[name="relExternaRazon[]"]').val() 
-            });
-        });
-        
-        var formData = {
-            puesto: $('select[name="puesto"]').val(),
-            area: $('input[name="area"]').val(),
-            reportaA: $('input[name="reportaA"]').val(),
-            fechaEmision: $('input[name="fechaEmision"]').val(),
-            objetivo: $('textarea[name="objetivo"]').val(),
-            funcionesClaves: funcionesClaves,
-            actividadesPorFuncion: actividadesPorFuncion,
-            funcionesSecundarias: funcionesSecundarias,
-            kpis: kpis,
-            perfil: {
-                edadMin: $('input[name="edadMin"]').val(),
-                edadMax: $('input[name="edadMax"]').val(),
-                sexo: $('select[name="sexo"]').val(),
-                estadoFamiliar: $('select[name="estadoFamiliar"]').val(),
-                disponibilidadHorario: $('select[name="disponibilidadHorario"]').val(),
-                modalidadTrabajo: $('select[name="modalidadTrabajo"]').val(),
-                poseerLicencia: $('select[name="poseerLicencia"]').val()
-            },
-            educacion: educacion,
-            experiencia: experiencia,
-            competenciasTecnicas: competenciasTecnicas,
-            competenciasConductuales: competenciasConductuales,
-            relacionesLaborales: {
-                internas: relacionesInternas,
-                externas: relacionesExternas
-            },
-            responsabilidades: {
-                equipo: $('select[name="respEquipo"]').val(),
-                fondos: $('textarea[name="respFondos"]').val(),
-                documentos: $('textarea[name="respDocumentos"]').val(),
-                tomaDecisiones: $('textarea[name="tomaDecisiones"]').val(),
-                personal: $('textarea[name="respPersonal"]').val(),
-                impactoEconomico: $('select[name="impactoEconomico"]').val()
-            },
-            entrenamiento: {
-                personalCargo: $('input[name="personalCargo"]').val(),
-                tipoEntrenamiento: $('select[name="tipoEntrenamiento"]').val(),
-                duracion: $('select[name="duracionInduccion"]').val(),
-                puestosResponsables: $('input[name="puestosResponsables"]').val()
-            },
-            creador: currentUser.nombre,
-            estado: 'BORRADOR'
+        // Función para agregar actividad vacía
+        window.agregarActividad = function(funcionId) {
+            var container = $('#actividades-funcion-' + funcionId);
+            if (container.length === 0) return;
+            container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
         };
         
-        // Verificar si es edición o nuevo
-        if (window._isEditing && window._editingId) {
-            var existingDescriptor = DescriptorService.getById(window._editingId);
-            if (existingDescriptor) {
-                formData.id = existingDescriptor.id;
-                formData.codigo = existingDescriptor.codigo;
-                formData.fechaCreacion = existingDescriptor.fechaCreacion;
-                formData.estado = 'BORRADOR';
-                DescriptorService.update(window._editingId, formData);
-                Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
-                    window._isEditing = false;
-                    window._editingId = null;
-                    if (typeof window.cargarMisDescriptores === 'function') {
-                        window.cargarMisDescriptores();
-                    } else {
-                        location.reload();
-                    }
+        // Función para agregar actividad con texto
+        function agregarActividadConTexto(funcionId, texto) {
+            var container = $('#actividades-funcion-' + funcionId);
+            if (container.length === 0) return;
+            if (texto && texto.trim() !== '') {
+                container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+            }
+        }
+        
+        window.agregarActividadConTexto = agregarActividadConTexto;
+        
+        // ========== NAVEGACIÓN DE PASOS ==========
+        function updateStepDisplay() {
+            $('.form-section').removeClass('active-section');
+            $('.form-section[data-section="' + currentStep + '"]').addClass('active-section');
+            $('.step').removeClass('active completed');
+            for(var i = 1; i <= totalSteps; i++) {
+                if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
+                else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
+            }
+            $('#prevBtn').toggle(currentStep > 1);
+            $('#nextBtn').toggle(currentStep < totalSteps);
+            $('#saveBtn').toggle(currentStep === totalSteps);
+            
+            if (currentStep !== 4 && funcionesClavesList.length > 0) {
+                guardarActividadesActuales();
+            }
+            
+            if (currentStep === 4) {
+                actualizarActividades();
+            }
+            if (currentStep === totalSteps) {
+                updateResumen();
+            }
+        }
+        
+        function nextStep() { 
+            if (currentStep < totalSteps) { 
+                currentStep++; 
+                updateStepDisplay(); 
+            } 
+        }
+        
+        function prevStep() { 
+            if (currentStep > 1) { 
+                currentStep--; 
+                updateStepDisplay(); 
+            } 
+        }
+        
+        function updateResumen() {
+            $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm"><tr><td><strong>Puesto:</strong></td><td>' + ($('select[name="puesto"]').val() || '-') + 'NonNulloNonNull' +
+                '<tr><td><strong>Funciones Claves:</strong>NonNulloNonNull' + $('#funcionesClavesContainer .dynamic-row').length + 'NonNulloNonNull' +
+                '<tr><td><strong>KPIs:</strong>NonNulloNonNull' + $('#kpisContainer .dynamic-row').length + 'NonNulloNonNull}艹<div class="alert alert-info">Revise antes de guardar</div>');
+        }
+        
+        // ========== FUNCIÓN PARA GUARDAR ==========
+        function saveDescriptor() {
+            // Funciones Claves
+            var funcionesClaves = [];
+            $('#funcionesClavesContainer .dynamic-row').each(function() {
+                funcionesClaves.push({ 
+                    codigo: $(this).find('input[name="funcionCodigo[]"]').val(), 
+                    nombre: $(this).find('input[name="funcionNombre[]"]').val() 
+                });
+            });
+            
+            // Actividades por función
+            var actividadesPorFuncion = [];
+            for(var f = 0; f < funcionesClavesList.length; f++) {
+                var actividades = [];
+                $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
+                    var val = $(this).val();
+                    if(val && val.trim() !== '') actividades.push(val.trim());
+                });
+                actividadesPorFuncion.push({ 
+                    funcionNombre: funcionesClavesList[f].nombre, 
+                    actividades: actividades 
                 });
             }
-        } else {
-            var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
-            formData.id = descriptores.length + 1;
-            formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');
-            formData.fechaCreacion = new Date().toISOString();
-            formData.estado = 'BORRADOR';
-            descriptores.push(formData);
-            localStorage.setItem('descriptores', JSON.stringify(descriptores));
-            Swal.fire('Éxito', 'Descriptor ' + formData.codigo + ' guardado', 'success').then(function() {
-                if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
-                else location.reload();
+            
+            // Funciones Secundarias
+            var funcionesSecundarias = [];
+            $('#funcionesSecundariasContainer textarea').each(function() { 
+                if($(this).val()) funcionesSecundarias.push($(this).val()); 
             });
+            
+            // KPIs
+            var kpis = [];
+            $('#kpisContainer .dynamic-row').each(function() {
+                kpis.push({ 
+                    indicador: $(this).find('input[name="kpiIndicador[]"]').val(), 
+                    frecuencia: $(this).find('select[name="kpiFrecuencia[]"]').val(), 
+                    meta: $(this).find('input[name="kpiMeta[]"]').val() 
+                });
+            });
+            
+            // Educación
+            var educacion = [];
+            $('#educacionContainer .dynamic-row').each(function() {
+                educacion.push({ 
+                    requisito: $(this).find('input[name="eduRequisito[]"]').val(), 
+                    especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(), 
+                    requerido: $(this).find('select[name="eduRequerido[]"]').val() 
+                });
+            });
+            
+            // Experiencia
+            var experiencia = [];
+            $('#experienciaContainer .dynamic-row').each(function() {
+                experiencia.push({ 
+                    requisito: $(this).find('textarea[name="expRequisito[]"]').val(), 
+                    requerido: $(this).find('select[name="expRequerido[]"]').val() 
+                });
+            });
+            
+            // Competencias Técnicas
+            var competenciasTecnicas = [];
+            $('#competenciasTecnicasContainer .dynamic-row').each(function() {
+                competenciasTecnicas.push({ 
+                    nombre: $(this).find('input[name="compTecNombre[]"]').val(), 
+                    nivel: $(this).find('select[name="compTecNivel[]"]').val(), 
+                    aplicabilidad: $(this).find('select[name="compTecAplicabilidad[]"]').val() 
+                });
+            });
+            
+            // Competencias Conductuales
+            var competenciasConductuales = [];
+            $('#competenciasConductualesContainer .dynamic-row').each(function() {
+                competenciasConductuales.push({ 
+                    nombre: $(this).find('input[name="compCondNombre[]"]').val(), 
+                    descripcion: $(this).find('input[name="compCondDescripcion[]"]').val(), 
+                    aplicabilidad: $(this).find('select[name="compCondAplicabilidad[]"]').val() 
+                });
+            });
+            
+            // Relaciones Internas
+            var relacionesInternas = [];
+            $('#relacionesInternasContainer .relacion-row').each(function() {
+                relacionesInternas.push({ 
+                    puesto: $(this).find('input[name="relInternaPuesto[]"]').val(), 
+                    razon: $(this).find('input[name="relInternaRazon[]"]').val() 
+                });
+            });
+            
+            // Relaciones Externas
+            var relacionesExternas = [];
+            $('#relacionesExternasContainer .relacion-row').each(function() {
+                relacionesExternas.push({ 
+                    entidad: $(this).find('input[name="relExternaEntidad[]"]').val(), 
+                    razon: $(this).find('input[name="relExternaRazon[]"]').val() 
+                });
+            });
+            
+            var formData = {
+                puesto: $('select[name="puesto"]').val(),
+                area: $('input[name="area"]').val(),
+                reportaA: $('input[name="reportaA"]').val(),
+                fechaEmision: $('input[name="fechaEmision"]').val(),
+                objetivo: $('textarea[name="objetivo"]').val(),
+                funcionesClaves: funcionesClaves,
+                actividadesPorFuncion: actividadesPorFuncion,
+                funcionesSecundarias: funcionesSecundarias,
+                kpis: kpis,
+                perfil: {
+                    edadMin: $('input[name="edadMin"]').val(),
+                    edadMax: $('input[name="edadMax"]').val(),
+                    sexo: $('select[name="sexo"]').val(),
+                    estadoFamiliar: $('select[name="estadoFamiliar"]').val(),
+                    disponibilidadHorario: $('select[name="disponibilidadHorario"]').val(),
+                    modalidadTrabajo: $('select[name="modalidadTrabajo"]').val(),
+                    poseerLicencia: $('select[name="poseerLicencia"]').val()
+                },
+                educacion: educacion,
+                experiencia: experiencia,
+                competenciasTecnicas: competenciasTecnicas,
+                competenciasConductuales: competenciasConductuales,
+                relacionesLaborales: {
+                    internas: relacionesInternas,
+                    externas: relacionesExternas
+                },
+                responsabilidades: {
+                    equipo: $('select[name="respEquipo"]').val(),
+                    fondos: $('textarea[name="respFondos"]').val(),
+                    documentos: $('textarea[name="respDocumentos"]').val(),
+                    tomaDecisiones: $('textarea[name="tomaDecisiones"]').val(),
+                    personal: $('textarea[name="respPersonal"]').val(),
+                    impactoEconomico: $('select[name="impactoEconomico"]').val()
+                },
+                entrenamiento: {
+                    personalCargo: $('input[name="personalCargo"]').val(),
+                    tipoEntrenamiento: $('select[name="tipoEntrenamiento"]').val(),
+                    duracion: $('select[name="duracionInduccion"]').val(),
+                    puestosResponsables: $('input[name="puestosResponsables"]').val()
+                },
+                creador: currentUser.nombre,
+                estado: 'BORRADOR'
+            };
+            
+            if (window._isEditing && window._editingId) {
+                var existingDescriptor = DescriptorService.getById(window._editingId);
+                if (existingDescriptor) {
+                    formData.id = existingDescriptor.id;
+                    formData.codigo = existingDescriptor.codigo;
+                    formData.fechaCreacion = existingDescriptor.fechaCreacion;
+                    formData.estado = 'BORRADOR';
+                    DescriptorService.update(window._editingId, formData);
+                    Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
+                        window._isEditing = false;
+                        window._editingId = null;
+                        limpiarActividadesGuardadas();
+                        if (typeof window.cargarMisDescriptores === 'function') {
+                            window.cargarMisDescriptores();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                }
+            } else {
+                var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
+                formData.id = descriptores.length + 1;
+                formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');
+                formData.fechaCreacion = new Date().toISOString();
+                formData.estado = 'BORRADOR';
+                descriptores.push(formData);
+                localStorage.setItem('descriptores', JSON.stringify(descriptores));
+                Swal.fire('Éxito', 'Descriptor ' + formData.codigo + ' guardado', 'success').then(function() {
+                    limpiarActividadesGuardadas();
+                    if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
+                    else location.reload();
+                });
+            }
         }
-    }
-    
-    // ========== EVENTOS ==========
-    $('#nextBtn').off('click').click(nextStep);
-    $('#prevBtn').off('click').click(prevStep);
-    $('#saveBtn').off('click').click(saveDescriptor);
-    $('.step').off('click').click(function() { 
-        var step = parseInt($(this).data('step')); 
-        if (step < currentStep) { 
-            currentStep = step; 
-            updateStepDisplay(); 
-        } 
-    });
-    
-    $('#addFuncionClave').off('click').click(function() { addFuncionClaveRow(); });
-    $('#addFuncionSecundaria').off('click').click(function() { addFuncionSecundariaRow(); });
-    $('#addKPI').off('click').click(function() { addKPIRow(); });
-    $('#addEducacion').off('click').click(function() { addEducacionRow(); });
-    $('#addExperiencia').off('click').click(function() { addExperienciaRow(); });
-    $('#addCompetenciaTecnica').off('click').click(function() { addCompetenciaTecnicaRow(); });
-    $('#addCompetenciaConductual').off('click').click(function() { addCompetenciaConductualRow(); });
-    $('#addRelacionInterna').off('click').click(function() { addRelacionInternaRow(); });
-    $('#addRelacionExterna').off('click').click(function() { addRelacionExternaRow(); });
-    
-    // Inicializar
-    updateStepDisplay();
-})();
+        
+        // ========== EVENTOS ==========
+        $('#nextBtn').off('click').click(nextStep);
+        $('#prevBtn').off('click').click(prevStep);
+        $('#saveBtn').off('click').click(saveDescriptor);
+        $('.step').off('click').click(function() { 
+            var step = parseInt($(this).data('step')); 
+            if (step < currentStep) { 
+                currentStep = step; 
+                updateStepDisplay(); 
+            } 
+        });
+        
+        $('#addFuncionClave').off('click').click(function() { addFuncionClaveRow(); });
+        $('#addFuncionSecundaria').off('click').click(function() { addFuncionSecundariaRow(); });
+        $('#addKPI').off('click').click(function() { addKPIRow(); });
+        $('#addEducacion').off('click').click(function() { addEducacionRow(); });
+        $('#addExperiencia').off('click').click(function() { addExperienciaRow(); });
+        $('#addCompetenciaTecnica').off('click').click(function() { addCompetenciaTecnicaRow(); });
+        $('#addCompetenciaConductual').off('click').click(function() { addCompetenciaConductualRow(); });
+        $('#addRelacionInterna').off('click').click(function() { addRelacionInternaRow(); });
+        $('#addRelacionExterna').off('click').click(function() { addRelacionExternaRow(); });
+        
+        updateStepDisplay();
+    })();
 </script>
 </body>
 </html>
