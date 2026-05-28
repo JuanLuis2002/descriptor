@@ -109,20 +109,14 @@ function loadMenu() {
         `);
     } else if (currentUser.rol === 'JEFE_TH') {
         nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="validacionFinal">
-                <i class="fas fa-gavel me-2"></i> <span>Validación Final</span>
-            </a>
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="competencias">
-                <i class="fas fa-graduation-cap me-2"></i> <span>Diccionario Competencias</span>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="firmasJTH">
+                <i class="fas fa-signature me-2"></i> <span>Firmas Pendientes</span>
             </a>
         `);
     } else if (currentUser.rol === 'COLABORADOR') {
         nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misFirmas">
-                <i class="fas fa-signature me-2"></i> <span>Pendientes de Firma</span>
-            </a>
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="miDescriptor">
-                <i class="fas fa-file-alt me-2"></i> <span>Mi Descriptor</span>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="firmasCT">
+                <i class="fas fa-signature me-2"></i> <span>Mi Firma</span>
             </a>
         `);
     }
@@ -160,6 +154,12 @@ function cargarModulo(modulo) {
             break;
         case 'revisionTH':
             cargarRevisionTH();
+            break;
+        case 'firmasJTH':
+            cargarFirmasJTH();
+            break;
+        case 'firmasCT':
+            cargarFirmasCT();
             break;
         default:
             loadDashboard();
@@ -324,6 +324,44 @@ function cargarRevisionTH() {
                     .done(function() {
                         if (typeof THController !== 'undefined') {
                             THController.init(currentUser);
+                        }
+                    });
+            });
+    }
+}
+
+// Cargar firmas Jefe de TH
+function cargarFirmasJTH() {
+    $('#pageTitle').text('Firmas - Jefe de Talento Humano');
+    
+    if (typeof JTHController !== 'undefined' && JTHController.init) {
+        JTHController.init(currentUser);
+    } else {
+        $.getScript('modulos/frmFirmaJTH/services/jthService.js')
+            .done(function() {
+                $.getScript('modulos/frmFirmaJTH/controller/jthController.js')
+                    .done(function() {
+                        if (typeof JTHController !== 'undefined') {
+                            JTHController.init(currentUser);
+                        }
+                    });
+            });
+    }
+}
+
+// Cargar firmas Colaborador
+function cargarFirmasCT() {
+    $('#pageTitle').text('Firmas - Colaborador');
+    
+    if (typeof CTController !== 'undefined' && CTController.init) {
+        CTController.init(currentUser);
+    } else {
+        $.getScript('modulos/frmFirmaCT/services/ctService.js')
+            .done(function() {
+                $.getScript('modulos/frmFirmaCT/controller/ctController.js')
+                    .done(function() {
+                        if (typeof CTController !== 'undefined') {
+                            CTController.init(currentUser);
                         }
                     });
             });
