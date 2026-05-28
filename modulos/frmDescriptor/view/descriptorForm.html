@@ -261,20 +261,21 @@
                 '<div class="card-header bg-primary text-white p-2"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
                 '<div class="card-body p-3 bg-light">' +
                 '<div id="actividades-funcion-' + funcion.id + '">' +
-                '<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcion.id + '" placeholder="Describa una actividad"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>' +
                 '</div>' +
                 '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
                 '</div></div>';
         }
         $('#actividadesContainer').html(html);
         
-        // Si hay datos guardados en edición, cargarlos
+        // Si hay datos guardados en edición, cargarlos (sin agregar fila vacía extra)
         if (window._savedActividades && window._savedActividades.length > 0) {
             for (var f = 0; f < window._savedActividades.length; f++) {
                 var saved = window._savedActividades[f];
-                for (var a = 0; a < saved.actividades.length; a++) {
-                    if (typeof window.agregarActividadConTexto === 'function') {
-                        window.agregarActividadConTexto(f, saved.actividades[a]);
+                if (saved.actividades && saved.actividades.length > 0) {
+                    for (var a = 0; a < saved.actividades.length; a++) {
+                        if (typeof window.agregarActividadConTexto === 'function') {
+                            window.agregarActividadConTexto(f, saved.actividades[a]);
+                        }
                     }
                 }
             }
@@ -282,7 +283,7 @@
         }
     }
     
-    // Función para agregar actividad (global)
+    // Función para agregar actividad (global) - SIN FILA POR DEFECTO
     window.agregarActividad = function(funcionId) {
         var container = $('#actividades-funcion-' + funcionId);
         if (container.length === 0) {
@@ -292,21 +293,20 @@
         container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
     };
     
-    // Función para agregar actividad con texto (para edición)
+    // Función para agregar actividad con texto (para edición) - SIN FILA ADICIONAL
     window.agregarActividadConTexto = function(funcionId, texto) {
         var container = $('#actividades-funcion-' + funcionId);
         if (container.length === 0) {
             console.error('No se encontró el contenedor para la función:', funcionId);
             return;
         }
-        container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+        // Solo agregar si el texto no está vacío
+        if (texto && texto.trim() !== '') {
+            container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+        }
     };
     
-    // ========== NAVEGACIÓN DE PASOS ==========
-    var currentStep = 1;
-    var totalSteps = 14;
-
-    // Variable global para guardar actividades durante la edición
+    // Variable para guardar actividades temporalmente
     window._savedActividades = null;
     window.guardarActividadesTemporalmente = function(actividades) {
         window._savedActividades = actividades;
