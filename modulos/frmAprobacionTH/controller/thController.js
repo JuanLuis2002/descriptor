@@ -117,10 +117,9 @@ var THController = {
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
             for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<tr>' +
-                    '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
+                kpisHtml += '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
                     '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
-                    '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + 'NonNulloNonNull' +
                     '</tr>';
             }
             kpisHtml += '</tbody></table>';
@@ -345,7 +344,7 @@ var THController = {
             html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Relaciones Internas',
@@ -403,7 +402,7 @@ var THController = {
             html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Relaciones Externas',
@@ -456,7 +455,7 @@ var THController = {
                 '<div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Requerimientos Organizacionales',
@@ -512,7 +511,7 @@ var THController = {
             }
         }
         
-        html += '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRiesgo()"><i class="fas fa-plus"></i> Agregar riesgo</button></div></div>';
+        html += '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRiesgo()"><i class="fas fa-plus"></i> Agregar riesgo</button></div></div>';
         
         Swal.fire({
             title: 'Editar Riesgos Físicos del Puesto',
@@ -553,21 +552,33 @@ var THController = {
     }
 };
 
-// Funciones auxiliares
+// ========== FUNCIONES AUXILIARES GLOBALES ==========
 window.agregarRelacionInterna = function() {
-    $('#relacionesInternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    var container = $('#relacionesInternasEditor');
+    if (container.length > 0) {
+        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    }
 };
 
 window.agregarRelacionExterna = function() {
-    $('#relacionesExternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    var container = $('#relacionesExternasEditor');
+    if (container.length > 0) {
+        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    }
 };
 
 window.agregarRequerimiento = function() {
-    $('#requerimientosEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    var container = $('#requerimientosEditor');
+    if (container.length > 0) {
+        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    }
 };
 
 window.agregarRiesgo = function() {
-    $('#riesgosLista').append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    var container = $('#riesgosLista');
+    if (container.length > 0) {
+        container.append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+    }
 };
 
 window.THController = THController;
