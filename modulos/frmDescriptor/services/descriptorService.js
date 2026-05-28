@@ -30,9 +30,24 @@ var DescriptorService = {
     },
     
     update: function(id, data) {
-        const descriptors = this.getAll();
+        const descriptors = this.getAll();  // CORREGIDO: usar this.getAll()
         const index = descriptors.findIndex(d => d.id === id);
         if (index !== -1) {
+            // Si se está actualizando el estado, registrar en auditoría
+            if (data.estado && descriptors[index].estado !== data.estado) {
+                if (!descriptors[index].auditoria) {
+                    descriptors[index].auditoria = { historial: [] };
+                }
+                if (!descriptors[index].auditoria.historial) {
+                    descriptors[index].auditoria.historial = [];
+                }
+                descriptors[index].auditoria.historial.push({
+                    fecha: new Date().toISOString(),
+                    estadoAnterior: descriptors[index].estado,
+                    estadoNuevo: data.estado,
+                    accion: 'CAMBIO DE ESTADO'
+                });
+            }
             descriptors[index] = { ...descriptors[index], ...data };
             localStorage.setItem('descriptores', JSON.stringify(descriptores));
             return descriptors[index];
@@ -54,31 +69,26 @@ var DescriptorService = {
     
     // Registrar evento en auditoría
     registrarEvento: function(id, evento) {
-        const descriptor = this.getById(id);
-        if (descriptor) {
-            if (!descriptor.auditoria) {
-                descriptor.auditoria = { historial: [] };
+        const descriptors = this.getAll();
+        const index = descriptors.findIndex(d => d.id === id);
+        if (index !== -1) {
+            if (!descriptors[index].auditoria) {
+                descriptors[index].auditoria = { historial: [] };
             }
-            if (!descriptor.auditoria.historial) {
-                descriptor.auditoria.historial = [];
+            if (!descriptors[index].auditoria.historial) {
+                descriptors[index].auditoria.historial = [];
             }
             
-            // Agregar evento al historial
-            descriptor.auditoria.historial.push({
+            descriptors[index].auditoria.historial.push({
                 fecha: new Date().toISOString(),
                 ...evento
             });
             
-            // Actualizar estado actual en auditoría
             if (evento.estado) {
-                descriptor.auditoria.estadoActual = {
-                    estado: evento.estado,
-                    fecha: new Date().toISOString(),
-                    usuario: evento.usuario
-                };
+                descriptors[index].estado = evento.estado;
             }
             
-            this.update(id, descriptor);
+            localStorage.setItem('descriptores', JSON.stringify(descriptores));
             return true;
         }
         return false;
