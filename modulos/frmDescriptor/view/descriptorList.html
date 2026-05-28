@@ -227,6 +227,20 @@ window.initDescriptorList = function() {
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
     }
     
+    function getEstadoBadgeClass(estado) {
+        switch(estado) {
+            case 'BORRADOR': return 'bg-secondary';
+            case 'ENVIADO_JF': return 'bg-info';
+            case 'OBSERVADO_JF': return 'bg-warning';
+            case 'OBSERVADO_TH': return 'bg-warning';
+            case 'APROBADO_POR_JF': return 'bg-success';
+            case 'ENVIADO_TH': return 'bg-primary';
+            case 'ACTIVO': return 'bg-success';
+            case 'FIRMADO': return 'bg-dark';
+            default: return 'bg-secondary';
+        }
+    }
+    
     function verAuditoria(id) {
         if (typeof DescriptorService === 'undefined') return;
         var descriptor = DescriptorService.getById(id);
@@ -238,7 +252,7 @@ window.initDescriptorList = function() {
         historial.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
         
         var html = '<div class="text-start" style="max-height: 500px; overflow-y: auto;">';
-        html += '<div class="alert alert-info mb-3"><strong>Descriptor:</strong> ' + descriptor.codigo + '<br><strong>Puesto:</strong> ' + descriptor.puesto + '<br><strong>Estado actual:</strong> <span class="badge bg-primary">' + (descriptor.estado || 'BORRADOR') + '</span></div>';
+        html += '<div class="alert alert-info mb-3"><strong>Descriptor:</strong> ' + descriptor.codigo + '<br><strong>Puesto:</strong> ' + descriptor.puesto + '<br><strong>Estado actual:</strong> <span class="badge ' + getEstadoBadgeClass(descriptor.estado) + '">' + (descriptor.estado || 'BORRADOR') + '</span></div>';
         html += '<h6 class="border-bottom pb-2">Línea de tiempo del proceso</h6>';
         
         if (historial.length === 0) {
@@ -249,19 +263,7 @@ window.initDescriptorList = function() {
                 var fechaFormateada = new Date(ev.fecha).toLocaleString();
                 var estadoBadge = '';
                 if (ev.estado) {
-                    var estadoClass = '';
-                    switch(ev.estado) {
-                        case 'BORRADOR': estadoClass = 'bg-secondary'; break;
-                        case 'ENVIADO_JF': estadoClass = 'bg-info'; break;
-                        case 'OBSERVADO_JF': estadoClass = 'bg-warning'; break;
-                        case 'OBSERVADO_TH': estadoClass = 'bg-warning'; break;
-                        case 'APROBADO_POR_JF': estadoClass = 'bg-success'; break;
-                        case 'ENVIADO_TH': estadoClass = 'bg-primary'; break;
-                        case 'ACTIVO': estadoClass = 'bg-success'; break;
-                        case 'FIRMADO': estadoClass = 'bg-dark'; break;
-                        default: estadoClass = 'bg-secondary';
-                    }
-                    estadoBadge = ' <span class="badge ' + estadoClass + ' auditoria-estado">' + ev.estado + '</span>';
+                    estadoBadge = ' <span class="badge ' + getEstadoBadgeClass(ev.estado) + '">' + ev.estado + '</span>';
                 }
                 
                 html += '<div class="auditoria-item">' +
