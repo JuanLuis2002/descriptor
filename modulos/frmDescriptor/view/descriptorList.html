@@ -8,16 +8,18 @@
         .descriptor-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-borrador { background: #6c757d; color: white; }
-        .status-enviado_th { background: #0dcaf0; color: #000; }
+        .status-enviado_jf { background: #0dcaf0; color: #000; }
         .status-observado { background: #ffc107; color: #000; }
         .status-activo { background: #198754; color: white; }
         .status-firmado { background: #0d6efd; color: white; }
+        .status-enviado_th { background: #fd7e14; color: white; }
         .filtro-busqueda { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .stats-bar { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .stat-item { text-align: center; border-right: 1px solid #dee2e6; }
         .stat-item:last-child { border-right: none; }
         .stat-number { font-size: 24px; font-weight: bold; color: #0d6efd; }
         .stat-label { font-size: 12px; color: #6c757d; }
+        .observacion-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 12px; }
         @media (max-width: 768px) { .stat-item { border-right: none; margin-bottom: 10px; } }
     </style>
 </head>
@@ -26,7 +28,8 @@
     <div class="row text-center">
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statBorradores">0</div><div class="stat-label">Borradores</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviados">0</div><div class="stat-label">Enviados a TH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviados">0</div><div class="stat-label">Enviados a JF</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservados">0</div><div class="stat-label">Observados</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmados">0</div><div class="stat-label">Firmados</div></div>
     </div>
@@ -35,7 +38,7 @@
 <div class="filtro-busqueda">
     <div class="row g-3">
         <div class="col-md-4"><label class="form-label small">Buscar</label><input type="text" class="form-control" id="searchInput" placeholder="Por puesto, código o área..."></div>
-        <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="ENVIADO_TH">Enviado a TH</option><option value="OBSERVADO">Observado</option><option value="ACTIVO">Activo</option><option value="FIRMADO">Firmado</option></select></div>
+        <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="ENVIADO_JF">Enviado a JF</option><option value="OBSERVADO">Observado</option><option value="ACTIVO">Activo</option><option value="FIRMADO">Firmado</option></select></div>
         <div class="col-md-3"><label class="form-label small">Ordenar por</label><select class="form-select" id="sortBy"><option value="fecha">Fecha (reciente)</option><option value="puesto">Puesto (A-Z)</option><option value="estado">Estado</option></select></div>
         <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" id="btnNuevoDescriptor"><i class="fas fa-plus"></i> Nuevo</button></div>
     </div>
@@ -73,7 +76,8 @@ window.initDescriptorList = function() {
             var stats = DescriptorListService.getEstadisticas(currentUser.nombre);
             $('#statTotal').text(stats.total);
             $('#statBorradores').text(stats.borradores);
-            $('#statEnviados').text(stats.enviados);
+            $('#statEnviados').text(stats.enviados || 0);
+            $('#statObservados').text(stats.observados || 0);
             $('#statActivos').text(stats.activos);
             $('#statFirmados').text(stats.firmados);
         }
@@ -96,7 +100,6 @@ window.initDescriptorList = function() {
         mostrarLista(filtered);
     }
     
-    // Reemplaza la función mostrarLista completa
     function mostrarLista(descriptores) {
         var container = $('#descriptoresListContainer');
         if (descriptores.length === 0) {
@@ -108,39 +111,42 @@ window.initDescriptorList = function() {
         for (var i = 0; i < descriptores.length; i++) {
             var d = descriptores[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
+            var estadoClass = d.estado === 'ENVIADO_JF' ? 'enviado_jf' : (d.estado || 'BORRADOR').toLowerCase();
+            var estadoTexto = d.estado === 'ENVIADO_JF' ? 'Enviado a JF' : (d.estado || 'BORRADOR');
+            
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="descriptor-card" data-id="' + d.id + '">' +
                 '<div class="d-flex justify-content-between align-items-start mb-3">' +
                 '<div><h6 class="mb-0">' + (d.codigo || 'DES-' + d.id) + '</h6><small class="text-muted">' + fecha + '</small></div>' +
-                '<span class="status-badge status-' + (d.estado || 'BORRADOR').toLowerCase() + '">' + (d.estado || 'BORRADOR') + '</span></div>' +
+                '<span class="status-badge status-' + estadoClass + '">' + estadoTexto + '</span></div>' +
                 '<h5 class="mb-2">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="text-muted small mb-3"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br>' +
-                '<i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p>' +
-                '<div class="d-flex justify-content-end gap-2">' +
+                '<i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p>';
+            
+            // Mostrar observaciones si existen y el estado es OBSERVADO
+            if (d.estado === 'OBSERVADO' && d.observaciones) {
+                html += '<div class="observacion-box"><i class="fas fa-comment me-1"></i> <strong>Observaciones:</strong><br>' + d.observaciones + '</div>';
+            }
+            
+            html += '<div class="d-flex justify-content-end gap-2 mt-2">' +
                 '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>' +
-                // BOTÓN EDITAR - solo para estado BORRADOR
-                (d.estado === 'BORRADOR' ? '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>' : '') +
-                (d.estado === 'BORRADOR' ? '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar</button>' : '') +
+                ((d.estado === 'BORRADOR' || d.estado === 'OBSERVADO') ? '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>' : '') +
+                (d.estado === 'BORRADOR' ? '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a JF</button>' : '') +
                 '</div></div></div>';
         }
         html += '</div>';
         container.html(html);
         
-        // Eventos
         $('.btn-ver').off('click').on('click', function(e) { e.stopPropagation(); verDescriptor($(this).data('id')); });
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
     }
 
-    // Agrega esta función después de enviarDescriptor
     function editarDescriptor(id) {
         console.log('Editando descriptor ID:', id);
-        // Llamar al controlador con el ID para editar
         if (typeof DescriptorController !== 'undefined') {
-            // Cambiar la pestaña activa a Nuevo Descriptor
             $('.nav-link').removeClass('active');
             $('.nav-link[data-modulo="nuevoDescriptor"]').addClass('active');
-            // Inicializar el controlador en modo edición
             DescriptorController.init(currentUser, id);
         } else {
             Swal.fire('Error', 'No se puede editar el descriptor', 'error');
@@ -155,11 +161,16 @@ window.initDescriptorList = function() {
         if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
             funcionesHtml = '<ul>';
             for (var i = 0; i < descriptor.funcionesClaves.length; i++) {
-                funcionesHtml += '<li><strong>' + descriptor.funcionesClaves[i].codigo + '</strong> - ' + descriptor.funcionesClaves[i].nombre + '</li>';
+                funcionesHtml += '<li><strong>' + (descriptor.funcionesClaves[i].codigo || '') + '</strong> - ' + (descriptor.funcionesClaves[i].nombre || '') + '</li>';
             }
             funcionesHtml += '</ul>';
         } else {
             funcionesHtml = '<p>No registradas</p>';
+        }
+        
+        var observacionesHtml = '';
+        if (descriptor.estado === 'OBSERVADO' && descriptor.observaciones) {
+            observacionesHtml = '<hr><div class="alert alert-warning"><i class="fas fa-comment"></i> <strong>Observaciones del Jefe Superior:</strong><br>' + descriptor.observaciones + '</div>';
         }
         
         var html = '<div class="text-start">' +
@@ -168,28 +179,34 @@ window.initDescriptorList = function() {
             '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '</p>' +
             '<p><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
-            '<p><strong>Estado:</strong> ' + (descriptor.estado || 'BORRADOR') + '</p>' +
+            '<p><strong>Estado:</strong> ' + (descriptor.estado === 'ENVIADO_JF' ? 'Enviado a JF' : (descriptor.estado || 'BORRADOR')) + '</p>' +
             '<hr>' +
             '<h6 class="border-bottom pb-2">Objetivo</h6>' +
             '<p>' + (descriptor.objetivo || '-') + '</p>' +
             '<hr>' +
-            '<h6 class="border-bottom pb-2">Funciones Claves</h6>' + funcionesHtml + '</div>';
+            '<h6 class="border-bottom pb-2">Funciones Claves</h6>' + funcionesHtml +
+            observacionesHtml + '</div>';
         
         Swal.fire({ title: 'Descriptor: ' + descriptor.puesto, html: html, width: '600px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     }
     
     function enviarDescriptor(id) {
-        Swal.fire({ title: '¿Enviar a Talento Humano?', text: 'Una vez enviado, no podrá modificar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí', confirmButtonColor: '#0d6efd' })
-            .then(function(result) {
-                if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
-                    DescriptorService.update(id, { estado: 'ENVIADO_TH' });
-                    Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
-                    cargarDescriptores();
-                }
-            });
+        Swal.fire({ 
+            title: '¿Enviar a Jefe Superior?', 
+            text: 'Una vez enviado, el Jefe Superior podrá revisar y aprobar el descriptor.', 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonText: 'Sí, enviar', 
+            confirmButtonColor: '#0d6efd' 
+        }).then(function(result) {
+            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
+                DescriptorService.update(id, { estado: 'ENVIADO_JF' });
+                Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior para revisión', 'success');
+                cargarDescriptores();
+            }
+        });
     }
     
-    // Eventos de filtros
     $('#searchInput').off('keyup').on('keyup', filtrarYMostrar);
     $('#estadoFilter').off('change').on('change', filtrarYMostrar);
     $('#sortBy').off('change').on('change', filtrarYMostrar);
@@ -198,11 +215,9 @@ window.initDescriptorList = function() {
     cargarDescriptores();
 };
 
-// Inicializar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.initDescriptorList);
 } else {
-    // Pequeño delay para asegurar que todo está cargado
     setTimeout(window.initDescriptorList, 50);
 }
 </script>

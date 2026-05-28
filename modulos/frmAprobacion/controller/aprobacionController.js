@@ -36,7 +36,7 @@ var AprobacionController = {
                 <div class="alert alert-info text-center">
                     <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                     <h5>No hay descriptores pendientes de aprobación</h5>
-                    <p>Cuando un Jefe Inmediato envíe un descriptor a TH, aparecerá aquí.</p>
+                    <p>Cuando un Jefe Inmediato envíe un descriptor, aparecerá aquí.</p>
                 </div>
             `);
             return;
@@ -78,8 +78,12 @@ var AprobacionController = {
     },
     
     verDetalle: function(id) {
+        var self = this;
         var descriptor = AprobacionService.getDetalle(id);
         if (!descriptor) return;
+        
+        // Verificar si ya está aprobado pendiente de envío
+        var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
         
         // Generar HTML del detalle
         var funcionesHtml = '';
@@ -175,61 +179,111 @@ var AprobacionController = {
             </div>
         `;
         
-        // Mostrar modal con el detalle y opciones de aprobación
+        // Configurar botones según el estado
+        var confirmButtonText = '<i class="fas fa-check"></i> Aprobar';
+        var denyButtonText = '<i class="fas fa-times"></i> Observar';
+        var confirmButtonColor = '#198754';
+        var denyButtonColor = '#ffc107';
+        
+        if (isAprobado) {
+            confirmButtonText = '<i class="fas fa-paper-plane"></i> Enviar a TH';
+            denyButtonText = '<i class="fas fa-undo"></i> Volver';
+            confirmButtonColor = '#0d6efd';
+            denyButtonColor = '#6c757d';
+        }
+        
         Swal.fire({
             title: `Revisar Descriptor: ${descriptor.puesto}`,
             html: modalHtml,
             width: '700px',
             showCancelButton: true,
             showDenyButton: true,
-            confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
-            denyButtonText: '<i class="fas fa-times"></i> Observar',
+            confirmButtonText: confirmButtonText,
+            denyButtonText: denyButtonText,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#198754',
-            denyButtonColor: '#ffc107',
+            confirmButtonColor: confirmButtonColor,
+            denyButtonColor: denyButtonColor,
             cancelButtonColor: '#6c757d',
             preConfirm: function() {
-                // Aprobar
-                return Swal.fire({
-                    title: 'Aprobar Descriptor',
-                    text: '¿Está seguro de aprobar este descriptor? Se enviará a Talento Humano para revisión técnica.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, aprobar',
-                    cancelButtonText: 'Cancelar'
-                }).then(function(result) {
-                    if (result.isConfirmed) {
-                        AprobacionService.aprobar(id, 'Aprobado por Jefe Superior');
-                        Swal.fire('Aprobado', 'Descriptor aprobado y enviado a Talento Humano', 'success');
-                        location.reload();
-                    }
-                    return false;
-                });
+                if (isAprobado) {
+                    // Enviar a TH
+                    return Swal.fire({
+                        title: 'Enviar a Talento Humano',
+                        text: '¿Está seguro de enviar este descriptor a Talento Humano para revisión técnica?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, enviar',
+                        cancelButtonText: 'Cancelar'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            AprobacionService.enviarATH(id);
+                            Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
+                            location.reload();
+                        }
+                        return false;
+                    });
+                } else {
+                    // Aprobar
+                    return Swal.fire({
+                        title: 'Aprobar Descriptor',
+                        text: '¿Está seguro de aprobar este descriptor?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, aprobar',
+                        cancelButtonText: 'Cancelar'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            AprobacionService.aprobar(id, 'Aprobado por Jefe Superior');
+                            Swal.fire('Aprobado', 'Descriptor aprobado. Ahora puede enviarlo a Talento Humano.', 'success');
+                            location.reload();
+                        }
+                        return false;
+                    });
+                }
             },
             preDeny: function() {
-                // Observar/Rechazar - pedir observaciones
-                return Swal.fire({
-                    title: 'Observaciones',
-                    html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba aquí las observaciones o correcciones necesarias..." rows="4"></textarea>',
-                    showCancelButton: true,
-                    confirmButtonText: 'Enviar observaciones',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: function() {
-                        var obs = document.getElementById('observaciones').value;
-                        if (!obs || obs.trim() === '') {
-                            Swal.showValidationMessage('Debe ingresar observaciones');
-                            return false;
+                if (isAprobado) {
+                    // Volver a estado pendiente
+                    return Swal.fire({
+                        title: 'Volver a pendiente',
+                        text: '¿Desea devolver este descriptor a estado pendiente?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, devolver',
+                        cancelButtonText: 'Cancelar'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            DescriptorService.update(id, { estado: 'ENVIADO_JF' });
+                            Swal.fire('Devuelto', 'Descriptor vuelve a estado pendiente', 'info');
+                            location.reload();
                         }
-                        return obs;
-                    }
-                }).then(function(result) {
-                    if (result.isConfirmed && result.value) {
-                        AprobacionService.observar(id, result.value);
-                        Swal.fire('Observado', 'Descriptor devuelto al Jefe Inmediato con observaciones', 'warning');
-                        location.reload();
-                    }
-                    return false;
-                });
+                        return false;
+                    });
+                } else {
+                    // Observar
+                    return Swal.fire({
+                        title: 'Observaciones',
+                        html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba aquí las observaciones o correcciones necesarias..." rows="4"></textarea>',
+                        showCancelButton: true,
+                        confirmButtonText: 'Enviar observaciones',
+                        cancelButtonText: 'Cancelar',
+                        preConfirm: function() {
+                            var obs = document.getElementById('observaciones').value;
+                            if (!obs || obs.trim() === '') {
+                                Swal.showValidationMessage('Debe ingresar observaciones');
+                                return false;
+                            }
+                            return obs;
+                        }
+                    }).then(function(result) {
+                        if (result.isConfirmed && result.value) {
+                            AprobacionService.observar(id, result.value);
+                            Swal.fire('Observado', 'Descriptor devuelto al Jefe Inmediato con observaciones', 'warning');
+                            location.reload();
+                        }
+                        return false;
+                    });
+                }
             }
         });
     }
