@@ -136,13 +136,6 @@ var CTController = {
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
                 CTService.guardarFirma(id, result.value);
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.registrarEvento(id, {
-                    accion: 'FIRMA DEL COLABORADOR/TITULAR',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: 'FIRMA_CT_COMPLETADA'
-                });
                 Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
                 CTController.cargarPendientes();
             }

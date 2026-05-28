@@ -82,8 +82,10 @@ var THController = {
         var descriptor = THService.getById(id);
         if (!descriptor) return;
         
+        // Verificar si ya tiene complementos
         var tieneComplementos = descriptor.complementadoPorTH || false;
         
+        // Generar HTML del detalle completo
         var funcionesHtml = '';
         if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
             funcionesHtml = '<ul class="mb-0">';
@@ -117,9 +119,10 @@ var THController = {
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
             for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
+                kpisHtml += '<tr>' +
+                    '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
                     '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
-                    '<td>' + (descriptor.kpis[i].meta || '-') + 'NonNulloNonNull' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
                     '</tr>';
             }
             kpisHtml += '</tbody></table>';
@@ -127,6 +130,7 @@ var THController = {
             kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
         }
         
+        // Secciones que TH debe complementar
         var relacionesInternasHtml = '';
         if (descriptor.relacionesLaborales && descriptor.relacionesLaborales.internas && descriptor.relacionesLaborales.internas.length > 0) {
             relacionesInternasHtml = '<ul>';
@@ -173,7 +177,7 @@ var THController = {
             <div class="text-start" style="max-height: 500px; overflow-y: auto;">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> <strong>Información del Descriptor</strong><br>
-                    Revise toda la información y complete las secciones pendientes
+                    Revise toda la información y complete las secciones pendientes marcadas con <span class="text-primary">(Editable por TH)</span>
                 </div>
                 
                 <h6 class="border-bottom pb-2 mt-3">Información General</h6>
@@ -280,13 +284,6 @@ var THController = {
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         THService.aprobar(id, 'Aprobado por TH Generalista');
-                        var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                        DescriptorService.registrarEvento(id, {
-                            accion: 'APROBACIÓN POR TH GENERALISTA',
-                            usuario: currentUserGlobal.nombre,
-                            rol: currentUserGlobal.rolNombre,
-                            estado: 'ACTIVO'
-                        });
                         Swal.fire('Aprobado', 'Descriptor aprobado y enviado al Jefe de TH', 'success');
                         location.reload();
                     }
@@ -311,14 +308,6 @@ var THController = {
                 }).then(function(result) {
                     if (result.isConfirmed && result.value) {
                         THService.observar(id, result.value);
-                        var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                        DescriptorService.registrarEvento(id, {
-                            accion: 'OBSERVACIÓN POR TH GENERALISTA',
-                            usuario: currentUserGlobal.nombre,
-                            rol: currentUserGlobal.rolNombre,
-                            estado: 'OBSERVADO',
-                            observacion: result.value
-                        });
                         Swal.fire('Observado', 'Descriptor devuelto al Jefe Inmediato con observaciones', 'warning');
                         location.reload();
                     }
@@ -344,7 +333,7 @@ var THController = {
             html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Relaciones Internas',
@@ -373,13 +362,6 @@ var THController = {
                     requerimientosOrganizacionales: descriptorActual.requerimientosOrganizacionales || [],
                     riesgosFisicos: descriptorActual.riesgosFisicos || {}
                 });
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ACTUALIZACIÓN DE RELACIONES INTERNAS (TH)',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: descriptorActual.estado
-                });
                 Swal.fire('Guardado', 'Relaciones internas actualizadas', 'success');
                 THController.verDetalle(id);
             }
@@ -402,7 +384,7 @@ var THController = {
             html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Relaciones Externas',
@@ -431,13 +413,6 @@ var THController = {
                     requerimientosOrganizacionales: descriptorActual.requerimientosOrganizacionales || [],
                     riesgosFisicos: descriptorActual.riesgosFisicos || {}
                 });
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ACTUALIZACIÓN DE RELACIONES EXTERNAS (TH)',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: descriptorActual.estado
-                });
                 Swal.fire('Guardado', 'Relaciones externas actualizadas', 'success');
                 THController.verDetalle(id);
             }
@@ -455,7 +430,7 @@ var THController = {
                 '<div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
         }
         
-        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
         
         Swal.fire({
             title: 'Editar Requerimientos Organizacionales',
@@ -475,17 +450,10 @@ var THController = {
             }
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
                 THService.guardarComplementos(id, {
                     relacionesLaborales: descriptor.relacionesLaborales || { internas: [], externas: [] },
                     requerimientosOrganizacionales: result.value,
                     riesgosFisicos: descriptor.riesgosFisicos || {}
-                });
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ACTUALIZACIÓN DE REQUERIMIENTOS (TH)',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: descriptor.estado
                 });
                 Swal.fire('Guardado', 'Requerimientos actualizados', 'success');
                 THController.verDetalle(id);
@@ -511,7 +479,7 @@ var THController = {
             }
         }
         
-        html += '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="window.agregarRiesgo()"><i class="fas fa-plus"></i> Agregar riesgo</button></div></div>';
+        html += '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRiesgo()"><i class="fas fa-plus"></i> Agregar riesgo</button></div></div>';
         
         Swal.fire({
             title: 'Editar Riesgos Físicos del Puesto',
@@ -533,17 +501,10 @@ var THController = {
             }
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
                 THService.guardarComplementos(id, {
                     relacionesLaborales: descriptor.relacionesLaborales || { internas: [], externas: [] },
                     requerimientosOrganizacionales: descriptor.requerimientosOrganizacionales || [],
                     riesgosFisicos: result.value
-                });
-                DescriptorService.registrarEvento(id, {
-                    accion: 'ACTUALIZACIÓN DE RIESGOS (TH)',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: descriptor.estado
                 });
                 Swal.fire('Guardado', 'Riesgos actualizados', 'success');
                 THController.verDetalle(id);
@@ -552,33 +513,21 @@ var THController = {
     }
 };
 
-// ========== FUNCIONES AUXILIARES GLOBALES ==========
+// Funciones auxiliares para agregar filas dinámicamente
 window.agregarRelacionInterna = function() {
-    var container = $('#relacionesInternasEditor');
-    if (container.length > 0) {
-        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-    }
+    $('#relacionesInternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
 };
 
 window.agregarRelacionExterna = function() {
-    var container = $('#relacionesExternasEditor');
-    if (container.length > 0) {
-        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-    }
+    $('#relacionesExternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
 };
 
 window.agregarRequerimiento = function() {
-    var container = $('#requerimientosEditor');
-    if (container.length > 0) {
-        container.append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-    }
+    $('#requerimientosEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
 };
 
 window.agregarRiesgo = function() {
-    var container = $('#riesgosLista');
-    if (container.length > 0) {
-        container.append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
-    }
+    $('#riesgosLista').append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
 };
 
 window.THController = THController;
