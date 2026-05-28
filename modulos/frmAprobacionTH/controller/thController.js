@@ -119,7 +119,11 @@ var THController = {
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
             for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<tr><td>' + (descriptor.kpis[i].indicador || '-') + '</td><td>' + (descriptor.kpis[i].frecuencia || '-') + 'NonNulloNonNull' + (descriptor.kpis[i].meta || '-') + 'NonNulloNonNull' + '';
+                kpisHtml += '<tr>' +
+                    '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
+                    '</tr>';
             }
             kpisHtml += '</tbody></table>';
         } else {
