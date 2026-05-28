@@ -354,9 +354,9 @@
         var kpisCount = $('#kpisContainer .dynamic-row').length;
         
         $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm">' +
-            '<tr><td><strong>Puesto:</strong></td><td>' + puestoVal + '</td></tr>' +
-            '<tr><td><strong>Funciones Claves:</strong></td><td>' + funcionesCount + '</td></tr>' +
-            '<tr><td><strong>KPIs:</strong></td><td>' + kpisCount + '</td></tr>' +
+            '<tr>:<strong>Puesto:</strong></td>:' + puestoVal + 'NonNulloNonNull' +
+            '<tr>:<strong>Funciones Claves:</strong>NonNulloNonNull' + funcionesCount + 'NonNulloNonNull' +
+            '<tr>:<strong>KPIs:</strong>NonNulloNonNull' + kpisCount + 'NonNulloNonNull' +
             '</table><div class="alert alert-info">Revise antes de guardar</div>');
     }
     
@@ -487,7 +487,16 @@
                 formData.id = existingDescriptor.id;
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
-                formData.estado = 'BORRADOR';
+                
+                // Determinar el estado después de editar según el estado original
+                if (existingDescriptor.estado === 'OBSERVADO_JF') {
+                    formData.estado = 'APROBADO_POR_JF';
+                } else if (existingDescriptor.estado === 'OBSERVADO_TH') {
+                    formData.estado = 'ENVIADO_TH';
+                } else {
+                    formData.estado = 'BORRADOR';
+                }
+                
                 DescriptorService.update(window._editingId, formData);
                 Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
                     window._isEditing = false;

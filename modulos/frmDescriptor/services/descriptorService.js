@@ -41,7 +41,6 @@ var DescriptorService = {
             }
         }
         if (index !== -1) {
-            // Actualizar el descriptor con los nuevos datos
             for (var clave in data) {
                 descriptors[index][clave] = data[clave];
             }
@@ -84,7 +83,7 @@ var DescriptorService = {
     },
     
     registrarEvento: function(id, evento) {
-        var descriptors = this.getAll();  // CORREGIDO: usar this.getAll()
+        var descriptors = this.getAll();
         var index = -1;
         for (var i = 0; i < descriptors.length; i++) {
             if (descriptors[i].id === id) {
