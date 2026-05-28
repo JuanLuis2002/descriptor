@@ -188,6 +188,9 @@
     var currentStep = 1;
     var totalSteps = 14;
     
+    // Variable para guardar actividades temporalmente (persiste entre pasos)
+    var actividadesBackup = null;
+    
     // ========== FUNCIONES PARA AGREGAR FILAS ==========
     function addFuncionClaveRow() {
         $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
@@ -241,8 +244,46 @@
     $('#areaUsuario').val(currentUser.area || '');
     $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
     
+    // ========== FUNCIÓN PARA GUARDAR ACTIVIDADES ACTUALES ==========
+    function guardarActividadesActuales() {
+        if (funcionesClavesList.length === 0) return;
+        
+        var actividadesGuardadas = [];
+        for(var f = 0; f < funcionesClavesList.length; f++) {
+            var actividades = [];
+            $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
+                var val = $(this).val();
+                if(val && val.trim() !== '') actividades.push(val.trim());
+            });
+            actividadesGuardadas.push({ 
+                funcionNombre: funcionesClavesList[f].nombre, 
+                actividades: actividades 
+            });
+        }
+        actividadesBackup = actividadesGuardadas;
+    }
+    
+    // ========== FUNCIÓN PARA RESTAURAR ACTIVIDADES ==========
+    function restaurarActividades() {
+        if (!actividadesBackup || actividadesBackup.length === 0) return;
+        
+        for(var f = 0; f < actividadesBackup.length; f++) {
+            var saved = actividadesBackup[f];
+            if (saved.actividades && saved.actividades.length > 0) {
+                for(var a = 0; a < saved.actividades.length; a++) {
+                    agregarActividadConTexto(f, saved.actividades[a]);
+                }
+            }
+        }
+    }
+    
     // ========== FUNCIÓN PARA ACTUALIZAR ACTIVIDADES ==========
     function actualizarActividades() {
+        // Guardar actividades actuales antes de regenerar
+        if (funcionesClavesList.length > 0) {
+            guardarActividadesActuales();
+        }
+        
         funcionesClavesList = [];
         var funcionIndex = 0;
         $('#funcionesClavesContainer .dynamic-row').each(function() {
@@ -269,18 +310,8 @@
         }
         $('#actividadesContainer').html(html);
         
-        // Cargar actividades guardadas
-        if (window._savedActividades && window._savedActividades.length > 0) {
-            for (var f = 0; f < window._savedActividades.length; f++) {
-                var saved = window._savedActividades[f];
-                if (saved.actividades && saved.actividades.length > 0) {
-                    for (var a = 0; a < saved.actividades.length; a++) {
-                        agregarActividadConTexto(f, saved.actividades[a]);
-                    }
-                }
-            }
-            window._savedActividades = null;
-        }
+        // Restaurar actividades guardadas
+        restaurarActividades();
     }
     
     // Función para agregar actividad vacía
@@ -314,7 +345,12 @@
         $('#nextBtn').toggle(currentStep < totalSteps);
         $('#saveBtn').toggle(currentStep === totalSteps);
         
-        // Solo actualizar actividades cuando entramos a la sección 4
+        // Cuando SALIMOS de la sección 4, guardamos actividades
+        if (currentStep !== 4 && funcionesClavesList.length > 0) {
+            guardarActividadesActuales();
+        }
+        
+        // Cuando ENTRAMOS a la sección 4, actualizamos y restauramos
         if (currentStep === 4) {
             actualizarActividades();
         }
@@ -338,7 +374,7 @@
     }
     
     function updateResumen() {
-        $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm"></tr><td><strong>Puesto:</strong></td><td>' + ($('select[name="puesto"]').val() || '-') + '</td></tr>' +
+        $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm"><tr><td><strong>Puesto:</strong></td><td>' + ($('select[name="puesto"]').val() || '-') + '</td></tr>' +
             '<tr><td><strong>Funciones Claves:</strong></td><td>' + $('#funcionesClavesContainer .dynamic-row').length + '</td></tr>' +
             '<tr><td><strong>KPIs:</strong></td><td>' + $('#kpisContainer .dynamic-row').length + '</td></tr></table>' +
             '<div class="alert alert-info">Revise antes de guardar</div>');
