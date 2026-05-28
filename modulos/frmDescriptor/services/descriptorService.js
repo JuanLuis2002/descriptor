@@ -8,20 +8,20 @@ var DescriptorService = {
     save: function(descriptor) {
         const descriptors = this.getAll();
         descriptor.id = descriptors.length + 1;
-        descriptor.codigo = `DES-${(descriptores.length + 1).toString().padStart(4, '0')}`;
+        descriptor.codigo = `DES-${(descriptors.length + 1).toString().padStart(4, '0')}`;
         descriptor.estado = 'BORRADOR';
         descriptor.fechaCreacion = new Date().toISOString();
         descriptors.push(descriptor);
-        localStorage.setItem('descriptores', JSON.stringify(descriptores));
+        localStorage.setItem('descriptores', JSON.stringify(descriptors));
         return descriptor;
     },
     
     update: function(id, data) {
-        const descriptors = this.getAll();
+        const descriptors = this.getAll();  // CORREGIDO: usar this.getAll()
         const index = descriptors.findIndex(d => d.id === id);
         if (index !== -1) {
             descriptors[index] = { ...descriptors[index], ...data };
-            localStorage.setItem('descriptores', JSON.stringify(descriptores));
+            localStorage.setItem('descriptores', JSON.stringify(descriptors));
             return descriptors[index];
         }
         return null;
