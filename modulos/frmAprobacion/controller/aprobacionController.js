@@ -48,55 +48,106 @@ var AprobacionController = {
         
         var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
         
-        var funcionesHtml = '<ul>' + (descriptor.funcionesClaves || []).map(function(f) { return '<li><strong>' + (f.codigo || '') + '</strong> - ' + (f.nombre || '') + '</li>'; }).join('') + '</ul>';
+        // Funciones Claves
+        var funcionesHtml = '';
+        if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
+            funcionesHtml = '<ul class="mb-0">';
+            for (var i = 0; i < descriptor.funcionesClaves.length; i++) {
+                funcionesHtml += '<li><strong>' + (descriptor.funcionesClaves[i].codigo || '') + '</strong> - ' + (descriptor.funcionesClaves[i].nombre || '') + '</li>';
+            }
+            funcionesHtml += '</ul>';
+        } else {
+            funcionesHtml = '<p class="text-muted">No registradas</p>';
+        }
         
+        // Actividades
         var actividadesHtml = '';
-        if (descriptor.actividadesPorFuncion) {
+        if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
             for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
                 var func = descriptor.actividadesPorFuncion[i];
                 actividadesHtml += '<div class="mb-2"><strong>' + (func.funcionNombre || 'Función ' + (i+1)) + ':</strong><ul>';
-                if (func.actividades) {
+                if (func.actividades && func.actividades.length > 0) {
                     for (var j = 0; j < func.actividades.length; j++) {
                         actividadesHtml += '<li>' + func.actividades[j] + '</li>';
                     }
+                } else {
+                    actividadesHtml += '<li class="text-muted">No hay actividades registradas</li>';
                 }
                 actividadesHtml += '</ul></div>';
             }
+        } else {
+            actividadesHtml = '<p class="text-muted">No hay actividades registradas</p>';
         }
         
-        var kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
-        if (descriptor.kpis) {
+        // KPIs - CORREGIDO
+        var kpisHtml = '';
+        if (descriptor.kpis && descriptor.kpis.length > 0) {
+            kpisHtml = '<table class="table table-sm table-bordered">' +
+                '<thead class="table-light">' +
+                '<tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr>' +
+                '</thead><tbody>';
             for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<td>' + (descriptor.kpis[i].indicador || '-') + '</td><td>' + (descriptor.kpis[i].frecuencia || '-') + 'NonNulloNonNull' + (descriptor.kpis[i].meta || '-') + 'NonNulloNonNull' + '';
+                kpisHtml += '<tr>' +
+                    '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
+                    '</tr>';
             }
+            kpisHtml += '</tbody></table>';
+        } else {
+            kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
         }
-        kpisHtml += '</tbody></table>';
         
-        var perfilHtml = '<table class="table table-sm">' +
-            '<tr><th>Edad:</th><td>' + (descriptor.perfil?.edadMin || '-') + ' - ' + (descriptor.perfil?.edadMax || '-') + ' años</td><th>Sexo:</th><td>' + (descriptor.perfil?.sexo || '-') + 'NonNulloNonNull' +
-            '<tr><th>Estado Familiar:</th><td>' + (descriptor.perfil?.estadoFamiliar || '-') + 'NonNulloNonNull<th>Disponibilidad:</th><td>' + (descriptor.perfil?.disponibilidadHorario || '-') + 'NonNulloNonNull' +
-            '<tr><th>Modalidad:</th><td>' + (descriptor.perfil?.modalidadTrabajo || '-') + 'NonNulloNonNull<th>Licencia:</th><td>' + (descriptor.perfil?.poseerLicencia == '1' ? 'Sí' : 'No') + 'NonNulloNonNull' +
-            '</table>';
+        // Perfil del Puesto - CORREGIDO
+        var perfilHtml = '';
+        if (descriptor.perfil) {
+            perfilHtml = '<table class="table table-sm">' +
+                '<tr><th style="width: 35%;">Edad Mínima:</th><td>' + (descriptor.perfil.edadMin || '-') + ' años</td><th style="width: 35%;">Edad Máxima:</th><td>' + (descriptor.perfil.edadMax || '-') + ' años</td></tr>' +
+                '<tr><th>Sexo:</th><td>' + (descriptor.perfil.sexo === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.sexo === 'MASCULINO' ? 'Masculino' : 'Femenino')) + '</td><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.estadoFamiliar || '-')) + '</td></tr>' +
+                '<tr><th>Disponibilidad Horaria:</th><td>' + (descriptor.perfil.disponibilidadHorario === 'TIEMPO_COMPLETO' ? 'Tiempo Completo' : (descriptor.perfil.disponibilidadHorario === 'MEDIO_TIEMPO' ? 'Medio Tiempo' : descriptor.perfil.disponibilidadHorario || '-')) + '</td><th>Modalidad de Trabajo:</th><td>' + (descriptor.perfil.modalidadTrabajo === 'PRESENCIAL' ? 'Presencial' : (descriptor.perfil.modalidadTrabajo === 'HIBRIDO' ? 'Híbrido' : (descriptor.perfil.modalidadTrabajo === 'REMOTO' ? 'Remoto' : descriptor.perfil.modalidadTrabajo || '-'))) + '</td></tr>' +
+                '<tr><th>Poseer Licencia:</th><td colspan="3">' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</td></tr>' +
+                '</table>';
+        } else {
+            perfilHtml = '<p class="text-muted">No hay perfil registrado</p>';
+        }
         
-        var modalHtml = '<div class="text-start" style="max-height: 500px; overflow-y: auto;">' +
+        var modalHtml = '<div class="text-start" style="max-height: 550px; overflow-y: auto;">' +
+            '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
+            
             '<h6 class="border-bottom pb-2">Información General</h6>' +
-            '<p><strong>Código:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p>' +
-            '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
-            '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '</p>' +
-            '<p><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
-            '<p><strong>Creador:</strong> ' + (descriptor.creador || '-') + '</p>' +
-            '<p><strong>Fecha de Emisión:</strong> ' + (descriptor.fechaEmision || '-') + '</p><hr>' +
-            '<h6 class="border-bottom pb-2">Objetivo</h6><p>' + (descriptor.objetivo || '-') + '</p><hr>' +
-            '<h6 class="border-bottom pb-2">Funciones Claves</h6>' + funcionesHtml + '<hr>' +
-            '<h6 class="border-bottom pb-2">Actividades</h6>' + actividadesHtml + '<hr>' +
-            '<h6 class="border-bottom pb-2">Indicadores (KPIs)</h6>' + kpisHtml + '<hr>' +
-            '<h6 class="border-bottom pb-2">Perfil del Puesto</h6>' + perfilHtml + '<hr>' +
-            '<h6 class="border-bottom pb-2">Responsabilidades</h6>' +
+            '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '<br><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Objetivo del Puesto</h6>' +
+            '<p>' + (descriptor.objetivo || '-') + '</p>' +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Funciones Claves</h6>' +
+            funcionesHtml +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Actividades por Función</h6>' +
+            actividadesHtml +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Funciones Secundarias</h6>' +
+            '<ul>' + ((descriptor.funcionesSecundarias || []).map(function(f) { return '<li>' + f + '</li>'; }).join('') || '<li class="text-muted">No registradas</li>') + '</ul>' +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Indicadores de Desempeño (KPIs)</h6>' +
+            kpisHtml +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Perfil del Puesto</h6>' +
+            perfilHtml +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Responsabilidades a Cargo</h6>' +
             '<p><strong>De equipo:</strong> ' + (descriptor.responsabilidades?.equipo || '-') + '</p>' +
-            '<p><strong>Impacto económico:</strong> ' + (descriptor.responsabilidades?.impactoEconomico || '-') + '</p><hr>' +
-            '<h6 class="border-bottom pb-2">Entrenamiento</h6>' +
+            '<p><strong>De fondos:</strong> ' + (descriptor.responsabilidades?.fondos || '-') + '</p>' +
+            '<p><strong>De documentos:</strong> ' + (descriptor.responsabilidades?.documentos || '-') + '</p>' +
+            '<p><strong>Toma de decisiones:</strong> ' + (descriptor.responsabilidades?.tomaDecisiones || '-') + '</p>' +
+            '<p><strong>De personal:</strong> ' + (descriptor.responsabilidades?.personal || '-') + '</p>' +
+            '<p><strong>Impacto económico:</strong> ' + (descriptor.responsabilidades?.impactoEconomico || '-') + '</p>' +
+            
+            '<h6 class="border-bottom pb-2 mt-3">Entrenamiento</h6>' +
             '<p><strong>Personal a cargo:</strong> ' + (descriptor.entrenamiento?.personalCargo || '0') + '</p>' +
+            '<p><strong>Tipo de entrenamiento:</strong> ' + (descriptor.entrenamiento?.tipoEntrenamiento || '-') + '</p>' +
             '<p><strong>Duración:</strong> ' + (descriptor.entrenamiento?.duracion || '-') + '</p>' +
+            '<p><strong>Puestos responsables:</strong> ' + (descriptor.entrenamiento?.puestosResponsables || '-') + '</p>' +
             '</div>';
         
         var confirmButtonText = isAprobado ? '<i class="fas fa-paper-plane"></i> Enviar a TH' : '<i class="fas fa-check"></i> Aprobar';
@@ -107,7 +158,7 @@ var AprobacionController = {
         Swal.fire({
             title: 'Revisar Descriptor: ' + descriptor.puesto,
             html: modalHtml,
-            width: '700px',
+            width: '750px',
             showCancelButton: true,
             showDenyButton: true,
             confirmButtonText: confirmButtonText,
@@ -170,7 +221,7 @@ var AprobacionController = {
                 } else {
                     return Swal.fire({
                         title: 'Observaciones',
-                        html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba las observaciones..." rows="4"></textarea>',
+                        html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba las observaciones..." rows="4" style="width:100%"></textarea>',
                         showCancelButton: true,
                         confirmButtonText: 'Enviar',
                         preConfirm: function() {
