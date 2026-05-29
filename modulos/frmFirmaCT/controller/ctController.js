@@ -27,7 +27,7 @@ var CTController = {
             var d = todos[i];
             // El colaborador puede firmar si está en FIRMADO_JTH y es el titular
             // O si ya firmó y quiere ver su firma (FIRMADO_CT)
-            if (d.estado === 'FIRMADO_JTH' && d.titular === this.currentUser.nombre) {
+            if (d.estado === 'FIRMADO_JTH' && d.titular.trim().toLowerCase() === this.currentUser.nombre.trim().toLowerCase()) {
                 pendientes.push(d);
             } else if (d.estado === 'FIRMADO_CT' && d.titular === this.currentUser.nombre) {
                 pendientes.push(d);
