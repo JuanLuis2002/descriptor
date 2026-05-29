@@ -4,8 +4,10 @@ var CTService = {
         var todos = DescriptorService.getAll();
         var resultado = [];
         for (var i = 0; i < todos.length; i++) {
-            if (todos[i].estado === 'FIRMADO_JTH' && todos[i].titular === nombreTitular) {
-                resultado.push(todos[i]);
+            var d = todos[i];
+            // El colaborador firma cuando está en estado FIRMADO_JTH y es el titular
+            if (d.estado === 'FIRMADO_JTH' && d.titular === nombreTitular) {
+                resultado.push(d);
             }
         }
         return resultado;
