@@ -368,6 +368,87 @@ function cargarFirmasCT() {
     }
 }
 
+// Función para firmar descriptor (Jefe Inmediato)
+function firmarDescriptorJI(id) {
+    var descriptor = DescriptorService.getById(id);
+    if (!descriptor) return;
+    
+    var modalHtml = '<div class="text-center"><div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
+    
+    Swal.fire({
+        title: 'Firma Digital - Jefe Inmediato',
+        html: modalHtml,
+        width: '500px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+        cancelButtonText: 'Cancelar',
+        didOpen: function() {
+            var canvas = document.getElementById('firmaCanvas');
+            var signaturePad = new SignaturePad(canvas);
+            $('#limpiarFirma').click(function() { signaturePad.clear(); });
+            $('#descargarFirma').click(function() {
+                if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
+                var link = document.createElement('a');
+                link.download = 'firma_ji_' + id + '.png';
+                link.href = signaturePad.toDataURL('image/png');
+                link.click();
+            });
+            window.currentSignaturePad = signaturePad;
+        },
+        preConfirm: function() {
+            if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
+                Swal.showValidationMessage('Debe dibujar una firma');
+                return false;
+            }
+            return window.currentSignaturePad.toDataURL('image/png');
+        }
+    }).then(function(result) {
+        if (result.isConfirmed && result.value) {
+            var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
+            firmasGuardadas['ji_' + id] = result.value;
+            localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
+            DescriptorService.update(id, { estado: 'ACTIVO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
+            DescriptorService.registrarEvento(id, {
+                accion: 'FIRMA DEL JEFE INMEDIATO',
+                usuario: currentUser.nombre,
+                rol: currentUser.rolNombre,
+                estado: 'ACTIVO'
+            });
+            Swal.fire('Firmado', 'Descriptor firmado y activado correctamente', 'success');
+            cargarMisDescriptores();
+        }
+    });
+}
+
+// Función para desactivar descriptor
+function desactivarDescriptor(id) {
+    Swal.fire({
+        title: 'Desactivar Descriptor',
+        html: '<textarea id="motivo" class="swal2-textarea" placeholder="Motivo de desactivación..." rows="3"></textarea>',
+        showCancelButton: true,
+        confirmButtonText: 'Desactivar',
+        confirmButtonColor: '#dc3545',
+        preConfirm: function() {
+            var motivo = document.getElementById('motivo').value;
+            if (!motivo || motivo.trim() === '') {
+                Swal.showValidationMessage('Debe ingresar un motivo');
+                return false;
+            }
+            return motivo;
+        }
+    }).then(function(result) {
+        if (result.isConfirmed && result.value) {
+            DescriptorService.desactivar(id, result.value, currentUser.nombre, currentUser.rolNombre);
+            Swal.fire('Desactivado', 'Descriptor desactivado correctamente', 'success');
+            cargarMisDescriptores();
+        }
+    });
+}
+
+// Exportar globales
+window.firmarDescriptorJI = firmarDescriptorJI;
+window.desactivarDescriptor = desactivarDescriptor;
+
 // Exportar globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
 window.verDescriptor = verDescriptor;

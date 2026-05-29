@@ -10,20 +10,12 @@ var JTHController = {
     
     loadView: function() {
         var self = this;
-        
         $('#contentContainer').empty();
-        
         $.get('modulos/frmFirmaJTH/view/jthView.html', function(html) {
             $('#contentContainer').html(html);
-            console.log('Vista de firmas JTH cargada correctamente');
             self.cargarPendientes();
         }).fail(function() {
-            $('#contentContainer').html(`
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Error al cargar la vista de firmas JTH.
-                </div>
-            `);
+            $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de firmas JTH</div>');
         });
     },
     
@@ -31,13 +23,7 @@ var JTHController = {
         var pendientes = JTHService.getPendientesFirma();
         
         if (pendientes.length === 0) {
-            $('#pendientesContainer').html(`
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                    <h5>No hay descriptores pendientes de firma</h5>
-                    <p>Cuando un descriptor sea aprobado por TH, aparecerá aquí.</p>
-                </div>
-            `);
+            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de firma</h5></div>');
             return;
         }
         
@@ -45,32 +31,12 @@ var JTHController = {
         for (var i = 0; i < pendientes.length; i++) {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-            var tieneFirma = JTHService.getFirma(d.id) ? true : false;
-            html += `
-                <div class="col-12 col-md-6 col-lg-4 mb-3">
-                    <div class="card h-100">
-                        <div class="card-header bg-primary text-white">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">${d.codigo || 'DES-' + d.id}</span>
-                                <span class="badge ${tieneFirma ? 'bg-success' : 'bg-warning'}">${tieneFirma ? 'Firmado' : 'Pendiente'}</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">${d.puesto || 'Sin título'}</h5>
-                            <p class="card-text text-muted small">
-                                <i class="fas fa-building"></i> ${d.area || 'N/A'}<br>
-                                <i class="fas fa-user"></i> Creador: ${d.creador || 'N/A'}<br>
-                                <i class="fas fa-calendar"></i> Fecha: ${fecha}
-                            </p>
-                        </div>
-                        <div class="card-footer bg-white">
-                            <button class="btn btn-sm ${tieneFirma ? 'btn-success' : 'btn-warning'} w-100" onclick="JTHController.firmar(${d.id})">
-                                <i class="fas fa-signature"></i> ${tieneFirma ? 'Ver Firma' : 'Firmar Descriptor'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            var tieneFirma = JTHService.getFirma(d.id);
+            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
+                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + (tieneFirma ? 'bg-success' : 'bg-warning') + '">' + (tieneFirma ? 'Firmado' : 'Pendiente') + '</span></div></div>' +
+                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
+                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
+                '<div class="card-footer bg-white"><button class="btn btn-sm ' + (tieneFirma ? 'btn-success' : 'btn-warning') + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + (tieneFirma ? 'Ver Firma' : 'Firmar Descriptor') + '</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
@@ -82,20 +48,10 @@ var JTHController = {
         
         var firmaExistente = JTHService.getFirma(id);
         
-        var modalHtml = `
-            <div class="text-center">
-                <div id="signature-pad" class="signature-pad border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;">
-                    <canvas id="firmaCanvas" width="400" height="200" style="width: 100%; height: 100%;"></canvas>
-                </div>
-                <div class="mt-3">
-                    <button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button>
-                    <button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar Firma</button>
-                </div>
-            </div>
-        `;
+        var modalHtml = '<div class="text-center"><div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
         
         Swal.fire({
-            title: `Firma Digital - Jefe de TH`,
+            title: 'Firma Digital - Jefe de TH',
             html: modalHtml,
             width: '500px',
             showCancelButton: true,
@@ -104,28 +60,15 @@ var JTHController = {
             didOpen: function() {
                 var canvas = document.getElementById('firmaCanvas');
                 var signaturePad = new SignaturePad(canvas);
-                
-                // Si ya existe una firma, cargarla
-                if (firmaExistente) {
-                    signaturePad.fromDataURL(firmaExistente);
-                }
-                
-                $('#limpiarFirma').click(function() {
-                    signaturePad.clear();
-                });
-                
+                if (firmaExistente) signaturePad.fromDataURL(firmaExistente);
+                $('#limpiarFirma').click(function() { signaturePad.clear(); });
                 $('#descargarFirma').click(function() {
-                    if (signaturePad.isEmpty()) {
-                        Swal.fire('Advertencia', 'No hay firma para descargar', 'warning');
-                        return;
-                    }
-                    var dataURL = signaturePad.toDataURL('image/png');
+                    if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
                     var link = document.createElement('a');
                     link.download = 'firma_jth_' + id + '.png';
-                    link.href = dataURL;
+                    link.href = signaturePad.toDataURL('image/png');
                     link.click();
                 });
-                
                 window.currentSignaturePad = signaturePad;
             },
             preConfirm: function() {
@@ -133,12 +76,17 @@ var JTHController = {
                     Swal.showValidationMessage('Debe dibujar una firma');
                     return false;
                 }
-                var firmaDataURL = window.currentSignaturePad.toDataURL('image/png');
-                return firmaDataURL;
+                return window.currentSignaturePad.toDataURL('image/png');
             }
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
                 JTHService.guardarFirma(id, result.value);
+                DescriptorService.registrarEvento(id, {
+                    accion: 'FIRMA DEL JEFE DE TALENTO HUMANO',
+                    usuario: JTHController.currentUser.nombre,
+                    rol: JTHController.currentUser.rolNombre,
+                    estado: 'FIRMADO_JTH'
+                });
                 Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
                 JTHController.cargarPendientes();
             }

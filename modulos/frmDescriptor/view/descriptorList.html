@@ -9,13 +9,17 @@
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-borrador { background: #6c757d; color: white; }
         .status-enviado_jf { background: #0dcaf0; color: #000; }
-        .status-observado { background: #ffc107; color: #000; }
+        .status-observado_jf { background: #ffc107; color: #000; }
         .status-aprobado_jf { background: #20c997; color: white; }
         .status-enviado_th { background: #fd7e14; color: white; }
+        .status-observado_th { background: #ffc107; color: #000; }
+        .status-aprobado_th { background: #20c997; color: white; }
+        .status-firma_jth { background: #0d6efd; color: white; }
+        .status-firmado_jth { background: #0d6efd; color: white; }
+        .status-firmado_ct { background: #6f42c1; color: white; }
+        .status-firmado_ji { background: #6f42c1; color: white; }
         .status-activo { background: #198754; color: white; }
-        .status-firma_jth_completada { background: #0d6efd; color: white; }
-        .status-firma_ct_completada { background: #6f42c1; color: white; }
-        .status-firmado { background: #198754; color: white; }
+        .status-inactivo { background: #dc3545; color: white; }
         .filtro-busqueda { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .stats-bar { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .stat-item { text-align: center; border-right: 1px solid #dee2e6; }
@@ -23,6 +27,12 @@
         .stat-number { font-size: 24px; font-weight: bold; color: #0d6efd; }
         .stat-label { font-size: 12px; color: #6c757d; }
         .observacion-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 12px; }
+        .auditoria-item { padding: 10px; border-bottom: 1px solid #dee2e6; }
+        .auditoria-item:last-child { border-bottom: none; }
+        .auditoria-fecha { font-size: 11px; color: #6c757d; }
+        .auditoria-accion { font-weight: bold; }
+        .auditoria-usuario { color: #0d6efd; }
+        .auditoria-estado { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-left: 8px; }
         @media (max-width: 768px) { .stat-item { border-right: none; margin-bottom: 10px; } }
     </style>
 </head>
@@ -31,19 +41,37 @@
     <div class="row text-center">
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statBorradores">0</div><div class="stat-label">Borradores</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviados">0</div><div class="stat-label">Enviados a JF</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservados">0</div><div class="stat-label">Observados</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobados">0</div><div class="stat-label">Aprobados por JF</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosJF">0</div><div class="stat-label">Enviados a JF</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosJF">0</div><div class="stat-label">Observados por JF</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosJF">0</div><div class="stat-label">Aprobados por JF</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Firmas JTH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmados">0</div><div class="stat-label">Firmados</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statInactivos">0</div><div class="stat-label">Inactivos</div></div>
     </div>
 </div>
 
 <div class="filtro-busqueda">
     <div class="row g-3">
         <div class="col-md-4"><label class="form-label small">Buscar</label><input type="text" class="form-control" id="searchInput" placeholder="Por puesto, código o área..."></div>
-        <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="ENVIADO_JF">Enviado a JF</option><option value="OBSERVADO">Observado</option><option value="APROBADO_POR_JF">Aprobado por JF</option><option value="ENVIADO_TH">Enviado a TH</option><option value="ACTIVO">Activo</option><option value="FIRMA_JTH_COMPLETADA">Firma JTH</option><option value="FIRMA_CT_COMPLETADA">Firma Colaborador</option><option value="FIRMADO">Firmado</option></select></div>
+        <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter">
+            <option value="">Todos</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="ENVIADO_JF">Enviado a JF</option>
+            <option value="OBSERVADO_JF">Observado por JF</option>
+            <option value="APROBADO_POR_JF">Aprobado por JF</option>
+            <option value="ENVIADO_TH">Enviado a TH</option>
+            <option value="OBSERVADO_TH">Observado por TH</option>
+            <option value="APROBADO_TH">Aprobado por TH</option>
+            <option value="FIRMA_JTH">Pendiente Firma JTH</option>
+            <option value="FIRMADO_JTH">Firmado por JTH</option>
+            <option value="FIRMADO_CT">Firmado por Colaborador</option>
+            <option value="FIRMADO_JI">Firmado por Jefe Inmediato</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+        </select></div>
         <div class="col-md-3"><label class="form-label small">Ordenar por</label><select class="form-select" id="sortBy"><option value="fecha">Fecha (reciente)</option><option value="puesto">Puesto (A-Z)</option><option value="estado">Estado</option></select></div>
         <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" id="btnNuevoDescriptor"><i class="fas fa-plus"></i> Nuevo</button></div>
     </div>
@@ -52,7 +80,6 @@
 <div id="descriptoresListContainer"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p>Cargando...</p></div></div>
 
 <script>
-// Función global para inicializar la lista - se ejecuta solo una vez
 window.initDescriptorList = function() {
     if (window._listInitialized === true) {
         console.log('Lista ya inicializada, omitiendo');
@@ -70,7 +97,6 @@ window.initDescriptorList = function() {
             actualizarEstadisticas();
             filtrarYMostrar();
         } else {
-            console.error('DescriptorListService no está disponible');
             $('#descriptoresListContainer').html('<div class="alert alert-danger">Error al cargar los descriptores</div>');
         }
     }
@@ -80,12 +106,15 @@ window.initDescriptorList = function() {
             var stats = DescriptorListService.getEstadisticas(currentUser.nombre);
             $('#statTotal').text(stats.total);
             $('#statBorradores').text(stats.borradores);
-            $('#statEnviados').text(stats.enviados || 0);
-            $('#statObservados').text(stats.observados || 0);
-            $('#statAprobados').text(stats.aprobados || 0);
+            $('#statEnviadosJF').text(stats.enviadosJF || 0);
+            $('#statObservadosJF').text(stats.observadosJF || 0);
+            $('#statAprobadosJF').text(stats.aprobadosJF || 0);
             $('#statEnviadosTH').text(stats.enviadosTH || 0);
+            $('#statObservadosTH').text(stats.observadosTH || 0);
+            $('#statAprobadosTH').text(stats.aprobadosTH || 0);
+            $('#statFirmasJTH').text(stats.firmaJTH || 0);
             $('#statActivos').text(stats.activos);
-            $('#statFirmados').text(stats.firmados);
+            $('#statInactivos').text(stats.inactivos || 0);
         }
     }
     
@@ -106,6 +135,44 @@ window.initDescriptorList = function() {
         mostrarLista(filtered);
     }
     
+    function getEstadoTexto(estado) {
+        var estados = {
+            'BORRADOR': 'Borrador',
+            'ENVIADO_JF': 'Enviado a JF',
+            'OBSERVADO_JF': 'Observado por JF',
+            'APROBADO_POR_JF': 'Aprobado por JF',
+            'ENVIADO_TH': 'Enviado a TH',
+            'OBSERVADO_TH': 'Observado por TH',
+            'APROBADO_TH': 'Aprobado por TH',
+            'FIRMA_JTH': 'Pendiente Firma JTH',
+            'FIRMADO_JTH': 'Firmado por JTH',
+            'FIRMADO_CT': 'Firmado por Colaborador',
+            'FIRMADO_JI': 'Firmado por Jefe Inmediato',
+            'ACTIVO': 'Activo',
+            'INACTIVO': 'Inactivo'
+        };
+        return estados[estado] || estado;
+    }
+    
+    function getEstadoClass(estado) {
+        var classes = {
+            'BORRADOR': 'borrador',
+            'ENVIADO_JF': 'enviado_jf',
+            'OBSERVADO_JF': 'observado_jf',
+            'APROBADO_POR_JF': 'aprobado_jf',
+            'ENVIADO_TH': 'enviado_th',
+            'OBSERVADO_TH': 'observado_th',
+            'APROBADO_TH': 'aprobado_th',
+            'FIRMA_JTH': 'firma_jth',
+            'FIRMADO_JTH': 'firmado_jth',
+            'FIRMADO_CT': 'firmado_ct',
+            'FIRMADO_JI': 'firmado_ji',
+            'ACTIVO': 'activo',
+            'INACTIVO': 'inactivo'
+        };
+        return classes[estado] || 'borrador';
+    }
+    
     function mostrarLista(descriptores) {
         var container = $('#descriptoresListContainer');
         if (descriptores.length === 0) {
@@ -117,51 +184,8 @@ window.initDescriptorList = function() {
         for (var i = 0; i < descriptores.length; i++) {
             var d = descriptores[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-            
-            var estadoClass = '';
-            var estadoTexto = '';
-            
-            switch(d.estado) {
-                case 'BORRADOR':
-                    estadoClass = 'borrador';
-                    estadoTexto = 'Borrador';
-                    break;
-                case 'ENVIADO_JF':
-                    estadoClass = 'enviado_jf';
-                    estadoTexto = 'Enviado a JF';
-                    break;
-                case 'OBSERVADO':
-                    estadoClass = 'observado';
-                    estadoTexto = 'Observado';
-                    break;
-                case 'APROBADO_POR_JF':
-                    estadoClass = 'aprobado_jf';
-                    estadoTexto = 'Aprobado por JF';
-                    break;
-                case 'ENVIADO_TH':
-                    estadoClass = 'enviado_th';
-                    estadoTexto = 'Enviado a TH';
-                    break;
-                case 'ACTIVO':
-                    estadoClass = 'activo';
-                    estadoTexto = 'Activo';
-                    break;
-                case 'FIRMA_JTH_COMPLETADA':
-                    estadoClass = 'firma_jth_completada';
-                    estadoTexto = 'Firma JTH Completada';
-                    break;
-                case 'FIRMA_CT_COMPLETADA':
-                    estadoClass = 'firma_ct_completada';
-                    estadoTexto = 'Firma Colaborador';
-                    break;
-                case 'FIRMADO':
-                    estadoClass = 'firmado';
-                    estadoTexto = 'Firmado';
-                    break;
-                default:
-                    estadoClass = 'borrador';
-                    estadoTexto = 'Borrador';
-            }
+            var estadoTexto = getEstadoTexto(d.estado);
+            var estadoClass = getEstadoClass(d.estado);
             
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="descriptor-card" data-id="' + d.id + '">' +
                 '<div class="d-flex justify-content-between align-items-start mb-3">' +
@@ -171,14 +195,17 @@ window.initDescriptorList = function() {
                 '<p class="text-muted small mb-3"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br>' +
                 '<i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p>';
             
-            if (d.estado === 'OBSERVADO' && d.observaciones) {
-                html += '<div class="observacion-box"><i class="fas fa-comment me-1"></i> <strong>Observaciones:</strong><br>' + d.observaciones + '</div>';
+            if ((d.estado === 'OBSERVADO_JF' && d.observacionesJF) || (d.estado === 'OBSERVADO_TH' && d.observacionesTH)) {
+                var obsTexto = d.estado === 'OBSERVADO_JF' ? d.observacionesJF : d.observacionesTH;
+                var obsOrigen = d.estado === 'OBSERVADO_JF' ? 'Jefe Superior' : 'Talento Humano';
+                html += '<div class="observacion-box"><i class="fas fa-comment me-1"></i> <strong>Observaciones (' + obsOrigen + '):</strong><br>' + obsTexto + '</div>';
             }
             
             html += '<div class="d-flex justify-content-end gap-2 mt-2">' +
-                '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>';
+                '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>' +
+                '<button class="btn btn-sm btn-outline-secondary btn-auditoria" data-id="' + d.id + '"><i class="fas fa-history"></i> Auditoría</button>';
             
-            if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO') {
+            if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH') {
                 html += '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>';
             }
             
@@ -190,8 +217,16 @@ window.initDescriptorList = function() {
                 html += '<button class="btn btn-sm btn-success btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a TH</button>';
             }
             
-            if (d.estado === 'FIRMA_CT_COMPLETADA') {
-                html += '<button class="btn btn-sm btn-primary btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature"></i> Firmar</button>';
+            if (d.estado === 'FIRMA_JTH') {
+                html += '<button class="btn btn-sm btn-primary btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell"></i> Notificar Firma</button>';
+            }
+            
+            if (d.estado === 'ACTIVO') {
+                html += '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i> Desactivar</button>';
+            }
+            
+            if (d.estado === 'INACTIVO') {
+                html += '<button class="btn btn-sm btn-success btn-reactivar" data-id="' + d.id + '"><i class="fas fa-sync-alt"></i> Reactivar</button>';
             }
             
             html += '</div></div></div>';
@@ -200,13 +235,94 @@ window.initDescriptorList = function() {
         container.html(html);
         
         $('.btn-ver').off('click').on('click', function(e) { e.stopPropagation(); verDescriptor($(this).data('id')); });
+        $('.btn-auditoria').off('click').on('click', function(e) { e.stopPropagation(); verAuditoria($(this).data('id')); });
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
-        $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
+        $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirma($(this).data('id')); });
+        $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
+        $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
     }
-
+    
+    function getEstadoBadgeClass(estado) {
+        var classes = {
+            'BORRADOR': 'bg-secondary',
+            'ENVIADO_JF': 'bg-info',
+            'OBSERVADO_JF': 'bg-warning',
+            'APROBADO_POR_JF': 'bg-success',
+            'ENVIADO_TH': 'bg-primary',
+            'OBSERVADO_TH': 'bg-warning',
+            'APROBADO_TH': 'bg-success',
+            'FIRMA_JTH': 'bg-primary',
+            'FIRMADO_JTH': 'bg-primary',
+            'FIRMADO_CT': 'bg-primary',
+            'FIRMADO_JI': 'bg-primary',
+            'ACTIVO': 'bg-success',
+            'INACTIVO': 'bg-danger'
+        };
+        return classes[estado] || 'bg-secondary';
+    }
+    
+    function verAuditoria(id) {
+        if (typeof DescriptorService === 'undefined') return;
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        
+        var auditoria = descriptor.auditoria || { eventos: [] };
+        var eventos = auditoria.eventos || [];
+        
+        eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+        
+        var html = '<div class="text-start" style="max-height: 500px; overflow-y: auto;">';
+        html += '<div class="alert alert-info mb-3"><strong>Descriptor:</strong> ' + descriptor.codigo + '<br><strong>Puesto:</strong> ' + descriptor.puesto + '<br><strong>Estado actual:</strong> <span class="badge ' + getEstadoBadgeClass(descriptor.estado) + '">' + getEstadoTexto(descriptor.estado) + '</span></div>';
+        html += '<h6 class="border-bottom pb-2">Línea de tiempo del proceso</h6>';
+        
+        if (eventos.length === 0) {
+            html += '<p class="text-muted text-center">No hay eventos registrados</p>';
+        } else {
+            for (var i = 0; i < eventos.length; i++) {
+                var ev = eventos[i];
+                var fechaFormateada = new Date(ev.fecha).toLocaleString();
+                var estadoBadge = '';
+                if (ev.estadoNuevo) {
+                    estadoBadge = ' <span class="badge ' + getEstadoBadgeClass(ev.estadoNuevo) + '">' + ev.estadoNuevo + '</span>';
+                }
+                
+                html += '<div class="auditoria-item">' +
+                    '<div class="auditoria-fecha"><i class="far fa-calendar-alt me-1"></i> ' + fechaFormateada + '</div>' +
+                    '<div class="auditoria-accion">' + (ev.accion || 'Evento') + estadoBadge + '</div>' +
+                    '<div class="auditoria-usuario"><i class="fas fa-user me-1"></i> ' + (ev.usuario || 'Sistema') + ' - ' + (ev.rol || '') + '</div>';
+                
+                if (ev.observacion) {
+                    html += '<div class="alert alert-warning mt-2 mb-0 p-2 small"><i class="fas fa-comment"></i> <strong>Observación:</strong> ' + ev.observacion + '</div>';
+                }
+                
+                html += '</div>';
+            }
+        }
+        
+        html += '<hr><h6 class="border-bottom pb-2">Resumen de Firmas</h6>';
+        
+        var firmas = [
+            { nombre: 'Jefe de Talento Humano', estado: descriptor.firmaJTH ? 'Firmado' : 'Pendiente' },
+            { nombre: 'Colaborador/Titular', estado: descriptor.firmaCT ? 'Firmado' : 'Pendiente' },
+            { nombre: 'Jefe Inmediato', estado: descriptor.firmaJI ? 'Firmado' : 'Pendiente' }
+        ];
+        
+        for (var f = 0; f < firmas.length; f++) {
+            var icono = firmas[f].estado === 'Firmado' ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-clock text-warning"></i>';
+            html += '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                '<span>' + icono + ' <strong>' + firmas[f].nombre + '</strong></span>' +
+                '<span class="text-muted small">' + firmas[f].estado + '</span>' +
+                '</div>';
+        }
+        
+        html += '</div>';
+        
+        Swal.fire({ title: 'Auditoría del Descriptor', html: html, width: '650px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
+    }
+    
     function editarDescriptor(id) {
         console.log('Editando descriptor ID:', id);
         if (typeof DescriptorController !== 'undefined') {
@@ -222,21 +338,6 @@ window.initDescriptorList = function() {
         if (typeof DescriptorService === 'undefined') return;
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
-        var funcionesHtml = '';
-        if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
-            funcionesHtml = '<ul>';
-            for (var i = 0; i < descriptor.funcionesClaves.length; i++) {
-                funcionesHtml += '<li><strong>' + (descriptor.funcionesClaves[i].codigo || '') + '</strong> - ' + (descriptor.funcionesClaves[i].nombre || '') + '</li>';
-            }
-            funcionesHtml += '</ul>';
-        } else {
-            funcionesHtml = '<p>No registradas</p>';
-        }
-        
-        var observacionesHtml = '';
-        if (descriptor.estado === 'OBSERVADO' && descriptor.observaciones) {
-            observacionesHtml = '<hr><div class="alert alert-warning"><i class="fas fa-comment"></i> <strong>Observaciones del Jefe Superior:</strong><br>' + descriptor.observaciones + '</div>';
-        }
         
         var html = '<div class="text-start">' +
             '<h6 class="border-bottom pb-2">Información General</h6>' +
@@ -244,112 +345,88 @@ window.initDescriptorList = function() {
             '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '</p>' +
             '<p><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
-            '<p><strong>Estado:</strong> ' + (descriptor.estado === 'APROBADO_POR_JF' ? 'Aprobado por JF' : (descriptor.estado === 'ENVIADO_JF' ? 'Enviado a JF' : (descriptor.estado || 'BORRADOR'))) + '</p>' +
+            '<p><strong>Estado:</strong> ' + getEstadoTexto(descriptor.estado) + '</p>' +
             '<hr>' +
             '<h6 class="border-bottom pb-2">Objetivo</h6>' +
             '<p>' + (descriptor.objetivo || '-') + '</p>' +
-            '<hr>' +
-            '<h6 class="border-bottom pb-2">Funciones Claves</h6>' + funcionesHtml +
-            observacionesHtml + '</div>';
+            '</div>';
         
         Swal.fire({ title: 'Descriptor: ' + descriptor.puesto, html: html, width: '600px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     }
     
     function enviarDescriptor(id) {
-        Swal.fire({ 
-            title: '¿Enviar a Jefe Superior?', 
-            text: 'Una vez enviado, el Jefe Superior podrá revisar y aprobar el descriptor.', 
-            icon: 'question', 
-            showCancelButton: true, 
-            confirmButtonText: 'Sí, enviar', 
-            confirmButtonColor: '#0d6efd' 
-        }).then(function(result) {
-            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
-                DescriptorService.update(id, { estado: 'ENVIADO_JF' });
-                Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior para revisión', 'success');
-                cargarDescriptores();
-            }
-        });
+        Swal.fire({ title: '¿Enviar a Jefe Superior?', text: 'Una vez enviado, el Jefe Superior podrá revisar y aprobar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#0d6efd' })
+            .then(function(result) {
+                if (result.isConfirmed) {
+                    var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                    DescriptorService.update(id, { estado: 'ENVIADO_JF' });
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'ENVÍO A JEFE SUPERIOR',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'ENVIADO_JF'
+                    });
+                    Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior', 'success');
+                    cargarDescriptores();
+                }
+            });
     }
     
     function enviarDescriptorATH(id) {
-        Swal.fire({ 
-            title: '¿Enviar a Talento Humano?', 
-            text: 'Una vez enviado, el equipo de Talento Humano podrá revisar y complementar el descriptor.', 
-            icon: 'question', 
-            showCancelButton: true, 
-            confirmButtonText: 'Sí, enviar', 
-            confirmButtonColor: '#198754' 
+        Swal.fire({ title: '¿Enviar a Talento Humano?', text: 'Una vez enviado, el equipo de Talento Humano podrá revisar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#198754' })
+            .then(function(result) {
+                if (result.isConfirmed) {
+                    var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                    DescriptorService.update(id, { estado: 'ENVIADO_TH' });
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'ENVÍO A TALENTO HUMANO',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'ENVIADO_TH'
+                    });
+                    Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
+                    cargarDescriptores();
+                }
+            });
+    }
+    
+    function notificarFirma(id) {
+        Swal.fire({ title: 'Notificación Enviada', text: 'Se ha notificado al Jefe de Talento Humano para que realice la firma digital.', icon: 'success', confirmButtonColor: '#0d6efd' });
+    }
+    
+    function desactivarDescriptor(id) {
+        Swal.fire({
+            title: 'Desactivar Descriptor',
+            text: '¿Está seguro de que desea desactivar este descriptor? Quedará como INACTIVO.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, desactivar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545'
         }).then(function(result) {
-            if (result.isConfirmed && typeof DescriptorService !== 'undefined') {
-                DescriptorService.update(id, { estado: 'ENVIADO_TH' });
-                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano para revisión', 'success');
+            if (result.isConfirmed) {
+                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                DescriptorService.desactivar(id, 'Desactivado por el usuario', currentUserGlobal.nombre, currentUserGlobal.rolNombre);
+                Swal.fire('Desactivado', 'Descriptor desactivado correctamente', 'success');
                 cargarDescriptores();
             }
         });
     }
     
-    function firmarDescriptorJI(id) {
-        var descriptor = DescriptorService.getById(id);
-        if (!descriptor) return;
-        
-        var modalHtml = `
-            <div class="text-center">
-                <div id="signature-pad" class="signature-pad border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;">
-                    <canvas id="firmaCanvas" width="400" height="200" style="width: 100%; height: 100%;"></canvas>
-                </div>
-                <div class="mt-3">
-                    <button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button>
-                    <button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar Firma</button>
-                </div>
-            </div>
-        `;
-        
+    function reactivarDescriptor(id) {
         Swal.fire({
-            title: `Firma Digital - Jefe Inmediato`,
-            html: modalHtml,
-            width: '500px',
+            title: 'Reactivar Descriptor',
+            text: '¿Está seguro de que desea reactivar este descriptor? Volverá a estado BORRADOR.',
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+            confirmButtonText: 'Sí, reactivar',
             cancelButtonText: 'Cancelar',
-            didOpen: function() {
-                var canvas = document.getElementById('firmaCanvas');
-                var signaturePad = new SignaturePad(canvas);
-                
-                $('#limpiarFirma').click(function() {
-                    signaturePad.clear();
-                });
-                
-                $('#descargarFirma').click(function() {
-                    if (signaturePad.isEmpty()) {
-                        Swal.fire('Advertencia', 'No hay firma para descargar', 'warning');
-                        return;
-                    }
-                    var dataURL = signaturePad.toDataURL('image/png');
-                    var link = document.createElement('a');
-                    link.download = 'firma_ji_' + id + '.png';
-                    link.href = dataURL;
-                    link.click();
-                });
-                
-                window.currentSignaturePad = signaturePad;
-            },
-            preConfirm: function() {
-                if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
-                    Swal.showValidationMessage('Debe dibujar una firma');
-                    return false;
-                }
-                return window.currentSignaturePad.toDataURL('image/png');
-            }
+            confirmButtonColor: '#198754'
         }).then(function(result) {
-            if (result.isConfirmed && result.value) {
-                // Guardar firma del Jefe Inmediato
-                var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
-                firmasGuardadas['ji_' + id] = result.value;
-                localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
-                
-                DescriptorService.update(id, { estado: 'FIRMADO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
+            if (result.isConfirmed) {
+                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                DescriptorService.reactivar(id, currentUserGlobal.nombre, currentUserGlobal.rolNombre);
+                Swal.fire('Reactivado', 'Descriptor reactivado correctamente', 'success');
                 cargarDescriptores();
             }
         });
