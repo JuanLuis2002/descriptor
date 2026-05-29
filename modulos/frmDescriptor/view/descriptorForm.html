@@ -440,12 +440,19 @@
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
                 
-                // CORRECCIÓN: Mantener el estado original si es OBSERVADO_TH
+                // CORRECCIÓN: Mantener el estado original según el caso
                 if (existingDescriptor.estado === 'OBSERVADO_TH') {
+                    // Si estaba observado por TH, mantener OBSERVADO_TH (luego se reenvía a TH)
                     formData.estado = 'OBSERVADO_TH';
-                } else if (existingDescriptor.estado === 'OBSERVADO_JF') {
+                } 
+                else if (existingDescriptor.estado === 'OBSERVADO_JF') {
+                    // Si estaba observado por JF, mantener OBSERVADO_JF (luego se reenvía a JF)
+                    formData.estado = 'OBSERVADO_JF';
+                }
+                else if (existingDescriptor.estado === 'APROBADO_POR_JF') {
                     formData.estado = 'APROBADO_POR_JF';
-                } else {
+                }
+                else {
                     formData.estado = 'BORRADOR';
                 }
                 
@@ -466,6 +473,8 @@
                         location.reload();
                     }
                 });
+            } else {
+                Swal.fire('Error', 'No se encontró el descriptor para actualizar', 'error');
             }
         } else {
             var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');

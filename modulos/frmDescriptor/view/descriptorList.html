@@ -215,6 +215,11 @@ window.initDescriptorList = function() {
                 html += '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a JF</button>';
             }
             
+            // Botón Reenviar a JF (para OBSERVADO_JF después de corregir)
+            if (d.estado === 'OBSERVADO_JF') {
+                html += '<button class="btn btn-sm btn-warning btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Reenviar a JF</button>';
+            }
+            
             // Botón Reenviar a TH (para OBSERVADO_TH después de corregir)
             if (d.estado === 'OBSERVADO_TH') {
                 html += '<button class="btn btn-sm btn-success btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Reenviar a TH</button>';
@@ -254,8 +259,9 @@ window.initDescriptorList = function() {
         $('.btn-auditoria').off('click').on('click', function(e) { e.stopPropagation(); verAuditoria($(this).data('id')); });
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
+        $('.btn-reenviar-jf').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorAJF($(this).data('id')); });
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
-        $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATHDesdeObservado($(this).data('id')); });
+        $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorATH($(this).data('id')); });
         $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirmantes($(this).data('id')); });
         $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
@@ -390,6 +396,30 @@ window.initDescriptorList = function() {
             });
     }
     
+    function reenviarDescriptorAJF(id) {
+        Swal.fire({ 
+            title: '¿Reenviar a Jefe Superior?', 
+            text: 'Una vez reenviado, el Jefe Superior podrá revisar las correcciones.', 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonText: 'Sí, reenviar', 
+            confirmButtonColor: '#0d6efd' 
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                DescriptorService.update(id, { estado: 'ENVIADO_JF' });
+                DescriptorService.registrarEvento(id, {
+                    accion: 'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)',
+                    usuario: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    estado: 'ENVIADO_JF'
+                });
+                Swal.fire('Reenviado', 'Descriptor reenviado al Jefe Superior', 'success');
+                cargarDescriptores();
+            }
+        });
+    }
+    
     function enviarDescriptorATH(id) {
         Swal.fire({ title: '¿Enviar a Talento Humano?', text: 'Una vez enviado, el equipo de Talento Humano podrá revisar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#198754' })
             .then(function(result) {
@@ -408,33 +438,37 @@ window.initDescriptorList = function() {
             });
     }
     
-    function enviarDescriptorATHDesdeObservado(id) {
-        Swal.fire({ title: '¿Reenviar a Talento Humano?', text: 'Una vez reenviado, Talento Humano podrá revisar las correcciones.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, reenviar', confirmButtonColor: '#198754' })
-            .then(function(result) {
-                if (result.isConfirmed) {
-                    var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                    DescriptorService.update(id, { estado: 'ENVIADO_TH' });
-                    DescriptorService.registrarEvento(id, {
-                        accion: 'REENVÍO A TALENTO HUMANO (DESPUÉS DE CORRECCIÓN)',
-                        usuario: currentUserGlobal.nombre,
-                        rol: currentUserGlobal.rolNombre,
-                        estado: 'ENVIADO_TH'
-                    });
-                    Swal.fire('Reenviado', 'Descriptor reenviado a Talento Humano', 'success');
-                    cargarDescriptores();
-                }
-            });
+    function reenviarDescriptorATH(id) {
+        Swal.fire({ 
+            title: '¿Reenviar a Talento Humano?', 
+            text: 'Una vez reenviado, Talento Humano podrá revisar las correcciones.', 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonText: 'Sí, reenviar', 
+            confirmButtonColor: '#198754' 
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                DescriptorService.update(id, { estado: 'ENVIADO_TH' });
+                DescriptorService.registrarEvento(id, {
+                    accion: 'REENVÍO A TALENTO HUMANO (DESPUÉS DE CORRECCIÓN)',
+                    usuario: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    estado: 'ENVIADO_TH'
+                });
+                Swal.fire('Reenviado', 'Descriptor reenviado a Talento Humano', 'success');
+                cargarDescriptores();
+            }
+        });
     }
     
     function notificarFirmantes(id) {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
         
-        // Obtener usuarios
         var jthUser = { nombre: 'Carlos Gómez', rol: 'JEFE_TH' };
         var colaborador = { nombre: descriptor.titular || 'Juan Pérez', rol: 'COLABORADOR' };
         
-        // Crear notificaciones simuladas
         var notificaciones = JSON.parse(localStorage.getItem('notificaciones') || '[]');
         
         notificaciones.push({
@@ -463,7 +497,7 @@ window.initDescriptorList = function() {
         
         localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
         
-        Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular para que realicen su firma digital.', icon: 'success', confirmButtonColor: '#0d6efd' });
+        Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular.', icon: 'success' });
     }
     
     function firmarDescriptorJI(id) {
