@@ -439,20 +439,32 @@
                 formData.id = existingDescriptor.id;
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
-                formData.estado = 'BORRADOR';
+                
+                // CORRECCIÓN: Mantener el estado original si es OBSERVADO_TH
+                if (existingDescriptor.estado === 'OBSERVADO_TH') {
+                    formData.estado = 'OBSERVADO_TH';
+                } else if (existingDescriptor.estado === 'OBSERVADO_JF') {
+                    formData.estado = 'APROBADO_POR_JF';
+                } else {
+                    formData.estado = 'BORRADOR';
+                }
+                
                 DescriptorService.update(window._editingId, formData);
                 DescriptorService.registrarEvento(window._editingId, {
                     accion: 'ACTUALIZACIÓN DEL DESCRIPTOR',
                     usuario: currentUser.nombre,
                     rol: currentUser.rolNombre,
-                    estado: 'BORRADOR'
+                    estado: formData.estado
                 });
                 Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
                     window._isEditing = false;
                     window._editingId = null;
                     limpiarActividadesGuardadas();
-                    if (typeof window.cargarMisDescriptores === 'function') window.cargarMisDescriptores();
-                    else location.reload();
+                    if (typeof window.cargarMisDescriptores === 'function') {
+                        window.cargarMisDescriptores();
+                    } else {
+                        location.reload();
+                    }
                 });
             }
         } else {
