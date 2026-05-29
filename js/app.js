@@ -445,6 +445,76 @@ function desactivarDescriptor(id) {
     });
 }
 
+// Función para reenviar a TH desde observado
+function enviarDescriptorATHDesdeObservado(id) {
+    Swal.fire({ 
+        title: '¿Reenviar a Talento Humano?', 
+        text: 'Una vez reenviado, Talento Humano podrá revisar las correcciones.', 
+        icon: 'question', 
+        showCancelButton: true, 
+        confirmButtonText: 'Sí, reenviar', 
+        confirmButtonColor: '#198754' 
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            DescriptorService.update(id, { estado: 'ENVIADO_TH' });
+            DescriptorService.registrarEvento(id, {
+                accion: 'REENVÍO A TALENTO HUMANO (DESPUÉS DE CORRECCIÓN)',
+                usuario: currentUserGlobal.nombre,
+                rol: currentUserGlobal.rolNombre,
+                estado: 'ENVIADO_TH'
+            });
+            Swal.fire('Reenviado', 'Descriptor reenviado a Talento Humano', 'success');
+            cargarMisDescriptores();
+        }
+    });
+}
+
+// Función para notificar firmantes
+function notificarFirmantes(id) {
+    var descriptor = DescriptorService.getById(id);
+    if (!descriptor) return;
+    
+    var jthUser = { nombre: 'Carlos Gómez', rol: 'JEFE_TH' };
+    var colaborador = { nombre: descriptor.titular || 'Juan Pérez', rol: 'COLABORADOR' };
+    
+    var notificaciones = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+    
+    notificaciones.push({
+        id: Date.now(),
+        descriptorId: id,
+        descriptorCodigo: descriptor.codigo,
+        descriptorPuesto: descriptor.puesto,
+        fecha: new Date().toISOString(),
+        mensaje: 'Se requiere su firma digital para el descriptor ' + descriptor.codigo,
+        leido: false,
+        usuarioDestino: jthUser.nombre,
+        rolDestino: jthUser.rol
+    });
+    
+    notificaciones.push({
+        id: Date.now() + 1,
+        descriptorId: id,
+        descriptorCodigo: descriptor.codigo,
+        descriptorPuesto: descriptor.puesto,
+        fecha: new Date().toISOString(),
+        mensaje: 'Se requiere su firma digital como titular del puesto para el descriptor ' + descriptor.codigo,
+        leido: false,
+        usuarioDestino: colaborador.nombre,
+        rolDestino: colaborador.rol
+    });
+    
+    localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
+    
+    Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular.', icon: 'success' });
+}
+
+// Exportar globales
+window.enviarDescriptorATHDesdeObservado = enviarDescriptorATHDesdeObservado;
+window.notificarFirmantes = notificarFirmantes;
+window.firmarDescriptorJI = firmarDescriptorJI;
+window.desactivarDescriptor = desactivarDescriptor;
+
 // Exportar globales
 window.firmarDescriptorJI = firmarDescriptorJI;
 window.desactivarDescriptor = desactivarDescriptor;

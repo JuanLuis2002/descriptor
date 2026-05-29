@@ -47,7 +47,7 @@
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Firmas JTH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Pendientes Firma JTH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statInactivos">0</div><div class="stat-label">Inactivos</div></div>
     </div>
@@ -205,26 +205,42 @@ window.initDescriptorList = function() {
                 '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>' +
                 '<button class="btn btn-sm btn-outline-secondary btn-auditoria" data-id="' + d.id + '"><i class="fas fa-history"></i> Auditoría</button>';
             
+            // Botón Editar (para BORRADOR, OBSERVADO_JF, OBSERVADO_TH)
             if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH') {
                 html += '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>';
             }
             
+            // Botón Enviar a JF (solo para BORRADOR)
             if (d.estado === 'BORRADOR') {
                 html += '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a JF</button>';
             }
             
+            // Botón Reenviar a TH (para OBSERVADO_TH después de corregir)
+            if (d.estado === 'OBSERVADO_TH') {
+                html += '<button class="btn btn-sm btn-success btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Reenviar a TH</button>';
+            }
+            
+            // Botón Enviar a TH (para APROBADO_POR_JF)
             if (d.estado === 'APROBADO_POR_JF') {
                 html += '<button class="btn btn-sm btn-success btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a TH</button>';
             }
             
+            // Botón Notificar a Firmantes (para FIRMA_JTH)
             if (d.estado === 'FIRMA_JTH') {
-                html += '<button class="btn btn-sm btn-primary btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell"></i> Notificar Firma</button>';
+                html += '<button class="btn btn-sm btn-primary btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell"></i> Notificar Firmantes</button>';
             }
             
+            // Botón Firmar para Jefe Inmediato (cuando estado es FIRMADO_CT)
+            if (d.estado === 'FIRMADO_CT') {
+                html += '<button class="btn btn-sm btn-primary btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature"></i> Firmar Documento</button>';
+            }
+            
+            // Botón Desactivar (solo para ACTIVO)
             if (d.estado === 'ACTIVO') {
                 html += '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i> Desactivar</button>';
             }
             
+            // Botón Reactivar (solo para INACTIVO)
             if (d.estado === 'INACTIVO') {
                 html += '<button class="btn btn-sm btn-success btn-reactivar" data-id="' + d.id + '"><i class="fas fa-sync-alt"></i> Reactivar</button>';
             }
@@ -239,7 +255,9 @@ window.initDescriptorList = function() {
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
-        $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirma($(this).data('id')); });
+        $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATHDesdeObservado($(this).data('id')); });
+        $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirmantes($(this).data('id')); });
+        $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
@@ -390,23 +408,135 @@ window.initDescriptorList = function() {
             });
     }
     
-    function notificarFirma(id) {
-        Swal.fire({ title: 'Notificación Enviada', text: 'Se ha notificado al Jefe de Talento Humano para que realice la firma digital.', icon: 'success', confirmButtonColor: '#0d6efd' });
+    function enviarDescriptorATHDesdeObservado(id) {
+        Swal.fire({ title: '¿Reenviar a Talento Humano?', text: 'Una vez reenviado, Talento Humano podrá revisar las correcciones.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, reenviar', confirmButtonColor: '#198754' })
+            .then(function(result) {
+                if (result.isConfirmed) {
+                    var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                    DescriptorService.update(id, { estado: 'ENVIADO_TH' });
+                    DescriptorService.registrarEvento(id, {
+                        accion: 'REENVÍO A TALENTO HUMANO (DESPUÉS DE CORRECCIÓN)',
+                        usuario: currentUserGlobal.nombre,
+                        rol: currentUserGlobal.rolNombre,
+                        estado: 'ENVIADO_TH'
+                    });
+                    Swal.fire('Reenviado', 'Descriptor reenviado a Talento Humano', 'success');
+                    cargarDescriptores();
+                }
+            });
+    }
+    
+    function notificarFirmantes(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        
+        // Obtener usuarios
+        var jthUser = { nombre: 'Carlos Gómez', rol: 'JEFE_TH' };
+        var colaborador = { nombre: descriptor.titular || 'Juan Pérez', rol: 'COLABORADOR' };
+        
+        // Crear notificaciones simuladas
+        var notificaciones = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+        
+        notificaciones.push({
+            id: Date.now(),
+            descriptorId: id,
+            descriptorCodigo: descriptor.codigo,
+            descriptorPuesto: descriptor.puesto,
+            fecha: new Date().toISOString(),
+            mensaje: 'Se requiere su firma digital para el descriptor ' + descriptor.codigo,
+            leido: false,
+            usuarioDestino: jthUser.nombre,
+            rolDestino: jthUser.rol
+        });
+        
+        notificaciones.push({
+            id: Date.now() + 1,
+            descriptorId: id,
+            descriptorCodigo: descriptor.codigo,
+            descriptorPuesto: descriptor.puesto,
+            fecha: new Date().toISOString(),
+            mensaje: 'Se requiere su firma digital como titular del puesto para el descriptor ' + descriptor.codigo,
+            leido: false,
+            usuarioDestino: colaborador.nombre,
+            rolDestino: colaborador.rol
+        });
+        
+        localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
+        
+        Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular para que realicen su firma digital.', icon: 'success', confirmButtonColor: '#0d6efd' });
+    }
+    
+    function firmarDescriptorJI(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        
+        var modalHtml = '<div class="text-center"><div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
+        
+        Swal.fire({
+            title: 'Firma Digital - Jefe Inmediato',
+            html: modalHtml,
+            width: '500px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+            cancelButtonText: 'Cancelar',
+            didOpen: function() {
+                var canvas = document.getElementById('firmaCanvas');
+                var signaturePad = new SignaturePad(canvas);
+                $('#limpiarFirma').click(function() { signaturePad.clear(); });
+                $('#descargarFirma').click(function() {
+                    if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
+                    var link = document.createElement('a');
+                    link.download = 'firma_ji_' + id + '.png';
+                    link.href = signaturePad.toDataURL('image/png');
+                    link.click();
+                });
+                window.currentSignaturePad = signaturePad;
+            },
+            preConfirm: function() {
+                if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
+                    Swal.showValidationMessage('Debe dibujar una firma');
+                    return false;
+                }
+                return window.currentSignaturePad.toDataURL('image/png');
+            }
+        }).then(function(result) {
+            if (result.isConfirmed && result.value) {
+                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
+                firmasGuardadas['ji_' + id] = result.value;
+                localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
+                DescriptorService.update(id, { estado: 'ACTIVO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
+                DescriptorService.registrarEvento(id, {
+                    accion: 'FIRMA DEL JEFE INMEDIATO',
+                    usuario: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    estado: 'ACTIVO'
+                });
+                Swal.fire('Firmado', 'Descriptor firmado y activado correctamente', 'success');
+                cargarDescriptores();
+            }
+        });
     }
     
     function desactivarDescriptor(id) {
         Swal.fire({
             title: 'Desactivar Descriptor',
-            text: '¿Está seguro de que desea desactivar este descriptor? Quedará como INACTIVO.',
-            icon: 'warning',
+            html: '<textarea id="motivo" class="swal2-textarea" placeholder="Motivo de desactivación..." rows="3"></textarea>',
             showCancelButton: true,
-            confirmButtonText: 'Sí, desactivar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#dc3545'
+            confirmButtonText: 'Desactivar',
+            confirmButtonColor: '#dc3545',
+            preConfirm: function() {
+                var motivo = document.getElementById('motivo').value;
+                if (!motivo || motivo.trim() === '') {
+                    Swal.showValidationMessage('Debe ingresar un motivo');
+                    return false;
+                }
+                return motivo;
+            }
         }).then(function(result) {
-            if (result.isConfirmed) {
+            if (result.isConfirmed && result.value) {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.desactivar(id, 'Desactivado por el usuario', currentUserGlobal.nombre, currentUserGlobal.rolNombre);
+                DescriptorService.desactivar(id, result.value, currentUserGlobal.nombre, currentUserGlobal.rolNombre);
                 Swal.fire('Desactivado', 'Descriptor desactivado correctamente', 'success');
                 cargarDescriptores();
             }

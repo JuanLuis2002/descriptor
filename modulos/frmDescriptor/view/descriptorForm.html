@@ -314,17 +314,25 @@
         var puestoVal = $('select[name="puesto"]').val() || '-';
         var funcionesCount = $('#funcionesClavesContainer .dynamic-row').length;
         var kpisCount = $('#kpisContainer .dynamic-row').length;
-        $('#resumenContent').html('<h6>Resumen</h6><table class="table table-sm">' +
-            '<tr>:<strong>Puesto:</strong>NonNulloNonNull:' + puestoVal + 'NonNulloNonNull' +
-            '<td>:<strong>Funciones Claves:</strong>NonNulloNonNull:' + funcionesCount + 'NonNulloNonNull' +
-            '<tr>:<strong>KPIs:</strong>NonNulloNonNull:' + kpisCount + 'NonNulloNonNull' +
-            '</table><div class="alert alert-info">Revise antes de guardar</div>');
+        
+        $('#resumenContent').html(
+            '<h6>Resumen</h6>' +
+            '<table class="table table-sm">' +
+            '<tr><td><strong>Puesto:</strong></td><td>' + puestoVal + '</td></tr>' +
+            '<tr><td><strong>Funciones Claves:</strong></td><td>' + funcionesCount + '</td></tr>' +
+            '<tr><td><strong>KPIs:</strong></td><td>' + kpisCount + '</td></tr>' +
+            '</table>' +
+            '<div class="alert alert-info mt-3">Revise antes de guardar</div>'
+        );
     }
     
     function saveDescriptor() {
         var funcionesClaves = [];
         $('#funcionesClavesContainer .dynamic-row').each(function() {
-            funcionesClaves.push({ codigo: $(this).find('input[name="funcionCodigo[]"]').val(), nombre: $(this).find('input[name="funcionNombre[]"]').val() });
+            funcionesClaves.push({ 
+                codigo: $(this).find('input[name="funcionCodigo[]"]').val(), 
+                nombre: $(this).find('input[name="funcionNombre[]"]').val() 
+            });
         });
         
         var actividadesPorFuncion = [];
@@ -342,27 +350,46 @@
         
         var kpis = [];
         $('#kpisContainer .dynamic-row').each(function() {
-            kpis.push({ indicador: $(this).find('input[name="kpiIndicador[]"]').val(), frecuencia: $(this).find('select[name="kpiFrecuencia[]"]').val(), meta: $(this).find('input[name="kpiMeta[]"]').val() });
+            kpis.push({ 
+                indicador: $(this).find('input[name="kpiIndicador[]"]').val(), 
+                frecuencia: $(this).find('select[name="kpiFrecuencia[]"]').val(), 
+                meta: $(this).find('input[name="kpiMeta[]"]').val() 
+            });
         });
         
         var educacion = [];
         $('#educacionContainer .dynamic-row').each(function() {
-            educacion.push({ requisito: $(this).find('input[name="eduRequisito[]"]').val(), especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(), requerido: $(this).find('select[name="eduRequerido[]"]').val() });
+            educacion.push({ 
+                requisito: $(this).find('input[name="eduRequisito[]"]').val(), 
+                especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(), 
+                requerido: $(this).find('select[name="eduRequerido[]"]').val() 
+            });
         });
         
         var experiencia = [];
         $('#experienciaContainer .dynamic-row').each(function() {
-            experiencia.push({ requisito: $(this).find('textarea[name="expRequisito[]"]').val(), requerido: $(this).find('select[name="expRequerido[]"]').val() });
+            experiencia.push({ 
+                requisito: $(this).find('textarea[name="expRequisito[]"]').val(), 
+                requerido: $(this).find('select[name="expRequerido[]"]').val() 
+            });
         });
         
         var competenciasTecnicas = [];
         $('#competenciasTecnicasContainer .dynamic-row').each(function() {
-            competenciasTecnicas.push({ nombre: $(this).find('input[name="compTecNombre[]"]').val(), nivel: $(this).find('select[name="compTecNivel[]"]').val(), aplicabilidad: $(this).find('select[name="compTecAplicabilidad[]"]').val() });
+            competenciasTecnicas.push({ 
+                nombre: $(this).find('input[name="compTecNombre[]"]').val(), 
+                nivel: $(this).find('select[name="compTecNivel[]"]').val(), 
+                aplicabilidad: $(this).find('select[name="compTecAplicabilidad[]"]').val() 
+            });
         });
         
         var competenciasConductuales = [];
         $('#competenciasConductualesContainer .dynamic-row').each(function() {
-            competenciasConductuales.push({ nombre: $(this).find('input[name="compCondNombre[]"]').val(), descripcion: $(this).find('input[name="compCondDescripcion[]"]').val(), aplicabilidad: $(this).find('select[name="compCondAplicabilidad[]"]').val() });
+            competenciasConductuales.push({ 
+                nombre: $(this).find('input[name="compCondNombre[]"]').val(), 
+                descripcion: $(this).find('input[name="compCondDescripcion[]"]').val(), 
+                aplicabilidad: $(this).find('select[name="compCondAplicabilidad[]"]').val() 
+            });
         });
         
         var formData = {

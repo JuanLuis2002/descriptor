@@ -46,24 +46,83 @@ var THController = {
         var descriptor = THService.getById(id);
         if (!descriptor) return;
         
-        var funcionesHtml = '<ul>' + (descriptor.funcionesClaves || []).map(function(f) { return '<li><strong>' + (f.codigo || '') + '</strong> - ' + (f.nombre || '') + '</li>'; }).join('') + '</ul>';
-        
-        var kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
-        if (descriptor.kpis) {
-            for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<tr>' + (descriptor.kpis[i].indicador || '-') + '</td>' + (descriptor.kpis[i].frecuencia || '-') + 'NonNulloNonNull' + (descriptor.kpis[i].meta || '-') + 'NonNulloNonNull' + '';
+        var funcionesHtml = '';
+        if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
+            funcionesHtml = '<ul>';
+            for (var i = 0; i < descriptor.funcionesClaves.length; i++) {
+                funcionesHtml += '<li><strong>' + (descriptor.funcionesClaves[i].codigo || '') + '</strong> - ' + (descriptor.funcionesClaves[i].nombre || '') + '</li>';
             }
+            funcionesHtml += '</ul>';
+        } else {
+            funcionesHtml = '<p class="text-muted">No registradas</p>';
         }
-        kpisHtml += '</tbody><table>';
         
-        var relacionesInternasHtml = '<ul>' + ((descriptor.relacionesLaborales?.internas || []).map(function(r) { return '<li><strong>' + (r.puesto || '') + '</strong> - ' + (r.razon || '') + '</li>'; }).join('') || '<li>No registradas</li>') + '</ul>';
-        var relacionesExternasHtml = '<ul>' + ((descriptor.relacionesLaborales?.externas || []).map(function(r) { return '<li><strong>' + (r.entidad || '') + '</strong> - ' + (r.razon || '') + '</li>'; }).join('') || '<li>No registradas</li>') + '</ul>';
+        var kpisHtml = '';
+        if (descriptor.kpis && descriptor.kpis.length > 0) {
+            kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
+            for (var i = 0; i < descriptor.kpis.length; i++) {
+                kpisHtml += '<tr>' +
+                    '<td>' + (descriptor.kpis[i].indicador || '-') + '<table>' +
+                    '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + '</table>' +
+                    '</tr>';
+            }
+            kpisHtml += '</tbody></table>';
+        } else {
+            kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
+        }
         
-        var requerimientosHtml = '<ul>' + ((descriptor.requerimientosOrganizacionales || []).map(function(r) { return '<li>' + r + '</li>'; }).join('') || '<li>No registrados</li>') + '</ul>';
+        // REQUERIMIENTOS ORGANIZACIONALES POR DEFECTO
+        var requerimientosPorDefecto = [
+            'Cumplir con los valores institucionales',
+            'Cumplir con los normativos institucionales',
+            'Cumplir con las competencias requeridas para el cargo'
+        ];
+        var requerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0 
+            ? descriptor.requerimientosOrganizacionales 
+            : requerimientosPorDefecto;
         
-        var riesgosHtml = '<p><strong>Esfuerzo físico:</strong> ' + (descriptor.riesgosFisicos?.esfuerzo || '-') + '</p>' +
-            '<p><strong>Condiciones ambientales:</strong> ' + (descriptor.riesgosFisicos?.condiciones || '-') + '</p>' +
-            '<p><strong>Riesgos profesionales:</strong></p><ul>' + ((descriptor.riesgosFisicos?.riesgos || []).map(function(r) { return '<li>' + r + '</li>'; }).join('') || '<li>No registrados</li>') + '</ul>';
+        var requerimientosHtml = '';
+        if (requerimientos && requerimientos.length > 0) {
+            requerimientosHtml = '<ul>';
+            for (var i = 0; i < requerimientos.length; i++) {
+                requerimientosHtml += '<li>' + requerimientos[i] + '</li>';
+            }
+            requerimientosHtml += '</ul>';
+        } else {
+            requerimientosHtml = '<p class="text-muted">No hay requerimientos registrados</p>';
+        }
+        
+        var relacionesInternasHtml = '';
+        if (descriptor.relacionesLaborales && descriptor.relacionesLaborales.internas && descriptor.relacionesLaborales.internas.length > 0) {
+            relacionesInternasHtml = '<ul>';
+            for (var i = 0; i < descriptor.relacionesLaborales.internas.length; i++) {
+                relacionesInternasHtml += '<li><strong>' + (descriptor.relacionesLaborales.internas[i].puesto || '') + '</strong> - ' + (descriptor.relacionesLaborales.internas[i].razon || '') + '</li>';
+            }
+            relacionesInternasHtml += '</ul>';
+        } else {
+            relacionesInternasHtml = '<p class="text-muted text-center">No hay relaciones internas registradas</p>';
+        }
+        
+        var relacionesExternasHtml = '';
+        if (descriptor.relacionesLaborales && descriptor.relacionesLaborales.externas && descriptor.relacionesLaborales.externas.length > 0) {
+            relacionesExternasHtml = '<ul>';
+            for (var i = 0; i < descriptor.relacionesLaborales.externas.length; i++) {
+                relacionesExternasHtml += '<li><strong>' + (descriptor.relacionesLaborales.externas[i].entidad || '') + '</strong> - ' + (descriptor.relacionesLaborales.externas[i].razon || '') + '</li>';
+            }
+            relacionesExternasHtml += '</ul>';
+        } else {
+            relacionesExternasHtml = '<p class="text-muted text-center">No hay relaciones externas registradas</p>';
+        }
+        
+        var riesgosHtml = '';
+        if (descriptor.riesgosFisicos) {
+            riesgosHtml = '<p><strong>Esfuerzo físico y mental:</strong> ' + (descriptor.riesgosFisicos.esfuerzo || '-') + '</p>' +
+                '<p><strong>Condiciones ambientales:</strong> ' + (descriptor.riesgosFisicos.condiciones || '-') + '</p>' +
+                '<p><strong>Riesgos profesionales:</strong></p><ul>' + ((descriptor.riesgosFisicos.riesgos || []).map(function(r) { return '<li>' + r + '</li>'; }).join('') || '<li>No registrados</li>') + '</ul>';
+        } else {
+            riesgosHtml = '<p class="text-muted text-center">No hay riesgos registrados</p>';
+        }
         
         var modalHtml = '<div class="text-start" style="max-height: 500px; overflow-y: auto;">' +
             '<div class="alert alert-info"><i class="fas fa-info-circle"></i> <strong>Información del Descriptor</strong></div>' +
@@ -72,10 +131,11 @@ var THController = {
             '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '</p>' +
             '<p><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
-            '<p><strong>Creador:</strong> ' + (descriptor.creador || '-') + '</p><hr>' +
+            '<p><strong>Creador:</strong> ' + (descriptor.creador || '-') + '</p>' +
+            '<p><strong>Fecha de Emisión:</strong> ' + (descriptor.fechaEmision || '-') + '</p><hr>' +
             '<h6 class="border-bottom pb-2">Objetivo</h6><p>' + (descriptor.objetivo || '-') + '</p><hr>' +
             '<h6 class="border-bottom pb-2">Funciones Claves</h6>' + funcionesHtml + '<hr>' +
-            '<h6 class="border-bottom pb-2">KPIs</h6>' + kpisHtml + '<hr>' +
+            '<h6 class="border-bottom pb-2">Indicadores de Desempeño (KPIs)</h6>' + kpisHtml + '<hr>' +
             '<h6 class="border-bottom pb-2 text-primary">V. RELACIONES LABORALES <small>(Editable)</small></h6>' +
             '<div class="mb-3"><label class="fw-bold">Relaciones Internas</label><div id="modalRelacionesInternas">' + relacionesInternasHtml + '</div>' +
             '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i> Editar</button></div>' +
@@ -152,11 +212,27 @@ var THController = {
     editarRelacionesInternas: function(id) {
         var descriptor = THService.getById(id);
         var relaciones = descriptor.relacionesLaborales?.internas || [];
-        var html = '<div id="relacionesInternasEditor">' + relaciones.map(function(r) {
-            return '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" value="' + (r.puesto || '') + '" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" value="' + (r.razon || '') + '" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
-        }).join('') + '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        var html = '<div class="text-start" id="relacionesInternasEditor">';
         
-        Swal.fire({ title: 'Editar Relaciones Internas', html: html, width: '600px', showCancelButton: true, confirmButtonText: 'Guardar',
+        for (var i = 0; i < relaciones.length; i++) {
+            html += '<div class="dynamic-row mb-2 p-2 border rounded">' +
+                '<div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" value="' + (relaciones[i].puesto || '') + '" placeholder="Puesto/Área"></div>' +
+                '<div class="col-5"><input type="text" class="form-control" name="relInternaRazon" value="' + (relaciones[i].razon || '') + '" placeholder="Razón"></div>' +
+                '<div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        }
+        
+        if (relaciones.length === 0) {
+            html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        }
+        
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionInterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        
+        Swal.fire({
+            title: 'Editar Relaciones Internas',
+            html: html,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
             preConfirm: function() {
                 var nuevas = [];
                 $('#relacionesInternasEditor .dynamic-row').each(function() {
@@ -186,11 +262,27 @@ var THController = {
     editarRelacionesExternas: function(id) {
         var descriptor = THService.getById(id);
         var relaciones = descriptor.relacionesLaborales?.externas || [];
-        var html = '<div id="relacionesExternasEditor">' + relaciones.map(function(r) {
-            return '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" value="' + (r.entidad || '') + '" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" value="' + (r.razon || '') + '" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
-        }).join('') + '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        var html = '<div class="text-start" id="relacionesExternasEditor">';
         
-        Swal.fire({ title: 'Editar Relaciones Externas', html: html, width: '600px', showCancelButton: true, confirmButtonText: 'Guardar',
+        for (var i = 0; i < relaciones.length; i++) {
+            html += '<div class="dynamic-row mb-2 p-2 border rounded">' +
+                '<div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" value="' + (relaciones[i].entidad || '') + '" placeholder="Entidad externa"></div>' +
+                '<div class="col-5"><input type="text" class="form-control" name="relExternaRazon" value="' + (relaciones[i].razon || '') + '" placeholder="Razón"></div>' +
+                '<div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        }
+        
+        if (relaciones.length === 0) {
+            html += '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        }
+        
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRelacionExterna()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        
+        Swal.fire({
+            title: 'Editar Relaciones Externas',
+            html: html,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
             preConfirm: function() {
                 var nuevas = [];
                 $('#relacionesExternasEditor .dynamic-row').each(function() {
@@ -219,12 +311,26 @@ var THController = {
     
     editarRequerimientos: function(id) {
         var descriptor = THService.getById(id);
-        var requerimientos = descriptor.requerimientosOrganizacionales || [];
-        var html = '<div id="requerimientosEditor">' + (requerimientos.length ? requerimientos.map(function(r) {
-            return '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" value="' + (r || '') + '" placeholder="Requerimiento"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
-        }).join('') : '<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>') + '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        var requerimientosActuales = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0 
+            ? descriptor.requerimientosOrganizacionales 
+            : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
         
-        Swal.fire({ title: 'Editar Requerimientos', html: html, width: '600px', showCancelButton: true, confirmButtonText: 'Guardar',
+        var html = '<div class="text-start" id="requerimientosEditor">';
+        
+        for (var i = 0; i < requerimientosActuales.length; i++) {
+            html += '<div class="dynamic-row mb-2 p-2 border rounded">' +
+                '<div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" value="' + (requerimientosActuales[i] || '') + '" placeholder="Requerimiento organizacional"></div>' +
+                '<div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        }
+        
+        html += '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRequerimiento()"><i class="fas fa-plus"></i> Agregar</button></div>';
+        
+        Swal.fire({
+            title: 'Editar Requerimientos Organizacionales',
+            html: html,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
             preConfirm: function() {
                 var nuevos = [];
                 $('#requerimientosEditor .dynamic-row').each(function() {
@@ -254,15 +360,26 @@ var THController = {
         var riesgos = descriptor.riesgosFisicos || {};
         var riesgosArray = riesgos.riesgos || [];
         var html = '<div class="text-start">' +
-            '<div class="mb-3"><label>Esfuerzo físico y mental</label><textarea id="esfuerzo" class="form-control" rows="2">' + (riesgos.esfuerzo || '') + '</textarea></div>' +
-            '<div class="mb-3"><label>Condiciones ambientales</label><textarea id="condiciones" class="form-control" rows="2">' + (riesgos.condiciones || '') + '</textarea></div>' +
-            '<div class="mb-3"><label>Riesgos profesionales</label><div id="riesgosLista">' +
-            (riesgosArray.length ? riesgosArray.map(function(r) {
-                return '<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" value="' + (r || '') + '" placeholder="Riesgo"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
-            }).join('') : '<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>') +
-            '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRiesgo()"><i class="fas fa-plus"></i> Agregar</button></div></div>';
+            '<div class="mb-3"><label>Esfuerzo físico y mental</label><textarea id="esfuerzo" class="form-control" rows="2" placeholder="Ej: Esfuerzo mental y visual">' + (riesgos.esfuerzo || '') + '</textarea></div>' +
+            '<div class="mb-3"><label>Condiciones ambientales</label><textarea id="condiciones" class="form-control" rows="2" placeholder="Ej: Ventilado, espacioso e iluminado">' + (riesgos.condiciones || '') + '</textarea></div>' +
+            '<div class="mb-3"><label>Riesgos profesionales</label><div id="riesgosLista">';
         
-        Swal.fire({ title: 'Editar Riesgos', html: html, width: '600px', showCancelButton: true, confirmButtonText: 'Guardar',
+        if (riesgosArray.length === 0) {
+            html += '<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Ej: Dolor lumbar"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+        } else {
+            for (var i = 0; i < riesgosArray.length; i++) {
+                html += '<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" value="' + (riesgosArray[i] || '') + '" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>';
+            }
+        }
+        
+        html += '</div><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarRiesgo()"><i class="fas fa-plus"></i> Agregar riesgo</button></div></div>';
+        
+        Swal.fire({
+            title: 'Editar Riesgos Físicos del Puesto',
+            html: html,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
             preConfirm: function() {
                 var esfuerzo = document.getElementById('esfuerzo').value;
                 var condiciones = document.getElementById('condiciones').value;
@@ -290,9 +407,21 @@ var THController = {
     }
 };
 
-window.agregarRelacionInterna = function() { $('#relacionesInternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); };
-window.agregarRelacionExterna = function() { $('#relacionesExternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); };
-window.agregarRequerimiento = function() { $('#requerimientosEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); };
-window.agregarRiesgo = function() { $('#riesgosLista').append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); };
+// Funciones auxiliares
+window.agregarRelacionInterna = function() { 
+    $('#relacionesInternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); 
+};
+
+window.agregarRelacionExterna = function() { 
+    $('#relacionesExternasEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); 
+};
+
+window.agregarRequerimiento = function() { 
+    $('#requerimientosEditor').append('<div class="dynamic-row mb-2 p-2 border rounded"><div class="row"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); 
+};
+
+window.agregarRiesgo = function() { 
+    $('#riesgosLista').append('<div class="riesgo-item mb-2"><div class="row"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.riesgo-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>'); 
+};
 
 window.THController = THController;
