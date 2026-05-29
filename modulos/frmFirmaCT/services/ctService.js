@@ -6,7 +6,7 @@ var CTService = {
         for (var i = 0; i < todos.length; i++) {
             var d = todos[i];
             // El colaborador firma cuando está en estado FIRMADO_JTH y es el titular
-            if (d.estado === 'FIRMADO_JTH' && d.titular.trim().toLowerCase() === nombreTitular.trim().toLowerCase()) {
+            if (d.estado === 'FIRMADO_JTH' && d.titular === nombreTitular) {
                 resultado.push(d);
             }
         }

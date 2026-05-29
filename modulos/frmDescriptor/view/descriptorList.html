@@ -467,7 +467,7 @@ window.initDescriptorList = function() {
         if (!descriptor) return;
         
         // Cambiar estado a FIRMA_JTH para que aparezca en Jefe de TH
-        var titulo = descriptor.titular || 'Ing. Juan Pérez';
+        var titulo = descriptor.titular || 'Juan Pérez';
         
         DescriptorService.update(id, { 
             estado: 'FIRMA_JTH',
