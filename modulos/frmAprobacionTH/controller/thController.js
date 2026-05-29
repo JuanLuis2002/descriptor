@@ -203,21 +203,39 @@ var THController = {
             confirmButtonColor: '#198754',
             denyButtonColor: '#ffc107',
             preConfirm: function() {
-                return Swal.fire({ title: 'Aprobar Descriptor', text: '¿Está seguro de aprobar este descriptor? Se enviará para firmas.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
-                    .then(function(result) {
-                        if (result.isConfirmed) {
-                            THService.aprobar(id);
-                            DescriptorService.registrarEvento(id, {
-                                accion: 'APROBACIÓN POR TH GENERALISTA',
-                                usuario: THController.currentUser.nombre,
-                                rol: THController.currentUser.rolNombre,
-                                estado: 'FIRMA_JTH'
-                            });
-                            Swal.fire('Aprobado', 'Descriptor enviado para firmas', 'success');
-                            location.reload();
+                return Swal.fire({ title: 'Aprobar Descriptor', 
+                    html: '<div class="text-start"><label class="form-label">Titular del Puesto (Colaborador que firmará):</label><input type="text" id="titularInput" class="swal2-input" placeholder="Ej: Juan Pérez" value="' + (descriptor.titular || '') + '"></div>',
+                    text: '¿Está seguro de aprobar este descriptor? Se enviará para firmas.', 
+                    icon: 'question', 
+                    showCancelButton: true, 
+                    confirmButtonText: 'Sí, aprobar',
+                    preConfirm: function() {
+                        var titular = document.getElementById('titularInput').value;
+                        if (!titular || titular.trim() === '') {
+                            Swal.showValidationMessage('Debe ingresar el nombre del titular del puesto');
+                            return false;
                         }
-                        return false;
-                    });
+                        return titular;
+                    }
+                }).then(function(result) {
+                    if (result.isConfirmed && result.value) {
+                        var titularNombre = result.value;
+                        THService.aprobar(id, titularNombre);
+                        DescriptorService.registrarEvento(id, {
+                            accion: 'APROBACIÓN POR TH GENERALISTA',
+                            usuario: THController.currentUser.nombre,
+                            rol: THController.currentUser.rolNombre,
+                            estado: 'FIRMA_JTH'
+                        });
+                        // Actualizar el titular en el descriptor
+                        var descriptorActual = DescriptorService.getById(id);
+                        descriptorActual.titular = titularNombre;
+                        DescriptorService.update(id, descriptorActual);
+                        Swal.fire('Aprobado', 'Descriptor enviado para firmas. Titular: ' + titularNombre, 'success');
+                        location.reload();
+                    }
+                    return false;
+                });
             },
             preDeny: function() {
                 return Swal.fire({
