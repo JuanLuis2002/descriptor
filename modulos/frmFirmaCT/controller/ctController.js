@@ -20,12 +20,17 @@ var CTController = {
     },
     
     cargarPendientes: function() {
-        // Buscar descriptores con estado FIRMADO_JTH y que el titular sea el usuario actual
+        // Buscar descriptores con estado FIRMADO_JTH o FIRMADO_CT (si ya firmó)
         var todos = DescriptorService.getAll();
         var pendientes = [];
         for (var i = 0; i < todos.length; i++) {
-            if (todos[i].estado === 'FIRMADO_JTH' && todos[i].titular === this.currentUser.nombre) {
-                pendientes.push(todos[i]);
+            var d = todos[i];
+            // El colaborador puede firmar si está en FIRMADO_JTH y es el titular
+            // O si ya firmó y quiere ver su firma (FIRMADO_CT)
+            if (d.estado === 'FIRMADO_JTH' && d.titular === this.currentUser.nombre) {
+                pendientes.push(d);
+            } else if (d.estado === 'FIRMADO_CT' && d.titular === this.currentUser.nombre) {
+                pendientes.push(d);
             }
         }
         
@@ -47,7 +52,7 @@ var CTController = {
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
                 '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
+                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '<br><i class="fas fa-user"></i> Titular: ' + (d.titular || 'No asignado') + '</p></div>' +
                 '<div class="card-footer bg-white"><button class="btn btn-sm ' + btnClass + ' w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button></div></div></div>';
         }
         html += '</div>';
