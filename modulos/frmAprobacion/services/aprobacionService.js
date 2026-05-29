@@ -11,13 +11,9 @@ var AprobacionService = {
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'APROBADO_POR_JF';
+            descriptor.estado = 'APROBADO_POR_JF';  // Estado intermedio
             descriptor.comentariosAprobacion = comentarios;
             descriptor.fechaAprobacion = new Date().toISOString();
-            // Limpiar observaciones anteriores si las había
-            if (descriptor.observacionesJF) {
-                delete descriptor.observacionesJF;
-            }
             DescriptorService.update(id, descriptor);
             return true;
         }
@@ -36,13 +32,13 @@ var AprobacionService = {
         return false;
     },
     
-    // Observar descriptor (devolver al Jefe Inmediato con observaciones)
+    // Rechazar/Observar descriptor (devolver al Jefe Inmediato)
     observar: function(id, observaciones) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'OBSERVADO_JF';
-            descriptor.observacionesJF = observaciones;
-            descriptor.fechaObservacionJF = new Date().toISOString();
+            descriptor.estado = 'OBSERVADO';
+            descriptor.observaciones = observaciones;
+            descriptor.fechaObservacion = new Date().toISOString();
             DescriptorService.update(id, descriptor);
             return true;
         }

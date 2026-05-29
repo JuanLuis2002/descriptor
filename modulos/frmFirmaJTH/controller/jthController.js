@@ -105,6 +105,7 @@ var JTHController = {
                 var canvas = document.getElementById('firmaCanvas');
                 var signaturePad = new SignaturePad(canvas);
                 
+                // Si ya existe una firma, cargarla
                 if (firmaExistente) {
                     signaturePad.fromDataURL(firmaExistente);
                 }
@@ -138,13 +139,6 @@ var JTHController = {
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
                 JTHService.guardarFirma(id, result.value);
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                DescriptorService.registrarEvento(id, {
-                    accion: 'FIRMA DEL JEFE DE TALENTO HUMANO',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estado: 'FIRMA_JTH_COMPLETADA'
-                });
                 Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
                 JTHController.cargarPendientes();
             }
