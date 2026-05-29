@@ -20,10 +20,17 @@ var CTController = {
     },
     
     cargarPendientes: function() {
-        var pendientes = CTService.getPendientesFirma(this.currentUser.nombre);
+        // Buscar descriptores con estado FIRMADO_JTH y que el titular sea el usuario actual
+        var todos = DescriptorService.getAll();
+        var pendientes = [];
+        for (var i = 0; i < todos.length; i++) {
+            if (todos[i].estado === 'FIRMADO_JTH' && todos[i].titular === this.currentUser.nombre) {
+                pendientes.push(todos[i]);
+            }
+        }
         
         if (pendientes.length === 0) {
-            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de su firma</h5></div>');
+            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de su firma</h5><p>Cuando el Jefe de TH firme un descriptor, aparecerá aquí para que usted firme como titular.</p></div>');
             return;
         }
         
@@ -32,11 +39,16 @@ var CTController = {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var tieneFirma = CTService.getFirma(d.id);
+            var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
+            var badgeText = tieneFirma ? 'Firmado' : 'Pendiente';
+            var btnText = tieneFirma ? 'Ver Firma' : 'Firmar Documento';
+            var btnClass = tieneFirma ? 'btn-success' : 'btn-warning';
+            
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + (tieneFirma ? 'bg-success' : 'bg-warning') + '">' + (tieneFirma ? 'Firmado' : 'Pendiente') + '</span></div></div>' +
+                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm ' + (tieneFirma ? 'btn-success' : 'btn-warning') + ' w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + (tieneFirma ? 'Ver Firma' : 'Firmar Documento') + '</button></div></div></div>';
+                '<div class="card-footer bg-white"><button class="btn btn-sm ' + btnClass + ' w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);

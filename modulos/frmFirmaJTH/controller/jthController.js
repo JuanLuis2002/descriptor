@@ -20,10 +20,17 @@ var JTHController = {
     },
     
     cargarPendientes: function() {
-        var pendientes = JTHService.getPendientesFirma();
+        // Buscar descriptores con estado FIRMA_JTH
+        var todos = DescriptorService.getAll();
+        var pendientes = [];
+        for (var i = 0; i < todos.length; i++) {
+            if (todos[i].estado === 'FIRMA_JTH') {
+                pendientes.push(todos[i]);
+            }
+        }
         
         if (pendientes.length === 0) {
-            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de firma</h5></div>');
+            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de firma</h5><p>Cuando un descriptor sea aprobado por TH y se notifique a los firmantes, aparecerá aquí.</p></div>');
             return;
         }
         
@@ -32,11 +39,16 @@ var JTHController = {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var tieneFirma = JTHService.getFirma(d.id);
+            var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
+            var badgeText = tieneFirma ? 'Firmado' : 'Pendiente';
+            var btnText = tieneFirma ? 'Ver Firma' : 'Firmar Documento';
+            var btnClass = tieneFirma ? 'btn-success' : 'btn-warning';
+            
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + (tieneFirma ? 'bg-success' : 'bg-warning') + '">' + (tieneFirma ? 'Firmado' : 'Pendiente') + '</span></div></div>' +
+                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm ' + (tieneFirma ? 'btn-success' : 'btn-warning') + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + (tieneFirma ? 'Ver Firma' : 'Firmar Documento') + '</button></div></div></div>';
+                '<div class="card-footer bg-white"><button class="btn btn-sm ' + btnClass + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);

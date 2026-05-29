@@ -466,38 +466,29 @@ window.initDescriptorList = function() {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
         
-        var jthUser = { nombre: 'Carlos Gómez', rol: 'JEFE_TH' };
-        var colaborador = { nombre: descriptor.titular || 'Juan Pérez', rol: 'COLABORADOR' };
+        // Cambiar estado a FIRMA_JTH para que aparezca en Jefe de TH
+        var titulo = descriptor.titular || 'Juan Pérez';
         
-        var notificaciones = JSON.parse(localStorage.getItem('notificaciones') || '[]');
-        
-        notificaciones.push({
-            id: Date.now(),
-            descriptorId: id,
-            descriptorCodigo: descriptor.codigo,
-            descriptorPuesto: descriptor.puesto,
-            fecha: new Date().toISOString(),
-            mensaje: 'Se requiere su firma digital para el descriptor ' + descriptor.codigo,
-            leido: false,
-            usuarioDestino: jthUser.nombre,
-            rolDestino: jthUser.rol
+        DescriptorService.update(id, { 
+            estado: 'FIRMA_JTH',
+            titular: titulo
         });
         
-        notificaciones.push({
-            id: Date.now() + 1,
-            descriptorId: id,
-            descriptorCodigo: descriptor.codigo,
-            descriptorPuesto: descriptor.puesto,
-            fecha: new Date().toISOString(),
-            mensaje: 'Se requiere su firma digital como titular del puesto para el descriptor ' + descriptor.codigo,
-            leido: false,
-            usuarioDestino: colaborador.nombre,
-            rolDestino: colaborador.rol
+        // Registrar evento
+        DescriptorService.registrarEvento(id, {
+            accion: 'NOTIFICACIÓN A FIRMANTES',
+            usuario: currentUser.nombre,
+            rol: currentUser.rolNombre,
+            estado: 'FIRMA_JTH'
         });
         
-        localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
+        Swal.fire({ 
+            title: 'Notificaciones Enviadas', 
+            text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular (' + titulo + ') para que realicen su firma digital.\n\nEl descriptor ahora está en estado "Pendiente Firma JTH".', 
+            icon: 'success' 
+        });
         
-        Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular.', icon: 'success' });
+        cargarDescriptores();
     }
     
     function firmarDescriptorJI(id) {
