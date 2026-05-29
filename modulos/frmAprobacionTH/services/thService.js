@@ -12,7 +12,7 @@ var THService = {
         return DescriptorService.getById(id);
     },
     
-    // Guardar complementos del TH (Relaciones Laborales, Requerimientos, Riesgos)
+    // Guardar complementos del TH
     guardarComplementos: function(id, data) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
@@ -34,6 +34,10 @@ var THService = {
             descriptor.estado = 'ACTIVO';
             descriptor.comentariosTH = comentarios;
             descriptor.fechaAprobacionTH = new Date().toISOString();
+            // Limpiar observaciones de TH si las había
+            if (descriptor.observacionesTH) {
+                delete descriptor.observacionesTH;
+            }
             DescriptorService.update(id, descriptor);
             return true;
         }
@@ -44,7 +48,7 @@ var THService = {
     observar: function(id, observaciones) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'OBSERVADO';
+            descriptor.estado = 'OBSERVADO_TH';
             descriptor.observacionesTH = observaciones;
             descriptor.fechaObservacionTH = new Date().toISOString();
             DescriptorService.update(id, descriptor);

@@ -82,10 +82,9 @@ var AprobacionController = {
         var descriptor = AprobacionService.getDetalle(id);
         if (!descriptor) return;
         
-        // Verificar si ya está aprobado pendiente de envío
         var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
         
-        // Generar HTML del detalle
+        // Funciones Claves
         var funcionesHtml = '';
         if (descriptor.funcionesClaves && descriptor.funcionesClaves.length > 0) {
             funcionesHtml = '<ul class="mb-0">';
@@ -97,6 +96,7 @@ var AprobacionController = {
             funcionesHtml = '<p class="text-muted">No registradas</p>';
         }
         
+        // Actividades
         var actividadesHtml = '';
         if (descriptor.actividadesPorFuncion && descriptor.actividadesPorFuncion.length > 0) {
             for (var i = 0; i < descriptor.actividadesPorFuncion.length; i++) {
@@ -115,22 +115,31 @@ var AprobacionController = {
             actividadesHtml = '<p class="text-muted">No hay actividades registradas</p>';
         }
         
+        // KPIs
         var kpisHtml = '';
         if (descriptor.kpis && descriptor.kpis.length > 0) {
             kpisHtml = '<table class="table table-sm"><thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead><tbody>';
             for (var i = 0; i < descriptor.kpis.length; i++) {
-                kpisHtml += '<tr><td>' + (descriptor.kpis[i].indicador || '-') + '</td><td>' + (descriptor.kpis[i].frecuencia || '-') + '</td><td>' + (descriptor.kpis[i].meta || '-') + '</td></tr>';
+                kpisHtml += '<tr>' +
+                    '<td>' + (descriptor.kpis[i].indicador || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].frecuencia || '-') + '</td>' +
+                    '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
+                    '</tr>';
             }
             kpisHtml += '</tbody></table>';
         } else {
             kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
         }
         
+        // Perfil del Puesto - CORREGIDO
         var perfilHtml = '';
         if (descriptor.perfil) {
-            perfilHtml = '<table class="table table-sm"><tr><th>Edad:</th><td>' + (descriptor.perfil.edadMin || '-') + ' - ' + (descriptor.perfil.edadMax || '-') + ' años</td><th>Sexo:</th><td>' + (descriptor.perfil.sexo || '-') + '</td></tr>' +
-                '<tr><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar || '-') + '</td><th>Disponibilidad:</th><td>' + (descriptor.perfil.disponibilidadHorario || '-') + '</td></tr>' +
-                '<tr><th>Modalidad:</th><td>' + (descriptor.perfil.modalidadTrabajo || '-') + '</td><th>Licencia:</th><td>' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</td></tr></table>';
+            perfilHtml = '<table class="table table-sm">' +
+                '<tr><th style="width: 40%;">Edad Mínima:</th><td>' + (descriptor.perfil.edadMin || '-') + ' años</td><th style="width: 40%;">Edad Máxima:</th><td>' + (descriptor.perfil.edadMax || '-') + ' años</td></tr>' +
+                '<tr><th>Sexo:</th><td>' + (descriptor.perfil.sexo === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.sexo === 'MASCULINO' ? 'Masculino' : 'Femenino')) + '</td><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar === 'INDIFERENTE' ? 'Indiferente' : descriptor.perfil.estadoFamiliar || '-') + '</td></tr>' +
+                '<tr><th>Disponibilidad Horaria:</th><td>' + (descriptor.perfil.disponibilidadHorario === 'TIEMPO_COMPLETO' ? 'Tiempo Completo' : (descriptor.perfil.disponibilidadHorario === 'MEDIO_TIEMPO' ? 'Medio Tiempo' : descriptor.perfil.disponibilidadHorario || '-')) + '</td><th>Modalidad de Trabajo:</th><td>' + (descriptor.perfil.modalidadTrabajo === 'PRESENCIAL' ? 'Presencial' : (descriptor.perfil.modalidadTrabajo === 'HIBRIDO' ? 'Híbrido' : (descriptor.perfil.modalidadTrabajo === 'REMOTO' ? 'Remoto' : descriptor.perfil.modalidadTrabajo || '-'))) + '</td></tr>' +
+                '<tr><th>Poseer Licencia:</th><td colspan="3">' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</td></tr>' +
+                '</table>';
         } else {
             perfilHtml = '<p class="text-muted">No hay perfil registrado</p>';
         }
@@ -173,13 +182,12 @@ var AprobacionController = {
                 <hr>
                 <h6 class="border-bottom pb-2">Entrenamiento</h6>
                 <p><strong>Personal a cargo:</strong> ${descriptor.entrenamiento?.personalCargo || '0'}</p>
-                <p><strong>Tipo:</strong> ${descriptor.entrenamiento?.tipoEntrenamiento || '-'}</p>
+                <p><strong>Tipo de entrenamiento:</strong> ${descriptor.entrenamiento?.tipoEntrenamiento || '-'}</p>
                 <p><strong>Duración:</strong> ${descriptor.entrenamiento?.duracion || '-'}</p>
-                <p><strong>Responsables:</strong> ${descriptor.entrenamiento?.puestosResponsables || '-'}</p>
+                <p><strong>Puestos responsables:</strong> ${descriptor.entrenamiento?.puestosResponsables || '-'}</p>
             </div>
         `;
         
-        // Configurar botones según el estado
         var confirmButtonText = '<i class="fas fa-check"></i> Aprobar';
         var denyButtonText = '<i class="fas fa-times"></i> Observar';
         var confirmButtonColor = '#198754';
@@ -206,7 +214,6 @@ var AprobacionController = {
             cancelButtonColor: '#6c757d',
             preConfirm: function() {
                 if (isAprobado) {
-                    // Enviar a TH
                     return Swal.fire({
                         title: 'Enviar a Talento Humano',
                         text: '¿Está seguro de enviar este descriptor a Talento Humano para revisión técnica?',
@@ -217,13 +224,19 @@ var AprobacionController = {
                     }).then(function(result) {
                         if (result.isConfirmed) {
                             AprobacionService.enviarATH(id);
+                            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                            DescriptorService.registrarEvento(id, {
+                                accion: 'ENVÍO A TALENTO HUMANO (DESDE JF)',
+                                usuario: currentUserGlobal.nombre,
+                                rol: currentUserGlobal.rolNombre,
+                                estado: 'ENVIADO_TH'
+                            });
                             Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
                             location.reload();
                         }
                         return false;
                     });
                 } else {
-                    // Aprobar
                     return Swal.fire({
                         title: 'Aprobar Descriptor',
                         text: '¿Está seguro de aprobar este descriptor?',
@@ -234,6 +247,13 @@ var AprobacionController = {
                     }).then(function(result) {
                         if (result.isConfirmed) {
                             AprobacionService.aprobar(id, 'Aprobado por Jefe Superior');
+                            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                            DescriptorService.registrarEvento(id, {
+                                accion: 'APROBACIÓN POR JEFE SUPERIOR',
+                                usuario: currentUserGlobal.nombre,
+                                rol: currentUserGlobal.rolNombre,
+                                estado: 'APROBADO_POR_JF'
+                            });
                             Swal.fire('Aprobado', 'Descriptor aprobado. Ahora puede enviarlo a Talento Humano.', 'success');
                             location.reload();
                         }
@@ -243,7 +263,6 @@ var AprobacionController = {
             },
             preDeny: function() {
                 if (isAprobado) {
-                    // Volver a estado pendiente
                     return Swal.fire({
                         title: 'Volver a pendiente',
                         text: '¿Desea devolver este descriptor a estado pendiente?',
@@ -254,13 +273,19 @@ var AprobacionController = {
                     }).then(function(result) {
                         if (result.isConfirmed) {
                             DescriptorService.update(id, { estado: 'ENVIADO_JF' });
+                            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                            DescriptorService.registrarEvento(id, {
+                                accion: 'DEVOLUCIÓN A PENDIENTE',
+                                usuario: currentUserGlobal.nombre,
+                                rol: currentUserGlobal.rolNombre,
+                                estado: 'ENVIADO_JF'
+                            });
                             Swal.fire('Devuelto', 'Descriptor vuelve a estado pendiente', 'info');
                             location.reload();
                         }
                         return false;
                     });
                 } else {
-                    // Observar
                     return Swal.fire({
                         title: 'Observaciones',
                         html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba aquí las observaciones o correcciones necesarias..." rows="4"></textarea>',
@@ -278,6 +303,14 @@ var AprobacionController = {
                     }).then(function(result) {
                         if (result.isConfirmed && result.value) {
                             AprobacionService.observar(id, result.value);
+                            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                            DescriptorService.registrarEvento(id, {
+                                accion: 'OBSERVACIÓN POR JEFE SUPERIOR',
+                                usuario: currentUserGlobal.nombre,
+                                rol: currentUserGlobal.rolNombre,
+                                estado: 'OBSERVADO',
+                                observacion: result.value
+                            });
                             Swal.fire('Observado', 'Descriptor devuelto al Jefe Inmediato con observaciones', 'warning');
                             location.reload();
                         }
