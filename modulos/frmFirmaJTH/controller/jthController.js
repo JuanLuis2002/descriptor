@@ -36,7 +36,7 @@ var JTHController = {
                 '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + (tieneFirma ? 'bg-success' : 'bg-warning') + '">' + (tieneFirma ? 'Firmado' : 'Pendiente') + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm ' + (tieneFirma ? 'btn-success' : 'btn-warning') + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + (tieneFirma ? 'Ver Firma' : 'Firmar Descriptor') + '</button></div></div></div>';
+                '<div class="card-footer bg-white"><button class="btn btn-sm ' + (tieneFirma ? 'btn-success' : 'btn-warning') + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + (tieneFirma ? 'Ver Firma' : 'Firmar Documento') + '</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
@@ -48,10 +48,19 @@ var JTHController = {
         
         var firmaExistente = JTHService.getFirma(id);
         
-        var modalHtml = '<div class="text-center"><div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
+        var modalHtml = '<div class="text-center">' +
+            '<p class="mb-2">Firme en el recuadro con el mouse o dedo:</p>' +
+            '<div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;">' +
+            '<canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas>' +
+            '</div>' +
+            '<div class="mt-3">' +
+            '<button id="limpiarFirma" class="btn btn-secondary btn-sm mx-1"><i class="fas fa-eraser"></i> Limpiar</button>' +
+            '<button id="descargarFirma" class="btn btn-info btn-sm mx-1"><i class="fas fa-download"></i> Descargar</button>' +
+            '</div>' +
+            '</div>';
         
         Swal.fire({
-            title: 'Firma Digital - Jefe de TH',
+            title: 'Firma Digital - Jefe de Talento Humano',
             html: modalHtml,
             width: '500px',
             showCancelButton: true,
@@ -59,16 +68,31 @@ var JTHController = {
             cancelButtonText: 'Cancelar',
             didOpen: function() {
                 var canvas = document.getElementById('firmaCanvas');
-                var signaturePad = new SignaturePad(canvas);
-                if (firmaExistente) signaturePad.fromDataURL(firmaExistente);
-                $('#limpiarFirma').click(function() { signaturePad.clear(); });
+                var signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgb(255,255,255)',
+                    penColor: 'rgb(0,0,0)'
+                });
+                
+                if (firmaExistente) {
+                    signaturePad.fromDataURL(firmaExistente);
+                }
+                
+                $('#limpiarFirma').click(function() {
+                    signaturePad.clear();
+                });
+                
                 $('#descargarFirma').click(function() {
-                    if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
+                    if (signaturePad.isEmpty()) {
+                        Swal.fire('Advertencia', 'No hay firma para descargar', 'warning');
+                        return;
+                    }
+                    var dataURL = signaturePad.toDataURL('image/png');
                     var link = document.createElement('a');
                     link.download = 'firma_jth_' + id + '.png';
-                    link.href = signaturePad.toDataURL('image/png');
+                    link.href = dataURL;
                     link.click();
                 });
+                
                 window.currentSignaturePad = signaturePad;
             },
             preConfirm: function() {
