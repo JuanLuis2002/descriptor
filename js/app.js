@@ -525,3 +525,399 @@ window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
 window.editarDescriptor = editarDescriptor;
+
+// Variable para la ruta del logo (configurable)
+var LOGO_PATH = ''; // Colocar aquí la ruta del logo
+
+// Generar versión corta del descriptor
+function generarVersionCorta(id) {
+    var descriptor = DescriptorService.getById(id);
+    if (!descriptor) {
+        Swal.fire('Error', 'No se encontró el descriptor', 'error');
+        return;
+    }
+    
+    // Generar el HTML para el PDF
+    var pdfHtml = generarHTMLVersionCorta(descriptor);
+    
+    // Mostrar modal con previsualización
+    Swal.fire({
+        title: 'Descriptor de Puesto - Versión Corta',
+        html: '<div id="pdfPreviewContainer" style="max-height: 70vh; overflow-y: auto; background: #f0f2f5; padding: 10px; border-radius: 8px;">' +
+              '<div id="pdfContent" style="background: white; padding: 20px; border-radius: 8px;">' + pdfHtml + '</div>' +
+              '</div>' +
+              '<div class="mt-3 d-flex justify-content-center gap-2">' +
+              '<button id="btnDescargarPDF" class="btn btn-success"><i class="fas fa-download"></i> Descargar PDF</button>' +
+              '<button id="btnImprimirPDF" class="btn btn-info"><i class="fas fa-print"></i> Imprimir</button>' +
+              '</div>',
+        width: '900px',
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar',
+        didOpen: function() {
+            $('#btnDescargarPDF').click(function() {
+                var element = document.getElementById('pdfContent');
+                var opt = {
+                    margin: [0.5, 0.5, 0.5, 0.5],
+                    filename: 'descriptor_corto_' + descriptor.codigo + '.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            });
+            
+            $('#btnImprimirPDF').click(function() {
+                var element = document.getElementById('pdfContent');
+                var opt = {
+                    margin: [0.5, 0.5, 0.5, 0.5],
+                    filename: 'descriptor_corto_' + descriptor.codigo + '.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).outputPdf().then(function(pdf) {
+                    var iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = pdf;
+                    document.body.appendChild(iframe);
+                    iframe.contentWindow.print();
+                });
+            });
+        }
+    });
+}
+
+// Generar HTML para versión corta
+function generarHTMLVersionCorta(d) {
+    // Funciones Claves
+    var funcionesClavesHtml = '';
+    if (d.funcionesClaves && d.funcionesClaves.length > 0) {
+        funcionesClavesHtml = '<ol style="margin-top: 5px; padding-left: 20px;">';
+        for (var i = 0; i < d.funcionesClaves.length; i++) {
+            var nombre = d.funcionesClaves[i].nombre || '';
+            var codigo = d.funcionesClaves[i].codigo ? '[' + d.funcionesClaves[i].codigo + '] ' : '';
+            funcionesClavesHtml += '<li>' + codigo + nombre + '</li>';
+        }
+        funcionesClavesHtml += '</ol>';
+    } else {
+        funcionesClavesHtml = '<p>No registradas</p>';
+    }
+    
+    // Funciones Secundarias
+    var funcionesSecHtml = '';
+    if (d.funcionesSecundarias && d.funcionesSecundarias.length > 0) {
+        funcionesSecHtml = '<ol style="margin-top: 5px; padding-left: 20px;">';
+        for (var i = 0; i < d.funcionesSecundarias.length; i++) {
+            funcionesSecHtml += '<li>' + d.funcionesSecundarias[i] + '</li>';
+        }
+        funcionesSecHtml += '</ol>';
+    } else {
+        funcionesSecHtml = '<p>No registradas</p>';
+    }
+    
+    // KPIs
+    var kpisHtml = '';
+    if (d.kpis && d.kpis.length > 0) {
+        kpisHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 5px;">' +
+            '<thead>' +
+            '<tr style="background: #0d6efd; color: white;">' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Indicador</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Frecuencia / Meta</th>' +
+            '</tr>' +
+            '</thead><tbody>';
+        for (var i = 0; i < d.kpis.length; i++) {
+            kpisHtml += '<tr>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.kpis[i].indicador || '-') + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.kpis[i].frecuencia || '-') + ' / ' + (d.kpis[i].meta || '-') + '</td>' +
+                '</tr>';
+        }
+        kpisHtml += '</tbody></table>';
+    } else {
+        kpisHtml = '<p>No hay KPIs registrados</p>';
+    }
+    
+    // Educación
+    var educacionHtml = '';
+    if (d.educacion && d.educacion.length > 0) {
+        educacionHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 5px;">' +
+            '<thead>' +
+            '<tr style="background: #0d6efd; color: white;">' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Requisito</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Especificaciones</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Requerido</th>' +
+            '</tr>' +
+            '</thead><tbody>';
+        for (var i = 0; i < d.educacion.length; i++) {
+            educacionHtml += '<tr>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.educacion[i].requisito || '-') + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.educacion[i].especificaciones || '-') + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.educacion[i].requerido == 1 ? 'Requerido' : 'Deseable') + '</td>' +
+                '</tr>';
+        }
+        educacionHtml += '</tbody></table>';
+    } else {
+        educacionHtml = '<p>No hay educación registrada</p>';
+    }
+    
+    // Experiencia
+    var experienciaHtml = '';
+    if (d.experiencia && d.experiencia.length > 0) {
+        experienciaHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 5px;">' +
+            '<thead>' +
+            '<tr style="background: #0d6efd; color: white;">' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Requisito</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Requerido</th>' +
+            '</tr>' +
+            '</thead><tbody>';
+        for (var i = 0; i < d.experiencia.length; i++) {
+            experienciaHtml += '<tr>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.experiencia[i].requisito || '-') + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') + '</td>' +
+                '</tr>';
+        }
+        experienciaHtml += '</tbody></table>';
+    } else {
+        experienciaHtml = '<p>No hay experiencia registrada</p>';
+    }
+    
+    // Competencias Técnicas
+    var compTecnicasHtml = '';
+    if (d.competenciasTecnicas && d.competenciasTecnicas.length > 0) {
+        compTecnicasHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 5px;">' +
+            '<thead>' +
+            '<tr style="background: #0d6efd; color: white;">' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Código</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Competencia Técnica</th>' +
+            '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nivel de Dominio</th>' +
+            '</tr>' +
+            '</thead><tbody>';
+        for (var i = 0; i < d.competenciasTecnicas.length; i++) {
+            compTecnicasHtml += '<tr>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (i + 1) + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.competenciasTecnicas[i].nombre || '-') + '</td>' +
+                '<td style="border: 1px solid #ddd; padding: 8px;">' + (d.competenciasTecnicas[i].nivel || '-') + '</td>' +
+                '</tr>';
+        }
+        compTecnicasHtml += '</tbody></table>';
+    } else {
+        compTecnicasHtml = '<p>No hay competencias técnicas registradas</p>';
+    }
+    
+    // Competencias Conductuales
+    var compConductualesHtml = '';
+    if (d.competenciasConductuales && d.competenciasConductuales.length > 0) {
+        compConductualesHtml = '<ul style="margin-top: 5px;">';
+        for (var i = 0; i < d.competenciasConductuales.length; i++) {
+            compConductualesHtml += '<li><strong>' + (d.competenciasConductuales[i].nombre || '-') + '</strong>: ' + (d.competenciasConductuales[i].descripcion || '-') + '</li>';
+        }
+        compConductualesHtml += '</ul>';
+    } else {
+        compConductualesHtml = '<p>No hay competencias conductuales registradas</p>';
+    }
+    
+    // Logo HTML (con ruta configurable)
+    var logoHtml = LOGO_PATH ? '<img src="' + LOGO_PATH + '" style="height: 60px; float: left;">' : '<div style="width: 80px; height: 60px; background: #e9ecef; float: left; text-align: center; line-height: 60px; font-size: 10px; color: #6c757d;">LOGO</div>';
+    
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Descriptor ${d.codigo}</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 11px;
+                line-height: 1.4;
+                color: #333;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #0d6efd;
+            }
+            .header h2 {
+                color: #0d6efd;
+                font-size: 16px;
+                margin: 5px 0;
+            }
+            .header h3 {
+                font-size: 14px;
+                margin: 3px 0;
+            }
+            .logo-area {
+                overflow: hidden;
+                margin-bottom: 10px;
+            }
+            .section {
+                margin-bottom: 12px;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                background: #0d6efd;
+                color: white;
+                padding: 5px 8px;
+                font-size: 12px;
+                font-weight: bold;
+                margin-bottom: 8px;
+                border-radius: 4px;
+            }
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            .info-table td, .info-table th {
+                border: 1px solid #ddd;
+                padding: 6px;
+                vertical-align: top;
+            }
+            .info-table th {
+                background: #f8f9fa;
+                width: 30%;
+                font-weight: 600;
+            }
+            .signature-area {
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            .signature-box {
+                width: 32%;
+                border-top: 1px solid #333;
+                padding-top: 5px;
+                text-align: center;
+                font-size: 10px;
+            }
+            .footer {
+                margin-top: 15px;
+                text-align: center;
+                font-size: 9px;
+                color: #6c757d;
+                border-top: 1px solid #dee2e6;
+                padding-top: 8px;
+            }
+            @media print {
+                body { margin: 0; padding: 0; }
+                .no-print { display: none; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="logo-area">
+            ${logoHtml}
+            <div style="float: right; text-align: right;">
+                <div style="font-size: 10px; color: #6c757d;">Código: ${d.codigo || 'N/A'}</div>
+                <div style="font-size: 10px; color: #6c757d;">Fecha: ${d.fechaEmision || new Date().toLocaleDateString()}</div>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+        
+        <div class="header">
+            <h2>DEPARTAMENTO DE TALENTO HUMANO</h2>
+            <h3>DESCRIPTOR Y PERFIL DE PUESTO</h3>
+            <h3 style="color: #0d6efd;">VERSIÓN CORTA</h3>
+        </div>
+        
+        <table class="info-table">
+            <tr><th>TITULO DEL PUESTO:</th><td colspan="3"><strong>${d.puesto || 'N/A'}</strong></td></tr>
+            <tr><th>DIRECCION / DEPTO:</th><td>${d.area || 'N/A'}</td><th>FECHA DE EMISION:</th><td>${d.fechaEmision || new Date().toLocaleDateString()}</td></tr>
+            <tr><th>PUESTO AL QUE SE REPORTA:</th><td>${d.reportaA || 'N/A'}</td><th>N° PERSONAL A CARGO:</th><td>${d.entrenamiento?.personalCargo || '0'}</td></tr>
+        </table>
+        
+        <div class="section">
+            <div class="section-title">OBJETIVO DEL PUESTO</div>
+            <p style="margin: 5px 0; text-align: justify;">${d.objetivo || 'No especificado'}</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">FUNCIONES CLAVES</div>
+            ${funcionesClavesHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">FUNCIONES SECUNDARIAS</div>
+            ${funcionesSecHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">INDICADORES DE DESEMPEÑO (KPIs)</div>
+            ${kpisHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">PERFIL DEL PUESTO</div>
+            <table class="info-table">
+                <tr><th>Edad:</th><td>${d.perfil?.edadMin || '18'} - ${d.perfil?.edadMax || '65'} años</td>
+                    <th>Sexo:</th><td>${d.perfil?.sexo === 'MASCULINO' ? 'Masculino' : (d.perfil?.sexo === 'FEMENINO' ? 'Femenino' : 'Indiferente')}</td></tr>
+                <tr><th>Modalidad de Trabajo:</th><td>${d.perfil?.modalidadTrabajo || 'Presencial'}</td>
+                    <th>Disponibilidad:</th><td>${d.perfil?.disponibilidadHorario || 'Tiempo Completo'}</td></tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">EDUCACIÓN</div>
+            ${educacionHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">EXPERIENCIA</div>
+            ${experienciaHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">COMPETENCIAS TÉCNICAS</div>
+            ${compTecnicasHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">COMPETENCIAS CONDUCTUALES</div>
+            ${compConductualesHtml}
+        </div>
+        
+        <div class="section">
+            <div class="section-title">RESPONSABILIDADES</div>
+            <table class="info-table">
+                <tr><th>Supervisa a:</th><td colspan="3">${d.responsabilidades?.equipo || 'N/A'}</td></tr>
+                <tr><th>Impacto Económico:</th><td colspan="3">${d.responsabilidades?.impactoEconomico || 'Poco significativo'}</td></tr>
+                <tr><th>Inducción Específica:</th><td colspan="3">Duración: ${d.entrenamiento?.duracion || '2 semanas'} | Responsable: ${d.entrenamiento?.puestosResponsables || 'Jefe Inmediato'}</td></tr>
+            </table>
+        </div>
+        
+        <div class="signature-area">
+            <div class="signature-box">
+                <strong>${d.titular || '_________________'}</strong><br>
+                Nombre del Empleado<br>
+                <span style="font-size: 9px;">Fecha y Firma: _________________</span>
+            </div>
+            <div class="signature-box">
+                <strong>${d.creador || '_________________'}</strong><br>
+                Nombre de Jefatura<br>
+                <span style="font-size: 9px;">Fecha y Firma: _________________</span>
+            </div>
+            <div class="signature-box">
+                <strong>_________________</strong><br>
+                Jefe de Talento Humano<br>
+                <span style="font-size: 9px;">Fecha y Firma: _________________</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Documento generado desde el Sistema de Gestión de Descriptor de Puesto<br>
+            Página 1 de 1
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+// Exportar función global
+window.generarVersionCorta = generarVersionCorta;

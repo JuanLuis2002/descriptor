@@ -241,8 +241,18 @@ window.initDescriptorList = function() {
             }
             
             // Botón Desactivar (solo para ACTIVO)
+            /*
             if (d.estado === 'ACTIVO') {
                 html += '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i> Desactivar</button>';
+            }*/
+
+            // Botones para ACTIVO
+            if (d.estado === 'ACTIVO') {
+                html += '<div class="btn-group w-100 gap-1">' +
+                '<button class="btn btn-sm btn-success btn-version-corta" data-id="' + d.id + '"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
+                '<button class="btn btn-sm btn-secondary btn-version-extensa" data-id="' + d.id + '" disabled><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+                '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i></button>' +
+                '</div>';
             }
             
             // Botón Reactivar (solo para INACTIVO)
@@ -267,6 +277,15 @@ window.initDescriptorList = function() {
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
         $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
+        // Eventos para versión corta y extensa
+        $('.btn-version-corta').off('click').on('click', function(e) { 
+            e.stopPropagation(); 
+            generarVersionCorta($(this).data('id')); 
+        });
+        $('.btn-version-extensa').off('click').on('click', function(e) { 
+            e.stopPropagation(); 
+            Swal.fire('En desarrollo', 'Versión extensa próximamente disponible', 'info'); 
+        });
     }
     
     function getEstadoBadgeClass(estado) {
