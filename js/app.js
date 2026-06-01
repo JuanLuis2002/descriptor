@@ -527,7 +527,7 @@ window.closeMobileSidebar = closeMobileSidebar;
 window.editarDescriptor = editarDescriptor;
 
 // Variable para la ruta del logo (configurable)
-var LOGO_PATH = ''; // Colocar aquí la ruta del logo
+var LOGO_PATH = 'logo/logo.png'; // Colocar aquí la ruta del logo
 
 // Generar versión corta del descriptor
 function generarVersionCorta(id) {
