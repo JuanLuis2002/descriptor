@@ -250,7 +250,7 @@ window.initDescriptorList = function() {
             if (d.estado === 'ACTIVO') {
                 html += '<div class="btn-group w-100 gap-1">' +
                 '<button class="btn btn-sm btn-success btn-version-corta" data-id="' + d.id + '"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-                '<button class="btn btn-sm btn-secondary btn-version-extensa" data-id="' + d.id + '" disabled><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+                '<button class="btn btn-sm btn-secondary btn-version-extensa" data-id="' + d.id + '"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
                 '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i></button>' +
                 '</div>';
             }
@@ -284,7 +284,8 @@ window.initDescriptorList = function() {
         });
         $('.btn-version-extensa').off('click').on('click', function(e) { 
             e.stopPropagation(); 
-            Swal.fire('En desarrollo', 'Versión extensa próximamente disponible', 'info'); 
+            generarVersionExtensa($(this).data('id'));
+            //Swal.fire('En desarrollo', 'Versión extensa próximamente disponible', 'info'); 
         });
     }
     
