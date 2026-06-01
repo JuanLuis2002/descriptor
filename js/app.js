@@ -1553,15 +1553,14 @@ function generarHTMLVersionExtensa(d) {
         return [];
     }
 
-    function headerPagina(pageNumber, totalPages) {
-        var paginasTexto = pageNumber && totalPages ? pageNumber + ' de ' + totalPages : '';
+    function headerPagina() {
         return '<table class="header-tabla"><tr><td class="header-logo">' + logoHtml + '</td><td class="header-title">DEPARTAMENTO DE TALENTO HUMANO</td><td class="header-doc-title">DESCRIPTOR Y PERFIL DE PUESTO</td></tr></table>' +
             '<table class="tabla generalidades">' +
             '<tr><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>' +
             '<tr><td class="label">TITULO DEL PUESTO:</td><td>' + text(d.puesto) + '</td><td class="label">CODIGO:</td><td>' + text(d.codigo) + '</td></tr>' +
             '<tr><td class="label">DIRECCION / DEPTO:</td><td>' + text(d.area) + '</td><td class="label">FECHA DE EMISION:</td><td>' + text(d.fechaEmision) + '</td></tr>' +
             '<tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>' + text(d.reportaA) + '</td><td class="label">FECHA DE REVISION:</td><td>' + fechaActual + '</td></tr>' +
-            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td>' + paginasTexto + '</td></tr>' +
+            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td></td></tr>' +
             '</table>';
     }
 
@@ -1705,11 +1704,14 @@ function generarHTMLVersionExtensa(d) {
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #fff; color: #000; }
         body { font-family: "Arial Narrow", Arial, Helvetica, sans-serif; font-size: 8pt; font-stretch: condensed; }
-        .source-content { display: none; }
-        .pages-container { width: 8.5in; margin: 0 auto; }
-        .report-page { width: 8.5in; height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; page-break-after: always; position: relative; background: #fff; overflow: hidden; }
-        .report-page:last-child { page-break-after: auto; }
-        .report-body { overflow: hidden; }
+        .report-page { width: 8.02in; margin: 0 auto; background: #fff; }
+        .print-shell { width: 100%; border-collapse: collapse; }
+        .print-shell > thead { display: table-header-group; }
+        .print-shell > tfoot { display: table-footer-group; }
+        .print-shell > thead > tr > td,
+        .print-shell > tbody > tr > td,
+        .print-shell > tfoot > tr > td { border: none; padding: 0; }
+        .report-content { padding: 0 0 0.08in 0; }
         .header-tabla, .tabla { width: 100%; border-collapse: collapse; }
         .header-tabla { border: 1px solid #002060; margin-bottom: 7px; }
         .header-tabla td { border-left: 1px solid #002060; padding: 4px 8px; height: 38px; vertical-align: middle; font-weight: 700; }
@@ -1749,7 +1751,7 @@ function generarHTMLVersionExtensa(d) {
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
-        .page-footer { position: absolute; right: 0.24in; bottom: 0.13in; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; }
+        .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         .center { text-align: center; }
         .flow-block { break-inside: avoid; page-break-inside: avoid; }
         .section-label,
@@ -1761,84 +1763,36 @@ function generarHTMLVersionExtensa(d) {
         .perfil,
         .conductual-tabla,
         .firmas { break-inside: avoid; page-break-inside: avoid; }
-        @media screen { body { background: #fff; } }
+        @media screen {
+            body { background: #fff; }
+            .report-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; }
+        }
     </style>`;
 
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Descriptor ${text(d.codigo)}</title>${CSS}</head><body>
-    <div id="sourceContent" class="source-content">
-        <div class="flow-block"><div class="bar-title">DESCRIPTOR DE PUESTO</div></div>
-        ${objetivoHtml}
-        ${renderFuncionesResponsabilidad()}
-        ${actividadesTitulo ? '<div class="flow-block">' + actividadesTitulo + '</div>' : ''}
-        ${actividadesHtml}
-        ${renderResponsabilidades()}
-        ${renderRelaciones()}
-        ${renderRequerimientos()}
-        ${renderRiesgos()}
-        ${renderEntrenamiento()}
-        ${renderPerfil()}
-        ${renderEducacion()}
-        ${renderExperiencia()}
-        ${renderCompetenciasTecnicas()}
-        ${renderCompetenciasConductuales()}
-        ${renderFirmas()}
+    <div class="report-page">
+        <table class="print-shell">
+            <thead><tr><td>${headerPagina()}</td></tr></thead>
+            <tbody><tr><td class="report-content">
+                <div class="flow-block"><div class="bar-title">DESCRIPTOR DE PUESTO</div></div>
+                ${objetivoHtml}
+                ${renderFuncionesResponsabilidad()}
+                ${actividadesTitulo ? '<div class="flow-block">' + actividadesTitulo + '</div>' : ''}
+                ${actividadesHtml}
+                ${renderResponsabilidades()}
+                ${renderRelaciones()}
+                ${renderRequerimientos()}
+                ${renderRiesgos()}
+                ${renderEntrenamiento()}
+                ${renderPerfil()}
+                ${renderEducacion()}
+                ${renderExperiencia()}
+                ${renderCompetenciasTecnicas()}
+                ${renderCompetenciasConductuales()}
+                ${renderFirmas()}
+            </td></tr></tbody>
+            <tfoot><tr><td>${footerPagina()}</td></tr></tfoot>
+        </table>
     </div>
-    <div id="pagesContainer" class="pages-container"></div>
-    <script>
-    (function() {
-        var headerTemplate = ${JSON.stringify(headerPagina('__PAGE__', '__TOTAL__'))};
-        var footerTemplate = ${JSON.stringify(footerPagina())};
-        var source = document.getElementById('sourceContent');
-        var container = document.getElementById('pagesContainer');
-        var blocks = Array.prototype.slice.call(source.children);
-        var pages = [];
-
-        function makePage(pageNumber, totalPages) {
-            var page = document.createElement('div');
-            page.className = 'report-page';
-            var header = document.createElement('div');
-            header.className = 'report-header';
-            header.innerHTML = headerTemplate.replace('__PAGE__', pageNumber || '').replace('__TOTAL__', totalPages || '');
-            var body = document.createElement('div');
-            body.className = 'report-body';
-            var footer = document.createElement('div');
-            footer.innerHTML = footerTemplate;
-            page.appendChild(header);
-            page.appendChild(body);
-            page.appendChild(footer);
-            container.appendChild(page);
-            var footerTop = footer.getBoundingClientRect().top - page.getBoundingClientRect().top;
-            var headerBottom = header.getBoundingClientRect().bottom - page.getBoundingClientRect().top;
-            body.style.maxHeight = Math.max(100, footerTop - headerBottom - 8) + 'px';
-            return { page: page, body: body };
-        }
-
-        function paginate() {
-            container.innerHTML = '';
-            pages = [];
-            var current = makePage(1, '');
-            pages.push(current);
-            blocks.forEach(function(block) {
-                var clone = block.cloneNode(true);
-                current.body.appendChild(clone);
-                if (current.body.scrollHeight > current.body.clientHeight && current.body.children.length > 1) {
-                    current.body.removeChild(clone);
-                    current = makePage(pages.length + 1, '');
-                    pages.push(current);
-                    current.body.appendChild(clone);
-                }
-            });
-            var total = pages.length;
-            pages.forEach(function(item, index) {
-                item.page.querySelector('.report-header').innerHTML = headerTemplate
-                    .replace('__PAGE__', index + 1)
-                    .replace('__TOTAL__', total);
-            });
-        }
-
-        window.addEventListener('load', paginate);
-        setTimeout(paginate, 50);
-    })();
-    <\/script>
 </body></html>`;
 }
