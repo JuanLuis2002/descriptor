@@ -529,7 +529,8 @@ window.editarDescriptor = editarDescriptor;
 // Variable para la ruta del logo (configurable)
 var LOGO_PATH = 'logo/logo.png'; // Colocar aquí la ruta del logo
 
-// Generar versión corta del descriptor usando window.print()
+// Generar versión corta del descriptor
+// Generar versión corta del descriptor - Usando print en iframe oculto
 function generarVersionCorta(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) {
@@ -540,15 +541,61 @@ function generarVersionCorta(id) {
     // Generar el HTML para el PDF
     var pdfHtml = generarHTMLVersionCorta(descriptor);
     
-    // Crear ventana nueva para imprimir
-    var ventana = window.open('', '_blank');
-    ventana.document.write(pdfHtml);
-    ventana.document.close();
-    
-    // Esperar a que cargue y abrir impresión
-    ventana.onload = function() {
-        ventana.print();
-    };
+    // Mostrar modal con previsualización
+    Swal.fire({
+        title: 'Descriptor de Puesto - Versión Corta',
+        html: '<div id="pdfPreviewContainer" style="max-height: 70vh; overflow-y: auto; background: #f0f2f5; padding: 10px; border-radius: 8px;">' +
+              '<div id="pdfContent" style="background: white; padding: 20px; border-radius: 8px;">' + pdfHtml + '</div>' +
+              '</div>' +
+              '<div class="mt-3 d-flex justify-content-center gap-2">' +
+              '<button id="btnImprimirPDF" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>' +
+              '</div>',
+        width: '950px',
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar',
+        didOpen: function() {
+            $('#btnImprimirPDF').click(function() {
+                // Crear un iframe oculto
+                var iframe = document.createElement('iframe');
+                iframe.style.position = 'absolute';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                document.body.appendChild(iframe);
+                
+                // Escribir el contenido en el iframe
+                var iframeDoc = iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(pdfHtml);
+                iframeDoc.close();
+                
+                // Esperar a que cargue y luego imprimir
+                iframe.onload = function() {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                    
+                    // Remover el iframe después de imprimir
+                    setTimeout(function() {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                };
+                
+                // Si el onload no se dispara, forzar impresión
+                setTimeout(function() {
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                        setTimeout(function() {
+                            if (document.body.contains(iframe)) {
+                                document.body.removeChild(iframe);
+                            }
+                        }, 1000);
+                    }
+                }, 500);
+            });
+        }
+    });
 }
 
 // Generar HTML para versión corta (formato EXACTAMENTE como en las imágenes)
