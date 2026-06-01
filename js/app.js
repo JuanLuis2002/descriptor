@@ -596,8 +596,8 @@ function generarHTMLVersionCorta(d) {
     var firmaCT  = firmasGuardadas['ct_'  + d.id] || d.firmaCT  || null;
 
     function getFirmaHtml(firmaDataUrl) {
-        if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;">';
-        return '&nbsp;';
+        if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;vertical-align:middle;margin-left:8px;">';
+        return '';
     }
 
     var fechaActual = new Date().toLocaleDateString('es-ES');
@@ -805,7 +805,7 @@ function generarHTMLVersionCorta(d) {
   <tr class="col-hdr">
     <th style="width:55%;">Indicador</th>
     <th>Frecuencia / Meta</th>
-  </tr>
+   </tr>
   ${kpisRows}
 </table>
 
@@ -851,7 +851,7 @@ function generarHTMLVersionCorta(d) {
     <th style="width:36%;">Requisito</th>
     <th style="width:46%;">Especificaciones</th>
     <th style="width:18%;">Requerido</th>
-  </tr>
+   </tr>
   ${eduRows}
 </table>
 
@@ -864,7 +864,7 @@ function generarHTMLVersionCorta(d) {
   <tr class="col-hdr">
     <th>Requisito</th>
     <th style="width:22%;">Requerido</th>
-  </tr>
+   </tr>
   ${expRows}
 </table>
 
@@ -875,7 +875,7 @@ function generarHTMLVersionCorta(d) {
     <th style="width:12%;">Código</th>
     <th>Competencias Técnicas Requeridas</th>
     <th style="width:22%;">Nivel de Dominio</th>
-  </tr>
+   </tr>
   ${compTechRows}
 </table>
 
@@ -883,28 +883,28 @@ function generarHTMLVersionCorta(d) {
 <table class="t mt10">
   <tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>
   ${compCondRows}
-</table>
+</td>
 
-<!-- Firmas -->
+<!-- FIRMAS CORREGIDAS -->
 <table class="firma-t mt10">
   <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
   <tr>
     <td class="firma-lbl">Nombre del Empleado:</td>
-    <td class="firma-val">${d.titular || ''}&nbsp;&nbsp;${getFirmaHtml(firmaCT)}</td>
+    <td class="firma-val">${d.titular || '_________________'}</td>
     <td class="firma-lbl2">Fecha y Firma:</td>
-    <td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : ''}</td>
+    <td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td>
   </tr>
   <tr>
     <td class="firma-lbl">Nombre de Jefatura:</td>
-    <td class="firma-val">${d.creador || ''}&nbsp;&nbsp;${getFirmaHtml(firmaJI)}</td>
+    <td class="firma-val">${d.creador || '_________________'}</td>
     <td class="firma-lbl2">Fecha y Firma:</td>
-    <td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : ''}</td>
+    <td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td>
   </tr>
   <tr>
     <td class="firma-lbl">Jefe de Talento Humano:</td>
-    <td class="firma-val">${getFirmaHtml(firmaJTH)}</td>
+    <td class="firma-val">_________________</td>
     <td class="firma-lbl2">Fecha y Firma:</td>
-    <td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : ''}</td>
+    <td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td>
   </tr>
 </table>
 
