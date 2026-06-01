@@ -1553,14 +1553,15 @@ function generarHTMLVersionExtensa(d) {
         return [];
     }
 
-    function headerPagina() {
+    function headerPagina(pageNumber, totalPages) {
+        var paginasTexto = pageNumber && totalPages ? pageNumber + ' de ' + totalPages : '';
         return '<table class="header-tabla"><tr><td class="header-logo">' + logoHtml + '</td><td class="header-title">DEPARTAMENTO DE TALENTO HUMANO</td><td class="header-doc-title">DESCRIPTOR Y PERFIL DE PUESTO</td></tr></table>' +
             '<table class="tabla generalidades">' +
             '<tr><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>' +
             '<tr><td class="label">TITULO DEL PUESTO:</td><td>' + text(d.puesto) + '</td><td class="label">CODIGO:</td><td>' + text(d.codigo) + '</td></tr>' +
             '<tr><td class="label">DIRECCION / DEPTO:</td><td>' + text(d.area) + '</td><td class="label">FECHA DE EMISION:</td><td>' + text(d.fechaEmision) + '</td></tr>' +
             '<tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>' + text(d.reportaA) + '</td><td class="label">FECHA DE REVISION:</td><td>' + fechaActual + '</td></tr>' +
-            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td></td></tr>' +
+            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td>' + paginasTexto + '</td></tr>' +
             '</table>';
     }
 
@@ -1574,7 +1575,7 @@ function generarHTMLVersionExtensa(d) {
         for (var i = 0; i < funciones.length; i++) {
             rows += '<tr><td class="center code-col">' + text(funciones[i].codigo) + '</td><td>' + text(funciones[i].nombre) + '</td></tr>';
         }
-        return '<div class="section-label indent">II. &nbsp; FUNCIONES CLAVES CON RESPONSABILIDAD</div><table class="tabla compacta"><tr><th class="code-col">Código</th><th>Nombre</th></tr>' + rows + '</table>';
+        return '<div class="flow-block"><div class="section-label indent">II. &nbsp; FUNCIONES CLAVES CON RESPONSABILIDAD</div><table class="tabla compacta"><tr><th class="code-col">Código</th><th>Nombre</th></tr>' + rows + '</table></div>';
     }
 
     function renderActividadBlock(funcion) {
@@ -1584,7 +1585,7 @@ function generarHTMLVersionExtensa(d) {
         for (var i = 0; i < actividades.length; i++) {
             rows += '<tr><td class="center">' + (i + 1) + '</td><td>' + text(actividades[i]) + '</td></tr>';
         }
-        return '<table class="tabla compacta actividad-tabla">' + rows + '</table>';
+        return '<table class="tabla compacta actividad-tabla flow-block">' + rows + '</table>';
     }
 
     function renderActividades(start, end) {
@@ -1609,12 +1610,12 @@ function generarHTMLVersionExtensa(d) {
             if (hasText(items[i][1])) html += '<li><strong>' + items[i][0] + ':</strong> ' + text(items[i][1]) + '</li>';
         }
         if (!html) return '';
-        return '<div class="section-label">IV. RESPONSABILIDADES A CARGO</div><div class="border-box"><ul class="plain-list">' + html + '</ul></div>';
+        return '<div class="flow-block"><div class="section-label">IV. RESPONSABILIDADES A CARGO</div><div class="border-box"><ul class="plain-list">' + html + '</ul></div></div>';
     }
 
     function renderRelaciones() {
         if (relacionesInternas.length === 0 && relacionesExternas.length === 0) return '';
-        var html = '<div class="section-label">V. &nbsp; RELACIONES LABORALES</div>';
+        var html = '<div class="flow-block"><div class="section-label">V. &nbsp; RELACIONES LABORALES</div>';
         if (relacionesInternas.length > 0) {
             html += '<div class="sub-label">INTERNAS:</div><table class="tabla compacta"><tr><th>Puesto/área</th><th>Razón</th></tr>';
             for (var i = 0; i < relacionesInternas.length; i++) html += '<tr><td>' + text(relacionesInternas[i].puesto) + '</td><td>' + text(relacionesInternas[i].razon) + '</td></tr>';
@@ -1625,78 +1626,78 @@ function generarHTMLVersionExtensa(d) {
             for (var j = 0; j < relacionesExternas.length; j++) html += '<tr><td>' + text(relacionesExternas[j].entidad) + '</td><td>' + text(relacionesExternas[j].razon) + '</td></tr>';
             html += '</table>';
         }
-        return html;
+        return html + '</div>';
     }
 
     function renderRequerimientos() {
         if (requerimientos.length === 0) return '';
         var html = '';
         for (var i = 0; i < requerimientos.length; i++) html += '<div>' + (i + 1) + '.&nbsp; ' + text(requerimientos[i]) + '</div>';
-        return '<div class="section-label center">VI. &nbsp; REQUERIMIENTOS ORGANIZACIONALES</div><div class="border-box small-pad">' + html + '</div>';
+        return '<div class="flow-block"><div class="section-label center">VI. &nbsp; REQUERIMIENTOS ORGANIZACIONALES</div><div class="border-box small-pad">' + html + '</div></div>';
     }
 
     function renderRiesgos() {
         var hasRiesgos = hasText(riesgos.esfuerzo) || hasText(riesgos.condiciones) || riesgosLista.length > 0;
         if (!hasRiesgos) return '';
-        var html = '<div class="section-label">VII. RIESGOS FISICOS DEL PUESTO</div><div class="border-box small-pad">';
+        var html = '<div class="flow-block"><div class="section-label">VII. RIESGOS FISICOS DEL PUESTO</div><div class="border-box small-pad">';
         if (hasText(riesgos.esfuerzo)) html += '<div><strong>Esfuerzo físico y mental:</strong> ' + text(riesgos.esfuerzo) + '</div>';
         if (hasText(riesgos.condiciones)) html += '<div><strong>Condiciones ambientales:</strong> ' + text(riesgos.condiciones) + '</div>';
         if (riesgosLista.length > 0) {
             html += '<div><strong>Riesgos de accidente y/o enfermedad profesional:</strong></div>';
             for (var i = 0; i < riesgosLista.length; i++) html += '<div>- ' + text(riesgosLista[i]) + '</div>';
         }
-        return html + '</div>';
+        return html + '</div></div>';
     }
 
     function renderEntrenamiento() {
         if (!hasText(entrenamiento.tipoEntrenamiento) && !hasText(entrenamiento.duracion) && !hasText(entrenamiento.puestosResponsables)) return '';
-        return '<div class="section-label center">VIII. &nbsp; ENTRENAMIENTO INICIAL EN EL PUESTO</div><table class="tabla compacta"><tr><th>ENTRENAMIENTOS</th><th>DURACIÓN</th><th>PUESTOS RESPONSABLES</th></tr><tr><td>' + text(entrenamiento.tipoEntrenamiento) + '</td><td class="center">' + text(entrenamiento.duracion) + '</td><td>' + text(entrenamiento.puestosResponsables) + '</td></tr></table>';
+        return '<div class="flow-block"><div class="section-label center">VIII. &nbsp; ENTRENAMIENTO INICIAL EN EL PUESTO</div><table class="tabla compacta"><tr><th>ENTRENAMIENTOS</th><th>DURACIÓN</th><th>PUESTOS RESPONSABLES</th></tr><tr><td>' + text(entrenamiento.tipoEntrenamiento) + '</td><td class="center">' + text(entrenamiento.duracion) + '</td><td>' + text(entrenamiento.puestosResponsables) + '</td></tr></table></div>';
     }
 
     function renderPerfil() {
         var hasPerfil = hasText(perfil.edadMin) || hasText(perfil.edadMax) || hasText(perfil.sexo) || hasText(perfil.estadoFamiliar) || hasText(perfil.disponibilidadHorario) || hasText(perfil.modalidadTrabajo) || hasText(perfil.poseerLicencia);
         if (!hasPerfil) return '';
         var licencia = perfil.poseerLicencia == '1' ? 'Sí' : (hasText(perfil.poseerLicencia) ? 'No' : '');
-        return '<div class="bar-title mt14">PERFIL DEL PUESTO</div><table class="tabla perfil"><tr><th>EDAD</th><th>SEXO</th><th>ESTADO FAMILIAR</th></tr><tr><td><strong>Mínima:</strong> ' + text(perfil.edadMin) + ' &nbsp;&nbsp;&nbsp; <strong>Máxima:</strong> ' + text(perfil.edadMax) + '</td><td>' + enumText(perfil.sexo) + '</td><td>' + enumText(perfil.estadoFamiliar) + '</td></tr><tr><th>Disponibilidad de<br>Horario</th><th>Modalidad de Trabajo</th><th>Poseer Licencia<br>(de conducir)</th></tr><tr><td>' + enumText(perfil.disponibilidadHorario) + '</td><td>' + enumText(perfil.modalidadTrabajo) + '</td><td>' + licencia + '</td></tr></table>';
+        return '<div class="flow-block"><div class="bar-title mt14">PERFIL DEL PUESTO</div><table class="tabla perfil"><tr><th>EDAD</th><th>SEXO</th><th>ESTADO FAMILIAR</th></tr><tr><td><strong>Mínima:</strong> ' + text(perfil.edadMin) + ' &nbsp;&nbsp;&nbsp; <strong>Máxima:</strong> ' + text(perfil.edadMax) + '</td><td>' + enumText(perfil.sexo) + '</td><td>' + enumText(perfil.estadoFamiliar) + '</td></tr><tr><th>Disponibilidad de<br>Horario</th><th>Modalidad de Trabajo</th><th>Poseer Licencia<br>(de conducir)</th></tr><tr><td>' + enumText(perfil.disponibilidadHorario) + '</td><td>' + enumText(perfil.modalidadTrabajo) + '</td><td>' + licencia + '</td></tr></table></div>';
     }
 
     function renderEducacion() {
         if (educacion.length === 0) return '';
         var rows = '';
         for (var i = 0; i < educacion.length; i++) rows += '<tr><td>' + text(educacion[i].requisito) + '</td><td>' + text(educacion[i].especificaciones) + '</td><td class="center">' + (hasText(educacion[i].requerido) ? (educacion[i].requerido == 1 ? 'Requerido' : 'Deseable') : '') + '</td></tr>';
-        return '<div class="section-label mt14">EDUCACION</div><table class="tabla compacta"><tr><th>Requisito</th><th>Especificaciones</th><th>Requerido</th></tr>' + rows + '</table>';
+        return '<div class="flow-block"><div class="section-label mt14">EDUCACION</div><table class="tabla compacta"><tr><th>Requisito</th><th>Especificaciones</th><th>Requerido</th></tr>' + rows + '</table></div>';
     }
 
     function renderExperiencia() {
         if (experiencia.length === 0) return '';
         var rows = '';
         for (var i = 0; i < experiencia.length; i++) rows += '<tr><td>' + text(experiencia[i].requisito) + '</td><td class="center">' + (hasText(experiencia[i].requerido) ? (experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') : '') + '</td></tr>';
-        return '<div class="section-label mt10">EXPERIENCIA</div><table class="tabla compacta"><tr><th>Requisito</th><th>Requerido</th></tr>' + rows + '</table>';
+        return '<div class="flow-block"><div class="section-label mt10">EXPERIENCIA</div><table class="tabla compacta"><tr><th>Requisito</th><th>Requerido</th></tr>' + rows + '</table></div>';
     }
 
     function renderCompetenciasTecnicas() {
         if (competenciasTecnicas.length === 0) return '';
         var rows = '';
         for (var i = 0; i < competenciasTecnicas.length; i++) rows += '<tr><td class="center">' + (i + 1) + '</td><td>' + text(competenciasTecnicas[i].nombre) + '</td><td class="center">' + text(competenciasTecnicas[i].nivel) + '</td></tr>';
-        return '<table class="tabla compacta mt14"><tr><th class="code-col">CÓDIGO</th><th>COMPETENCIAS TÉCNICAS REQUERIDAS</th><th>NIVEL DE DOMINIO</th></tr>' + rows + '</table>';
+        return '<table class="tabla compacta mt14 flow-block"><tr><th class="code-col">CÓDIGO</th><th>COMPETENCIAS TÉCNICAS REQUERIDAS</th><th>NIVEL DE DOMINIO</th></tr>' + rows + '</table>';
     }
 
     function renderCompetenciasConductuales() {
         if (competenciasConductuales.length === 0) return '';
         var rows = '';
         for (var i = 0; i < competenciasConductuales.length; i++) rows += '<tr><td class="conductual-label">' + text(competenciasConductuales[i].nombre) + '</td><td>' + text(competenciasConductuales[i].descripcion) + '</td></tr>';
-        return '<table class="tabla conductual-tabla"><tr><th class="conductual-label">COMPETENCIAS<br>CONDUCTUALES</th><th></th></tr>' + rows + '</table>';
+        return '<table class="tabla conductual-tabla flow-block"><tr><th class="conductual-label">COMPETENCIAS<br>CONDUCTUALES</th><th></th></tr>' + rows + '</table>';
     }
 
     function renderFirmas() {
-        return '<table class="firmas"><tr>' +
+        return '<table class="firmas flow-block"><tr>' +
             '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.titular) + '</div></td>' +
             '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
             '</tr></table>';
     }
 
     var actividadesHtml = renderActividades(0, funciones.length);
-    var objetivoHtml = hasText(d.objetivo) ? '<div class="section-label indent">I. &nbsp; OBJETIVO DEL PUESTO</div><div class="objective-box">' + text(d.objetivo) + '</div>' : '';
+    var objetivoHtml = hasText(d.objetivo) ? '<div class="flow-block"><div class="section-label indent">I. &nbsp; OBJETIVO DEL PUESTO</div><div class="objective-box">' + text(d.objetivo) + '</div></div>' : '';
     var actividadesTitulo = actividadesHtml ? '<div class="section-label indent">III. FUNCIONES CLAVES Y ACTIVIDADES</div>' : '';
 
     var CSS = `<style>
@@ -1704,14 +1705,11 @@ function generarHTMLVersionExtensa(d) {
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #fff; color: #000; }
         body { font-family: "Arial Narrow", Arial, Helvetica, sans-serif; font-size: 8pt; font-stretch: condensed; }
-        .report-page { width: 8.02in; min-height: 10.49in; margin: 0 auto; background: #fff; }
-        .print-shell { width: 100%; border-collapse: collapse; }
-        .print-shell > thead { display: table-header-group; }
-        .print-shell > tfoot { display: table-footer-group; }
-        .print-shell > thead > tr > td,
-        .print-shell > tbody > tr > td,
-        .print-shell > tfoot > tr > td { border: none; padding: 0; }
-        .report-content { padding: 0 0 0.08in 0; }
+        .source-content { display: none; }
+        .pages-container { width: 8.5in; margin: 0 auto; }
+        .report-page { width: 8.5in; height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; page-break-after: always; position: relative; background: #fff; overflow: hidden; }
+        .report-page:last-child { page-break-after: auto; }
+        .report-body { overflow: hidden; }
         .header-tabla, .tabla { width: 100%; border-collapse: collapse; }
         .header-tabla { border: 1px solid #002060; margin-bottom: 7px; }
         .header-tabla td { border-left: 1px solid #002060; padding: 4px 8px; height: 38px; vertical-align: middle; font-weight: 700; }
@@ -1751,8 +1749,9 @@ function generarHTMLVersionExtensa(d) {
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
-        .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
+        .page-footer { position: absolute; right: 0.24in; bottom: 0.13in; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; }
         .center { text-align: center; }
+        .flow-block { break-inside: avoid; page-break-inside: avoid; }
         .section-label,
         .bar-title,
         .objective-box,
@@ -1762,36 +1761,84 @@ function generarHTMLVersionExtensa(d) {
         .perfil,
         .conductual-tabla,
         .firmas { break-inside: avoid; page-break-inside: avoid; }
-        @media screen {
-            body { background: #fff; }
-            .report-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; }
-        }
+        @media screen { body { background: #fff; } }
     </style>`;
 
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Descriptor ${text(d.codigo)}</title>${CSS}</head><body>
-    <div class="report-page">
-        <table class="print-shell">
-            <thead><tr><td>${headerPagina()}</td></tr></thead>
-            <tbody><tr><td class="report-content">
-                <div class="bar-title">DESCRIPTOR DE PUESTO</div>
-                ${objetivoHtml}
-                ${renderFuncionesResponsabilidad()}
-                ${actividadesTitulo}
-                ${actividadesHtml}
-                ${renderResponsabilidades()}
-                ${renderRelaciones()}
-                ${renderRequerimientos()}
-                ${renderRiesgos()}
-                ${renderEntrenamiento()}
-                ${renderPerfil()}
-                ${renderEducacion()}
-                ${renderExperiencia()}
-                ${renderCompetenciasTecnicas()}
-                ${renderCompetenciasConductuales()}
-                ${renderFirmas()}
-            </td></tr></tbody>
-            <tfoot><tr><td>${footerPagina()}</td></tr></tfoot>
-        </table>
+    <div id="sourceContent" class="source-content">
+        <div class="flow-block"><div class="bar-title">DESCRIPTOR DE PUESTO</div></div>
+        ${objetivoHtml}
+        ${renderFuncionesResponsabilidad()}
+        ${actividadesTitulo ? '<div class="flow-block">' + actividadesTitulo + '</div>' : ''}
+        ${actividadesHtml}
+        ${renderResponsabilidades()}
+        ${renderRelaciones()}
+        ${renderRequerimientos()}
+        ${renderRiesgos()}
+        ${renderEntrenamiento()}
+        ${renderPerfil()}
+        ${renderEducacion()}
+        ${renderExperiencia()}
+        ${renderCompetenciasTecnicas()}
+        ${renderCompetenciasConductuales()}
+        ${renderFirmas()}
     </div>
+    <div id="pagesContainer" class="pages-container"></div>
+    <script>
+    (function() {
+        var headerTemplate = ${JSON.stringify(headerPagina('__PAGE__', '__TOTAL__'))};
+        var footerTemplate = ${JSON.stringify(footerPagina())};
+        var source = document.getElementById('sourceContent');
+        var container = document.getElementById('pagesContainer');
+        var blocks = Array.prototype.slice.call(source.children);
+        var pages = [];
+
+        function makePage(pageNumber, totalPages) {
+            var page = document.createElement('div');
+            page.className = 'report-page';
+            var header = document.createElement('div');
+            header.className = 'report-header';
+            header.innerHTML = headerTemplate.replace('__PAGE__', pageNumber || '').replace('__TOTAL__', totalPages || '');
+            var body = document.createElement('div');
+            body.className = 'report-body';
+            var footer = document.createElement('div');
+            footer.innerHTML = footerTemplate;
+            page.appendChild(header);
+            page.appendChild(body);
+            page.appendChild(footer);
+            container.appendChild(page);
+            var footerTop = footer.getBoundingClientRect().top - page.getBoundingClientRect().top;
+            var headerBottom = header.getBoundingClientRect().bottom - page.getBoundingClientRect().top;
+            body.style.maxHeight = Math.max(100, footerTop - headerBottom - 8) + 'px';
+            return { page: page, body: body };
+        }
+
+        function paginate() {
+            container.innerHTML = '';
+            pages = [];
+            var current = makePage(1, '');
+            pages.push(current);
+            blocks.forEach(function(block) {
+                var clone = block.cloneNode(true);
+                current.body.appendChild(clone);
+                if (current.body.scrollHeight > current.body.clientHeight && current.body.children.length > 1) {
+                    current.body.removeChild(clone);
+                    current = makePage(pages.length + 1, '');
+                    pages.push(current);
+                    current.body.appendChild(clone);
+                }
+            });
+            var total = pages.length;
+            pages.forEach(function(item, index) {
+                item.page.querySelector('.report-header').innerHTML = headerTemplate
+                    .replace('__PAGE__', index + 1)
+                    .replace('__TOTAL__', total);
+            });
+        }
+
+        window.addEventListener('load', paginate);
+        setTimeout(paginate, 50);
+    })();
+    <\/script>
 </body></html>`;
 }
