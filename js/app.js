@@ -890,7 +890,7 @@ function generarHTMLVersionCorta(d) {
   <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
   <tr>
     <td class="firma-lbl">Nombre del Empleado:</td>
-    <td class="firma-val">${d.titular || '_________________'}</td>
+    <td class="firma-val">Ing. Juan Pérez</td>
     <td class="firma-lbl2">Fecha y Firma:</td>
     <td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td>
   </tr>
@@ -902,7 +902,7 @@ function generarHTMLVersionCorta(d) {
   </tr>
   <tr>
     <td class="firma-lbl">Jefe de Talento Humano:</td>
-    <td class="firma-val">_________________</td>
+    <td class="firma-val">Lic. Carlos Gómez</td>
     <td class="firma-lbl2">Fecha y Firma:</td>
     <td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td>
   </tr>
