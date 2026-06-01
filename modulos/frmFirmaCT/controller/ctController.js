@@ -33,9 +33,9 @@ var CTController = {
             } else if (d.estado === 'FIRMADO_CT' && d.titular === this.currentUser.nombre) {
                 pendientes.push(d);
             }*/
-            if (d.estado === 'FIRMADO_JTH' && (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()) {
+            if (d.estado === 'FIRMADO_JTH') { //&& (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()
                 pendientes.push(d);
-            } else if (d.estado === 'FIRMADO_CT' && (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()) {
+            } else if (d.estado === 'FIRMADO_CT') { //&& (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()
                 pendientes.push(d);
             }
         }
