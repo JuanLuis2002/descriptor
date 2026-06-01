@@ -1560,7 +1560,7 @@ function generarHTMLVersionExtensa(d) {
             '<tr><td class="label">TITULO DEL PUESTO:</td><td>' + text(d.puesto) + '</td><td class="label">CODIGO:</td><td>' + text(d.codigo) + '</td></tr>' +
             '<tr><td class="label">DIRECCION / DEPTO:</td><td>' + text(d.area) + '</td><td class="label">FECHA DE EMISION:</td><td>' + text(d.fechaEmision) + '</td></tr>' +
             '<tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>' + text(d.reportaA) + '</td><td class="label">FECHA DE REVISION:</td><td>' + fechaActual + '</td></tr>' +
-            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td><span class="page-number"></span></td></tr>' +
+            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td></td></tr>' +
             '</table>';
     }
 
@@ -1689,15 +1689,10 @@ function generarHTMLVersionExtensa(d) {
     }
 
     function renderFirmas() {
-        var titular = hasText(d.titular) || firmaCT;
-        var jefe = hasText(d.creador) || firmaJI;
-        if (!titular && !jefe && !firmaJTH) return '';
-        var html = '<table class="firmas"><tr>';
-        if (titular) html += '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.titular) + '</div></td>';
-        if (jefe) html += '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>';
-        html += '</tr></table>';
-        if (firmaJTH) html += '<div class="firma-jth">' + getFirmaHtml(firmaJTH) + '<div class="linea-firma"></div><div>Jefe de Talento Humano</div></div>';
-        return html;
+        return '<table class="firmas"><tr>' +
+            '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.titular) + '</div></td>' +
+            '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
+            '</tr></table>';
     }
 
     var actividadesHtml = renderActividades(0, funciones.length);
@@ -1756,7 +1751,6 @@ function generarHTMLVersionExtensa(d) {
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
-        .firma-jth { width: 260px; margin: 28px auto 0 auto; text-align: center; }
         .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         .center { text-align: center; }
         .section-label,
@@ -1768,11 +1762,9 @@ function generarHTMLVersionExtensa(d) {
         .perfil,
         .conductual-tabla,
         .firmas { break-inside: avoid; page-break-inside: avoid; }
-        .page-number:after { content: counter(page); }
         @media screen {
             body { background: #fff; }
             .report-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; }
-            .page-number:after { content: ""; }
         }
     </style>`;
 
