@@ -530,6 +530,7 @@ window.editarDescriptor = editarDescriptor;
 var LOGO_PATH = 'logo/logo.png'; // Colocar aquí la ruta del logo
 
 // Generar versión corta del descriptor
+// Generar versión corta del descriptor
 function generarVersionCorta(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) {
@@ -540,7 +541,20 @@ function generarVersionCorta(id) {
     // Generar el HTML para el PDF
     var pdfHtml = generarHTMLVersionCorta(descriptor);
     
-    // Mostrar modal con previsualización
+    // Crear un iframe oculto para una renderización más fiel
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    var iframeDoc = iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(pdfHtml);
+    iframeDoc.close();
+    
+    // Mostrar modal con previsualización usando el contenido del iframe
     Swal.fire({
         title: 'Descriptor de Puesto - Versión Corta',
         html: '<div id="pdfPreviewContainer" style="max-height: 70vh; overflow-y: auto; background: #f0f2f5; padding: 10px; border-radius: 8px;">' +
@@ -550,39 +564,48 @@ function generarVersionCorta(id) {
               '<button id="btnDescargarPDF" class="btn btn-success"><i class="fas fa-download"></i> Descargar PDF</button>' +
               '<button id="btnImprimirPDF" class="btn btn-info"><i class="fas fa-print"></i> Imprimir</button>' +
               '</div>',
-        width: '900px',
+        width: '950px',
         showConfirmButton: false,
         showCancelButton: true,
         cancelButtonText: 'Cerrar',
         didOpen: function() {
+            // Configuración mejorada para html2pdf
+            var opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: 'descriptor_corto_' + descriptor.codigo + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    letterRendering: true, 
+                    useCORS: true,
+                    logging: false,
+                    dpi: 192,
+                    windowWidth: 800
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'letter', 
+                    orientation: 'portrait',
+                    compress: true
+                },
+                pagebreak: { mode: 'css', before: '.page-break' }
+            };
+            
             $('#btnDescargarPDF').click(function() {
                 var element = document.getElementById('pdfContent');
-                var opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5],
-                    filename: 'descriptor_corto_' + descriptor.codigo + '.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
                 html2pdf().set(opt).from(element).save();
             });
             
             $('#btnImprimirPDF').click(function() {
                 var element = document.getElementById('pdfContent');
-                var opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5],
-                    filename: 'descriptor_corto_' + descriptor.codigo + '.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).outputPdf().then(function(pdf) {
-                    var iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = pdf;
-                    document.body.appendChild(iframe);
-                    iframe.contentWindow.print();
-                });
+                var win = window.open();
+                win.document.write('<html><head><title>Descriptor ' + descriptor.codigo + '</title>');
+                win.document.write('<style>@media print { body { margin: 0; padding: 0.5cm; } }</style>');
+                win.document.write('</head><body>');
+                win.document.write(element.innerHTML);
+                win.document.write('</body></html>');
+                win.document.close();
+                win.print();
             });
         }
     });
