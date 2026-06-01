@@ -1461,7 +1461,7 @@ function generarHTMLVersionCorta(d) {
 </body></html>`;
 }
 
-// La versión extensa usa el formato integrado oficial de 4 páginas.
+// La versión extensa usa el formato integrado oficial con paginación dinámica.
 function generarHTMLVersionExtensa(d) {
     var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
     var firmaJI  = firmasGuardadas['ji_'  + d.id] || d.firmaJI  || null;
@@ -1553,14 +1553,14 @@ function generarHTMLVersionExtensa(d) {
         return [];
     }
 
-    function headerPagina(pageNumber) {
+    function headerPagina() {
         return '<table class="header-tabla"><tr><td class="header-logo">' + logoHtml + '</td><td class="header-title">DEPARTAMENTO DE TALENTO HUMANO</td><td class="header-doc-title">DESCRIPTOR Y PERFIL DE PUESTO</td></tr></table>' +
             '<table class="tabla generalidades">' +
             '<tr><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>' +
             '<tr><td class="label">TITULO DEL PUESTO:</td><td>' + text(d.puesto) + '</td><td class="label">CODIGO:</td><td>' + text(d.codigo) + '</td></tr>' +
             '<tr><td class="label">DIRECCION / DEPTO:</td><td>' + text(d.area) + '</td><td class="label">FECHA DE EMISION:</td><td>' + text(d.fechaEmision) + '</td></tr>' +
             '<tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>' + text(d.reportaA) + '</td><td class="label">FECHA DE REVISION:</td><td>' + fechaActual + '</td></tr>' +
-            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td>' + pageNumber + ' de 4</td></tr>' +
+            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td><span class="page-number"></span></td></tr>' +
             '</table>';
     }
 
@@ -1700,18 +1700,23 @@ function generarHTMLVersionExtensa(d) {
         return html;
     }
 
-    var actividadesPrimeraPagina = renderActividades(0, 2);
-    var actividadesSegundaPagina = renderActividades(2, funciones.length);
+    var actividadesHtml = renderActividades(0, funciones.length);
     var objetivoHtml = hasText(d.objetivo) ? '<div class="section-label indent">I. &nbsp; OBJETIVO DEL PUESTO</div><div class="objective-box">' + text(d.objetivo) + '</div>' : '';
-    var actividadesTitulo = actividadesPrimeraPagina || actividadesSegundaPagina ? '<div class="section-label indent">III. FUNCIONES CLAVES Y ACTIVIDADES</div>' : '';
+    var actividadesTitulo = actividadesHtml ? '<div class="section-label indent">III. FUNCIONES CLAVES Y ACTIVIDADES</div>' : '';
 
     var CSS = `<style>
-        @page { size: letter; margin: 0; }
+        @page { size: letter; margin: 0.13in 0.24in 0.38in 0.24in; }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #fff; color: #000; }
         body { font-family: "Arial Narrow", Arial, Helvetica, sans-serif; font-size: 8pt; font-stretch: condensed; }
-        .dp-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.42in 0.24in; page-break-after: always; position: relative; background: #fff; overflow: hidden; }
-        .dp-page:last-child { page-break-after: auto; }
+        .report-page { width: 8.02in; min-height: 10.49in; margin: 0 auto; background: #fff; }
+        .print-shell { width: 100%; border-collapse: collapse; }
+        .print-shell > thead { display: table-header-group; }
+        .print-shell > tfoot { display: table-footer-group; }
+        .print-shell > thead > tr > td,
+        .print-shell > tbody > tr > td,
+        .print-shell > tfoot > tr > td { border: none; padding: 0; }
+        .report-content { padding: 0 0 0.08in 0; }
         .header-tabla, .tabla { width: 100%; border-collapse: collapse; }
         .header-tabla { border: 1px solid #002060; margin-bottom: 7px; }
         .header-tabla td { border-left: 1px solid #002060; padding: 4px 8px; height: 38px; vertical-align: middle; font-weight: 700; }
@@ -1752,14 +1757,49 @@ function generarHTMLVersionExtensa(d) {
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
         .firma-jth { width: 260px; margin: 28px auto 0 auto; text-align: center; }
-        .page-footer { position: absolute; right: 0.24in; bottom: 0.13in; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; }
+        .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         .center { text-align: center; }
+        .section-label,
+        .bar-title,
+        .objective-box,
+        .actividad-tabla,
+        .border-box,
+        .sub-label,
+        .perfil,
+        .conductual-tabla,
+        .firmas { break-inside: avoid; page-break-inside: avoid; }
+        .page-number:after { content: counter(page); }
+        @media screen {
+            body { background: #fff; }
+            .report-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.38in 0.24in; }
+            .page-number:after { content: ""; }
+        }
     </style>`;
 
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Descriptor ${text(d.codigo)}</title>${CSS}</head><body>
-    <div class="dp-page">${headerPagina(1)}<div class="bar-title">DESCRIPTOR DE PUESTO</div>${objetivoHtml}${renderFuncionesResponsabilidad()}${actividadesTitulo}${actividadesPrimeraPagina}${footerPagina()}</div>
-    <div class="dp-page">${headerPagina(2)}${actividadesSegundaPagina}${renderResponsabilidades()}${renderRelaciones()}${renderRequerimientos()}${renderRiesgos()}${footerPagina()}</div>
-    <div class="dp-page">${headerPagina(3)}${renderEntrenamiento()}${renderPerfil()}${renderEducacion()}${renderExperiencia()}${renderCompetenciasTecnicas()}${footerPagina()}</div>
-    <div class="dp-page">${headerPagina(4)}${renderCompetenciasConductuales()}${renderFirmas()}${footerPagina()}</div>
+    <div class="report-page">
+        <table class="print-shell">
+            <thead><tr><td>${headerPagina()}</td></tr></thead>
+            <tbody><tr><td class="report-content">
+                <div class="bar-title">DESCRIPTOR DE PUESTO</div>
+                ${objetivoHtml}
+                ${renderFuncionesResponsabilidad()}
+                ${actividadesTitulo}
+                ${actividadesHtml}
+                ${renderResponsabilidades()}
+                ${renderRelaciones()}
+                ${renderRequerimientos()}
+                ${renderRiesgos()}
+                ${renderEntrenamiento()}
+                ${renderPerfil()}
+                ${renderEducacion()}
+                ${renderExperiencia()}
+                ${renderCompetenciasTecnicas()}
+                ${renderCompetenciasConductuales()}
+                ${renderFirmas()}
+            </td></tr></tbody>
+            <tfoot><tr><td>${footerPagina()}</td></tr></tfoot>
+        </table>
+    </div>
 </body></html>`;
 }
