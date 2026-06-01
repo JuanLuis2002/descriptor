@@ -596,335 +596,191 @@ function generarHTMLVersionCorta(d) {
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
     var firmaCT = firmasGuardadas['ct_' + d.id] || d.firmaCT || null;
     
-    // Función para generar HTML de firma (imagen o texto)
-    function getFirmaHtml(firmaDataUrl, nombre) {
+    function getFirmaHtml(firmaDataUrl) {
         if (firmaDataUrl) {
-            return '<img src="' + firmaDataUrl + '" style="max-width: 150px; max-height: 40px;">';
+            return '<img src="' + firmaDataUrl + '" style="width: 100px; height: 35px;">';
         }
-        return '<span style="color: #999; font-style: italic;">Pendiente</span>';
-    }
-    
-    // Funciones Claves - Formato lista numerada
-    var funcionesClavesHtml = '';
-    if (d.funcionesClaves && d.funcionesClaves.length > 0) {
-        for (var i = 0; i < Math.min(d.funcionesClaves.length, 5); i++) {
-            var num = i + 1;
-            var nombre = d.funcionesClaves[i].nombre || '';
-            var codigo = d.funcionesClaves[i].codigo ? '[' + d.funcionesClaves[i].codigo + '] ' : '';
-            funcionesClavesHtml += num + '. ' + codigo + nombre + '<br>';
-        }
-        // Rellenar hasta 5 líneas si es necesario
-        for (var i = d.funcionesClaves.length; i < 5; i++) {
-            funcionesClavesHtml += (i+1) + '. <br>';
-        }
-    } else {
-        for (var i = 1; i <= 5; i++) {
-            funcionesClavesHtml += i + '. <br>';
-        }
-    }
-    
-    // Funciones Secundarias - Formato lista numerada
-    var funcionesSecHtml = '';
-    if (d.funcionesSecundarias && d.funcionesSecundarias.length > 0) {
-        for (var i = 0; i < Math.min(d.funcionesSecundarias.length, 5); i++) {
-            var num = i + 1;
-            funcionesSecHtml += num + '. ' + (d.funcionesSecundarias[i] || '') + '<br>';
-        }
-        for (var i = d.funcionesSecundarias.length; i < 5; i++) {
-            funcionesSecHtml += (i+1) + '. <br>';
-        }
-    } else {
-        for (var i = 1; i <= 5; i++) {
-            funcionesSecHtml += i + '. <br>';
-        }
-    }
-    
-    // KPIs - Tabla con 5 filas
-    var kpisHtml = '';
-    for (var i = 0; i < 5; i++) {
-        var indicador = (d.kpis && d.kpis[i]) ? d.kpis[i].indicador || '' : '';
-        var frecuencia = (d.kpis && d.kpis[i]) ? (d.kpis[i].frecuencia || '') : '';
-        var meta = (d.kpis && d.kpis[i]) ? (d.kpis[i].meta || '') : '';
-        var freqMeta = frecuencia ? (frecuencia + ' / ' + meta) : '';
-        kpisHtml += '<tr><td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + indicador + '</td>' +
-                    '<td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + freqMeta + '</td></tr>';
-    }
-    
-    // Educación - Tabla con 2 filas
-    var educacionHtml = '';
-    for (var i = 0; i < 2; i++) {
-        var requisito = (d.educacion && d.educacion[i]) ? d.educacion[i].requisito || '' : '';
-        var especificaciones = (d.educacion && d.educacion[i]) ? d.educacion[i].especificaciones || '' : '';
-        var requerido = (d.educacion && d.educacion[i]) ? (d.educacion[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
-        educacionHtml += '<tr><td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + requisito + '</td>' +
-                         '<td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + especificaciones + '</td>' +
-                         '<td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + requerido + '</td></tr>';
-    }
-    
-    // Experiencia - Tabla con 2 filas
-    var experienciaHtml = '';
-    for (var i = 0; i < 2; i++) {
-        var requisitoExp = (d.experiencia && d.experiencia[i]) ? d.experiencia[i].requisito || '' : '';
-        var requeridoExp = (d.experiencia && d.experiencia[i]) ? (d.experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
-        experienciaHtml += '<tr><td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + requisitoExp + '</td>' +
-                           '<td style="border: 1px solid #000; padding: 6px; vertical-align: top;">' + requeridoExp + '</td></tr>';
-    }
-    
-    // Competencias Técnicas - Tabla con 5 filas
-    var compTecnicasHtml = '';
-    for (var i = 0; i < 5; i++) {
-        var codigo = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (i+1) : '';
-        var nombre = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? d.competenciasTecnicas[i].nombre || '' : '';
-        var nivel = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? d.competenciasTecnicas[i].nivel || '' : '';
-        compTecnicasHtml += '<tr><td style="border: 1px solid #000; padding: 6px; text-align: center;">' + codigo + '</td>' +
-                            '<td style="border: 1px solid #000; padding: 6px;">' + nombre + '</td>' +
-                            '<td style="border: 1px solid #000; padding: 6px; text-align: center;">' + nivel + '</td></tr>';
-    }
-    
-    // Competencias Conductuales - Tabla con 3 filas
-    var compConductualesHtml = '';
-    for (var i = 0; i < 3; i++) {
-        var nombreCond = (d.competenciasConductuales && d.competenciasConductuales[i]) ? d.competenciasConductuales[i].nombre || '' : '';
-        var descripcion = (d.competenciasConductuales && d.competenciasConductuales[i]) ? d.competenciasConductuales[i].descripcion || '' : '';
-        compConductualesHtml += '<tr><td style="border: 1px solid #000; padding: 6px;">' + nombreCond + '</td>' +
-                                '<td style="border: 1px solid #000; padding: 6px;">' + descripcion + '</td></tr>';
+        return '_________________';
     }
     
     var fechaActual = new Date().toLocaleDateString('es-ES');
-    var logoHtml = LOGO_PATH ? '<img src="' + LOGO_PATH + '" style="height: 50px;">' : '';
+    var logoHtml = LOGO_PATH ? '<img src="' + LOGO_PATH + '" height="50">' : '';
+    
+    // Funciones Claves - solo texto plano
+    var funcionesClavesText = '';
+    if (d.funcionesClaves && d.funcionesClaves.length > 0) {
+        for (var i = 0; i < d.funcionesClaves.length && i < 5; i++) {
+            var nombre = d.funcionesClaves[i].nombre || '';
+            var codigo = d.funcionesClaves[i].codigo ? '[' + d.funcionesClaves[i].codigo + '] ' : '';
+            funcionesClavesText += (i+1) + '. ' + codigo + nombre + '<br>';
+        }
+    }
+    for (var i = (d.funcionesClaves ? d.funcionesClaves.length : 0); i < 5; i++) {
+        funcionesClavesText += (i+1) + '. <br>';
+    }
+    
+    // Funciones Secundarias
+    var funcionesSecText = '';
+    if (d.funcionesSecundarias && d.funcionesSecundarias.length > 0) {
+        for (var i = 0; i < d.funcionesSecundarias.length && i < 5; i++) {
+            funcionesSecText += (i+1) + '. ' + (d.funcionesSecundarias[i] || '') + '<br>';
+        }
+    }
+    for (var i = (d.funcionesSecundarias ? d.funcionesSecundarias.length : 0); i < 5; i++) {
+        funcionesSecText += (i+1) + '. <br>';
+    }
+    
+    // KPIs - tabla simple de 5 filas
+    var kpisRows = '';
+    for (var i = 0; i < 5; i++) {
+        var indicador = (d.kpis && d.kpis[i]) ? (d.kpis[i].indicador || '') : '';
+        var frecuencia = (d.kpis && d.kpis[i]) ? (d.kpis[i].frecuencia || '') : '';
+        var meta = (d.kpis && d.kpis[i]) ? (d.kpis[i].meta || '') : '';
+        var freqMeta = '';
+        if (frecuencia && meta) freqMeta = frecuencia + ' / ' + meta;
+        else if (frecuencia) freqMeta = frecuencia;
+        else if (meta) freqMeta = meta;
+        kpisRows += '<tr><td style="border:1px solid black;padding:4px;">' + indicador + '</td><td style="border:1px solid black;padding:4px;">' + freqMeta + '</td></tr>';
+    }
+    
+    // Educación
+    var eduRows = '';
+    for (var i = 0; i < 2; i++) {
+        var req = (d.educacion && d.educacion[i]) ? (d.educacion[i].requisito || '') : '';
+        var esp = (d.educacion && d.educacion[i]) ? (d.educacion[i].especificaciones || '') : '';
+        var reqd = (d.educacion && d.educacion[i]) ? (d.educacion[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
+        eduRows += '<tr><td style="border:1px solid black;padding:4px;">' + req + '</td><td style="border:1px solid black;padding:4px;">' + esp + '</td><td style="border:1px solid black;padding:4px;">' + reqd + '</td></tr>';
+    }
+    
+    // Experiencia
+    var expRows = '';
+    for (var i = 0; i < 2; i++) {
+        var reqExp = (d.experiencia && d.experiencia[i]) ? (d.experiencia[i].requisito || '') : '';
+        var reqdExp = (d.experiencia && d.experiencia[i]) ? (d.experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
+        expRows += '<tr><td style="border:1px solid black;padding:4px;">' + reqExp + '</td><td style="border:1px solid black;padding:4px;">' + reqdExp + '</td></tr>';
+    }
+    
+    // Competencias Técnicas
+    var compTechRows = '';
+    for (var i = 0; i < 5; i++) {
+        var cod = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (i+1) : '';
+        var nom = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (d.competenciasTecnicas[i].nombre || '') : '';
+        var niv = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (d.competenciasTecnicas[i].nivel || '') : '';
+        compTechRows += '<tr><td style="border:1px solid black;padding:4px;text-align:center;">' + cod + '</td><td style="border:1px solid black;padding:4px;">' + nom + '</td><td style="border:1px solid black;padding:4px;text-align:center;">' + niv + '</td></tr>';
+    }
+    
+    // Competencias Conductuales
+    var compCondRows = '';
+    for (var i = 0; i < 3; i++) {
+        var nomCond = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].nombre || '') : '';
+        var descCond = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].descripcion || '') : '';
+        compCondRows += '<tr><td style="border:1px solid black;padding:4px;">' + nomCond + '</td><td style="border:1px solid black;padding:4px;">' + descCond + '</td></tr>';
+    }
     
     return `
     <!DOCTYPE html>
     <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Descriptor ${d.codigo}</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                font-family: 'Times New Roman', Times, serif;
-                font-size: 10pt;
-                line-height: 1.3;
-                padding: 0.5cm;
-            }
-            .page {
-                width: 100%;
-                page-break-after: avoid;
-            }
-            .header-tabla {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 15px;
-            }
-            .header-tabla td, .header-tabla th {
-                border: 1px solid #000;
-                padding: 5px;
-                vertical-align: top;
-            }
-            .header-tabla th {
-                background: #d9d9d9;
-                font-weight: bold;
-                text-align: center;
-            }
-            .seccion-titulo {
-                background: #d9d9d9;
-                font-weight: bold;
-                padding: 4px 8px;
-                margin: 10px 0 5px 0;
-                border: 1px solid #000;
-            }
-            .tabla-borde {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 5px 0;
-            }
-            .tabla-borde td, .tabla-borde th {
-                border: 1px solid #000;
-                padding: 5px;
-                vertical-align: top;
-            }
-            .tabla-borde th {
-                background: #f0f0f0;
-                font-weight: bold;
-                text-align: center;
-            }
-            .firma-img {
-                max-width: 120px;
-                max-height: 35px;
-            }
-            .firma-tabla {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-            }
-            .firma-tabla td {
-                border: 1px solid #000;
-                padding: 8px;
-                text-align: center;
-                vertical-align: middle;
-            }
-            .footer {
-                margin-top: 10px;
-                text-align: center;
-                font-size: 9px;
-            }
-            .logo-area {
-                float: left;
-                margin-right: 10px;
-            }
-            .clearfix { overflow: hidden; margin-bottom: 10px; }
-            .info-derecha { float: right; text-align: right; font-size: 9pt; }
-        </style>
-    </head>
-    <body>
-        <!-- PÁGINA 1 -->
-        <div class="page">
-            <!-- Logo y código -->
-            <div class="clearfix">
-                <div class="logo-area">${logoHtml}</div>
-                <div class="info-derecha">
-                    <strong>Código:</strong> ${d.codigo || 'N/A'}<br>
-                    <strong>Fecha de Emisión:</strong> ${d.fechaEmision || fechaActual}<br>
-                    <strong>Páginas:</strong> 1 de 2
-                </div>
-            </div>
-            
-            <!-- Tabla principal GENERALIDADES DEL PUESTO -->
-            <table class="header-tabla">
-                <tr><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>
-                <tr>
-                    <td style="width: 30%;"><strong>TITULO DEL PUESTO:</strong></td>
-                    <td style="width: 40%;">${d.puesto || 'N/A'}</td>
-                    <td style="width: 30%;"><strong>CODIGO:</strong></td>
-                    <td style="width: 30%;">${d.codigo || 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td><strong>DIRECCION / DEPTO:</strong></td>
-                    <td>${d.area || 'N/A'}</td>
-                    <td><strong>FECHA DE EMISION:</strong></td>
-                    <td>${d.fechaEmision || fechaActual}</td>
-                </tr>
-                <tr>
-                    <td><strong>PUESTO AL QUE SE REPORTA:</strong></td>
-                    <td>${d.reportaA || 'N/A'}</td>
-                    <td><strong>FECHA DE REVISION:</strong></td>
-                    <td>${fechaActual}</td>
-                </tr>
-                <tr>
-                    <td><strong>N° de Personal a cargo:</strong></td>
-                    <td>${d.entrenamiento?.personalCargo || 'N/A'}</td>
-                    <td><strong>PAGINAS:</strong></td>
-                    <td>1 de 2</td>
-                </tr>
-            </table>
-            
-            <!-- Objetivo del Puesto -->
-            <div class="seccion-titulo">Objetivo del Puesto</div>
-            <p style="margin: 5px 0 10px 0;">${d.objetivo || 'No especificado'}</p>
-            
-            <!-- Funciones Claves y Secundarias en una tabla de 2 columnas -->
-            <table class="tabla-borde">
-                <tr>
-                    <th style="width: 50%;">Funciones Claves</th>
-                    <th style="width: 50%;">Funciones Secundarias</th>
-                </tr>
-                <tr>
-                    <td style="vertical-align: top;">${funcionesClavesHtml.replace(/<br>/g, '<br>')}</td>
-                    <td style="vertical-align: top;">${funcionesSecHtml.replace(/<br>/g, '<br>')}</td>
-                </tr>
-            </table>
-            
-            <!-- Indicadores de Desempeño -->
-            <div class="seccion-titulo">Indicadores de Desempeño</div>
-            <table class="tabla-borde">
-                <tr><th style="width: 50%;">Indicador</th><th style="width: 50%;">Frecuencia / Meta</th></tr>
-                ${kpisHtml}
-            </table>
-            
-            <!-- Supervisa a, Inducción, Impacto Económico -->
-            <table class="tabla-borde">
-                <tr><td style="width: 30%;"><strong>Supervisa a:</strong></td><td>${d.responsabilidades?.equipo || 'N/A'}</td></tr>
-                <tr><td><strong>Inducción Específica al Puesto</strong></td><td>Duración: ${d.entrenamiento?.duracion || '2 semanas'}<br>Responsable: ${d.entrenamiento?.puestosResponsables || 'Jefe Inmediato'}</td></tr>
-                <tr><td><strong>Impacto Económico Institucional:</strong></td><td>${d.responsabilidades?.impactoEconomico || 'Poco significativo, (menor a $50,000.00)'}</td></tr>
-            </table>
+    <head><meta charset="UTF-8"><title>Descriptor ${d.codigo}</title></head>
+    <body style="font-family:Arial, sans-serif;font-size:11pt;margin:0;padding:15px;">
+    
+    <!-- PAGINA 1 -->
+    <div style="width:100%;">
+        <table style="width:100%;margin-bottom:10px;">
+            <tr><td style="width:20%;">${logoHtml}</td><td style="width:80%;text-align:right;"><strong>Código:</strong> ${d.codigo || 'N/A'}<br><strong>Fecha de Emisión:</strong> ${d.fechaEmision || fechaActual}<br><strong>Páginas:</strong> 1 de 2</td></tr>
+        </table>
+        <div style="text-align:center;margin:10px 0;">
+            <h2 style="margin:0;">DEPARTAMENTO DE TALENTO HUMANO</h2>
+            <h3 style="margin:0;">DESCRIPTOR Y PERFIL DE PUESTO</h3>
         </div>
         
-        <!-- PÁGINA 2 -->
-        <div class="page" style="page-break-before: always;">
-            <div class="clearfix">
-                <div class="logo-area">${logoHtml}</div>
-                <div class="info-derecha">
-                    <strong>Código:</strong> ${d.codigo || 'N/A'}<br>
-                    <strong>Fecha de Emisión:</strong> ${d.fechaEmision || fechaActual}<br>
-                    <strong>Páginas:</strong> 2 de 2
-                </div>
-            </div>
-            
-            <!-- PERFIL DE PUESTO -->
-            <div class="seccion-titulo">PERFIL DE PUESTO</div>
-            <table class="tabla-borde">
-                <tr><td style="width: 25%;"><strong>Edad:</strong></td><td style="width: 25%;">${d.perfil?.edadMin || '18'} - ${d.perfil?.edadMax || '65'} años</td>
-                    <td style="width: 25%;"><strong>Sexo:</strong></td><td>${d.perfil?.sexo === 'MASCULINO' ? 'Masculino' : (d.perfil?.sexo === 'FEMENINO' ? 'Femenino' : 'Indiferente')}</td></tr>
-                <tr><td><strong>Modalidad de Trabajo:</strong></td><td>${d.perfil?.modalidadTrabajo || 'Presencial'}</td>
-                    <td><strong>Otros:</strong></td><td>${d.perfil?.disponibilidadHorario || 'Tiempo Completo'}</td></tr>
-            </table>
-            
-            <!-- EDUCACION -->
-            <div class="seccion-titulo">EDUCACION</div>
-            <table class="tabla-borde">
-                <tr><th style="width: 40%;">Requisito</th><th style="width: 40%;">Especificaciones</th><th style="width: 20%;">Requerido</th></tr>
-                ${educacionHtml}
-            </table>
-            
-            <!-- EXPERIENCIA -->
-            <div class="seccion-titulo">EXPERIENCIA</div>
-            <table class="tabla-borde">
-                <tr><th style="width: 70%;">Requisito</th><th style="width: 30%;">Requerido</th></tr>
-                ${experienciaHtml}
-            </table>
-            
-            <!-- COMPETENCIAS TÉCNICAS -->
-            <div class="seccion-titulo">COMPETENCIAS TÉCNICAS</div>
-            <table class="tabla-borde">
-                <tr><th style="width: 15%;">Código</th><th style="width: 60%;">Competencias Técnicas Requeridas</th><th style="width: 25%;">Nivel de Dominio</th></tr>
-                ${compTecnicasHtml}
-            </table>
-            
-            <!-- COMPETENCIAS CONDUCTUALES -->
-            <div class="seccion-titulo">COMPETENCIAS CONDUCTUALES</div>
-            <table class="tabla-borde">
-                ${compConductualesHtml}
-            </table>
-            
-            <!-- FIRMAS con imágenes reales -->
-            <div class="seccion-titulo">FIRMAS</div>
-            <table class="firma-tabla">
-                <tr>
-                    <td style="width: 33%;">
-                        <strong>${d.titular || '_________________'}</strong><br>
-                        Nombre del Empleado<br>
-                        ${getFirmaHtml(firmaCT, 'Colaborador')}<br>
-                        Fecha y Firma: ${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString() : '_________'}
-                    </td>
-                    <td style="width: 33%;">
-                        <strong>${d.creador || '_________________'}</strong><br>
-                        Nombre de Jefatura<br>
-                        ${getFirmaHtml(firmaJI, 'Jefe Inmediato')}<br>
-                        Fecha y Firma: ${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString() : '_________'}
-                    </td>
-                    <td style="width: 34%;">
-                        <strong>_________________</strong><br>
-                        Jefe de Talento Humano<br>
-                        ${getFirmaHtml(firmaJTH, 'Jefe TH')}<br>
-                        Fecha y Firma: ${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString() : '_________'}
-                    </td>
-                </tr>
-            </table>
-            
-            <div class="footer">
-                Documento generado desde el Sistema de Gestión de Descriptor de Puesto
-            </div>
-        </div>
+        <!-- GENERALIDADES -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;">
+            <tr bgcolor="#D9D9D9"><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>
+            <tr><td width="30%"><strong>TITULO DEL PUESTO:</strong></td><td width="40%">${d.puesto || 'N/A'}</td><td width="15%"><strong>CODIGO:</strong></td><td width="15%">${d.codigo || 'N/A'}</td></tr>
+            <tr><td><strong>DIRECCION / DEPTO:</strong></td><td>${d.area || 'N/A'}</td><td><strong>FECHA DE EMISION:</strong></td><td>${d.fechaEmision || fechaActual}</td></tr>
+            <tr><td><strong>PUESTO AL QUE SE REPORTA:</strong></td><td>${d.reportaA || 'N/A'}</td><td><strong>FECHA DE REVISION:</strong></td><td>${fechaActual}</td></tr>
+            <tr><td><strong>N° de Personal a cargo:</strong></td><td>${d.entrenamiento?.personalCargo || 'N/A'}</td><td><strong>PAGINAS:</strong></td><td>1 de 2</td></tr>
+        </table>
+        
+        <!-- OBJETIVO -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th>Objetivo del Puesto</th></tr>
+            <tr><td>${d.objetivo || 'No especificado'}</td></tr>
+        </table>
+        
+        <!-- FUNCIONES CLAVES Y SECUNDARIAS -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th width="50%">Funciones Claves</th><th width="50%">Funciones Secundarias</th></tr>
+            <tr><td style="vertical-align:top;">${funcionesClavesText}</td><td style="vertical-align:top;">${funcionesSecText}</td></tr>
+        </table>
+        
+        <!-- INDICADORES -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="2">Indicadores de Desempeño</th></tr>
+            <tr bgcolor="#F0F0F0"><th width="50%">Indicador</th><th width="50%">Frecuencia / Meta</th></tr>
+            ${kpisRows}
+        </table>
+        
+        <!-- SUPERVISA, INDUCCION, IMPACTO -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr><td width="30%"><strong>Supervisa a:</strong></td><td>${d.responsabilidades?.equipo || 'N/A'}</td></tr>
+            <tr><td><strong>Inducción Específica al Puesto</strong></td><td>Duración: ${d.entrenamiento?.duracion || '2 semanas'}<br>Responsable: ${d.entrenamiento?.puestosResponsables || 'Jefe Inmediato'}</td></tr>
+            <tr><td><strong>Impacto Económico Institucional:</strong></td><td>${d.responsabilidades?.impactoEconomico || 'Poco significativo, (menor a $50,000.00)'}</td></tr>
+        </table>
+    </div>
+    
+    <!-- PAGINA 2 -->
+    <div style="width:100%;page-break-before:always;">
+        <table style="width:100%;margin-bottom:10px;">
+            <tr><td style="width:20%;">${logoHtml}</td><td style="width:80%;text-align:right;"><strong>Código:</strong> ${d.codigo || 'N/A'}<br><strong>Fecha de Emisión:</strong> ${d.fechaEmision || fechaActual}<br><strong>Páginas:</strong> 2 de 2</td></tr>
+        </table>
+        
+        <!-- PERFIL -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;">
+            <tr bgcolor="#D9D9D9"><th colspan="4">PERFIL DE PUESTO</th></tr>
+            <tr><td width="25%"><strong>Edad:</strong></td><td width="25%">${d.perfil?.edadMin || '18'} - ${d.perfil?.edadMax || '65'} años</td><td width="25%"><strong>Sexo:</strong></td><td width="25%">${d.perfil?.sexo === 'MASCULINO' ? 'Masculino' : (d.perfil?.sexo === 'FEMENINO' ? 'Femenino' : 'Indiferente')}</td></tr>
+            <tr><td><strong>Modalidad de Trabajo:</strong></td><td>${d.perfil?.modalidadTrabajo || 'Presencial'}</td><td><strong>Otros:</strong></td><td>${d.perfil?.disponibilidadHorario || 'Tiempo Completo'}</td></tr>
+        </table>
+        
+        <!-- EDUCACION -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="3">EDUCACION</th></tr>
+            <tr bgcolor="#F0F0F0"><th width="40%">Requisito</th><th width="40%">Especificaciones</th><th width="20%">Requerido</th></tr>
+            ${eduRows}
+        </table>
+        
+        <!-- EXPERIENCIA -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="2">EXPERIENCIA</th></tr>
+            <tr bgcolor="#F0F0F0"><th width="70%">Requisito</th><th width="30%">Requerido</th></tr>
+            ${expRows}
+        </table>
+        
+        <!-- COMPETENCIAS TECNICAS -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="3">COMPETENCIAS TÉCNICAS</th></tr>
+            <tr bgcolor="#F0F0F0"><th width="15%">Código</th><th width="60%">Competencias Técnicas Requeridas</th><th width="25%">Nivel de Dominio</th></tr>
+            ${compTechRows}
+        </table>
+        
+        <!-- COMPETENCIAS CONDUCTUALES -->
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="2">COMPETENCIAS CONDUCTUALES</th></tr>
+            ${compCondRows}
+        </table>
+        
+        <!-- FIRMAS -->
+        <table border="1" cellpadding="8" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px;">
+            <tr bgcolor="#D9D9D9"><th colspan="6">FIRMAS</th></tr>
+            <tr>
+                <td width="33%" style="text-align:center;"><strong>${d.titular || '_________________'}</strong><br>Nombre del Empleado<br>${getFirmaHtml(firmaCT)}<br>Fecha y Firma: ${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString() : '_________'}</td>
+                <td width="33%" style="text-align:center;"><strong>${d.creador || '_________________'}</strong><br>Nombre de Jefatura<br>${getFirmaHtml(firmaJI)}<br>Fecha y Firma: ${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString() : '_________'}</td>
+                <td width="34%" style="text-align:center;"><strong>_________________</strong><br>Jefe de Talento Humano<br>${getFirmaHtml(firmaJTH)}<br>Fecha y Firma: ${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString() : '_________'}</td>
+            </tr>
+        </table>
+        
+        <div style="text-align:center;margin-top:15px;font-size:9pt;">Documento generado desde el Sistema de Gestión de Descriptor de Puesto</div>
+    </div>
     </body>
     </html>
     `;
