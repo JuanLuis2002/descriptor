@@ -10,7 +10,7 @@ var CTService = {
             if (d.estado === 'FIRMADO_JTH' && d.titular === nombreTitular) {
                 resultado.push(d);
             }*/
-            if (d.estado === 'FIRMADO_JTH' && (d.titular || '').trim().toLowerCase() === (nombreTitular || '').trim().toLowerCase()) {
+            if (d.estado === 'FIRMADO_JTH') {
                 resultado.push(d);
             }
         }
