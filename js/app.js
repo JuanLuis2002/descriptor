@@ -943,46 +943,26 @@ function generarVersionExtensa(id) {
     // Mostrar modal con previsualización
     Swal.fire({
         title: 'Descriptor de Puesto - Versión Extensa',
-        html: '<div id="pdfPreviewContainer" style="max-height: 70vh; overflow-y: auto; background: #f0f2f5; padding: 10px; border-radius: 8px;">' +
-              '<div id="pdfContent" style="background: white; padding: 0; border-radius: 8px; display: inline-block;">' + pdfHtml + '</div>' +
+        html: '<div id="pdfPreviewContainer" style="height: 72vh; overflow: auto; background: #e9ecef; padding: 12px; border-radius: 8px; text-align: center;">' +
+              '<iframe id="pdfPreviewFrame" title="Vista previa versión extensa" style="width: 8.5in; height: 11in; max-width: 100%; border: 0; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.18);"></iframe>' +
               '</div>' +
               '<div class="mt-3 d-flex justify-content-center gap-2">' +
-              '<button id="btnDescargarPDFExtenso" class="btn btn-success"><i class="fas fa-download"></i> Descargar PDF</button>' +
-              '<button id="btnImprimirPDFExtenso" class="btn btn-info"><i class="fas fa-print"></i> Imprimir</button>' +
+              '<button id="btnImprimirPDFExtenso" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>' +
               '</div>',
-        width: '1000px',
+        width: '980px',
         showConfirmButton: false,
         showCancelButton: true,
         cancelButtonText: 'Cerrar',
         didOpen: function() {
-            $('#btnDescargarPDFExtenso').click(function() {
-                var element = document.getElementById('pdfContent');
-                var opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5],
-                    filename: 'descriptor_extenso_' + descriptor.codigo + '.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).save();
-            });
+            var previewFrame = document.getElementById('pdfPreviewFrame');
+            var previewDoc = previewFrame.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(pdfHtml);
+            previewDoc.close();
             
             $('#btnImprimirPDFExtenso').click(function() {
-                var element = document.getElementById('pdfContent');
-                var opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5],
-                    filename: 'descriptor_extenso_' + descriptor.codigo + '.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).outputPdf().then(function(pdf) {
-                    var iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = pdf;
-                    document.body.appendChild(iframe);
-                    iframe.contentWindow.print();
-                });
+                previewFrame.contentWindow.focus();
+                previewFrame.contentWindow.print();
             });
         }
     });
@@ -1728,50 +1708,51 @@ function generarHTMLVersionExtensa(d) {
     var CSS = `<style>
         @page { size: letter; margin: 0; }
         * { box-sizing: border-box; }
-        body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.3pt; }
-        .dp-page { width: 8.5in; min-height: 11in; padding: 0.16in 0.26in 0.42in 0.26in; page-break-after: always; position: relative; background: #fff; overflow: hidden; }
+        html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+        body { font-family: "Arial Narrow", Arial, Helvetica, sans-serif; font-size: 8pt; font-stretch: condensed; }
+        .dp-page { width: 8.5in; min-height: 11in; padding: 0.13in 0.24in 0.42in 0.24in; page-break-after: always; position: relative; background: #fff; overflow: hidden; }
         .dp-page:last-child { page-break-after: auto; }
         .header-tabla, .tabla { width: 100%; border-collapse: collapse; }
-        .header-tabla { border: 1.2px solid #0b2e6d; margin-bottom: 8px; }
-        .header-tabla td { border-left: 1px solid #0b2e6d; padding: 5px 8px; height: 42px; vertical-align: middle; font-weight: 700; }
+        .header-tabla { border: 1px solid #002060; margin-bottom: 7px; }
+        .header-tabla td { border-left: 1px solid #002060; padding: 4px 8px; height: 38px; vertical-align: middle; font-weight: 700; }
         .header-tabla td:first-child { border-left: none; }
         .header-logo { width: 13%; text-align: center; }
-        .logo-img { max-height: 32px; max-width: 42px; }
-        .header-title { width: 55%; font-size: 8pt; }
-        .header-doc-title { width: 32%; text-align: center; font-size: 8pt; }
-        .tabla th, .tabla td { border: 1px solid #000; padding: 2px 5px; vertical-align: top; height: 18px; line-height: 1.15; }
+        .logo-img { max-height: 30px; max-width: 38px; }
+        .header-title { width: 55%; font-size: 7.6pt; }
+        .header-doc-title { width: 32%; text-align: center; font-size: 7.6pt; }
+        .tabla th, .tabla td { border: 0.8px solid #000; padding: 2px 5px; vertical-align: top; height: 16px; line-height: 1.08; }
         .tabla th { font-weight: 700; background: #f1f1f1; }
         .generalidades th { text-align: left; color: #0b2e6d; background: #f1f1f1; }
         .generalidades .label { width: 28%; font-weight: 700; }
         .generalidades td:nth-child(2) { width: 36%; }
         .generalidades td:nth-child(4) { width: 21%; }
-        .bar-title { background: #5d5d5d; color: #fff; font-weight: 700; padding: 5px 8px; margin-top: 10px; font-size: 10pt; }
-        .section-label { font-weight: 700; padding: 3px 5px; line-height: 1.1; }
-        .indent { padding-left: 34px; }
-        .objective-box { border: 1px solid #000; min-height: 24px; padding: 4px 6px; margin-bottom: 5px; }
-        .compacta th, .compacta td { padding: 2px 5px; height: 17px; }
+        .bar-title { background: #595959; color: #fff; font-weight: 700; padding: 4px 8px; margin-top: 10px; font-size: 9.5pt; }
+        .section-label { font-weight: 700; padding: 3px 5px; line-height: 1.05; }
+        .indent { padding-left: 33px; }
+        .objective-box { border: 0.8px solid #000; min-height: 24px; padding: 4px 6px; margin-bottom: 4px; }
+        .compacta th, .compacta td { padding: 2px 5px; height: 16px; }
         .code-col { width: 18%; }
         .funcion-col { width: 18%; }
         .actividad-tabla { margin-bottom: 0; }
-        .border-box { border: 1px solid #000; padding: 3px 8px; }
+        .border-box { border: 0.8px solid #000; padding: 3px 8px; }
         .small-pad { padding: 3px 5px; }
         .plain-list { margin: 0 0 0 18px; padding: 0; }
         .plain-list li { margin: 1px 0; }
-        .sub-label { border: 1px solid #000; border-bottom: none; padding: 2px 5px; font-weight: 700; margin-top: 2px; }
+        .sub-label { border: 0.8px solid #000; border-bottom: none; padding: 2px 5px; font-weight: 700; margin-top: 2px; }
         .perfil th, .perfil td { text-align: center; }
         .mt10 { margin-top: 10px; }
         .mt14 { margin-top: 14px; }
         .conductual-tabla { margin-top: 10px; }
         .conductual-tabla th { text-align: center; }
         .conductual-label { width: 32%; text-align: center; font-weight: 700; }
-        .conductual-tabla td { min-height: 36px; height: 36px; }
+        .conductual-tabla td { min-height: 34px; height: 34px; }
         .firmas { width: 100%; margin-top: 46px; border-collapse: collapse; }
         .firmas td { width: 50%; text-align: center; vertical-align: bottom; padding: 0 36px; }
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
         .firma-jth { width: 260px; margin: 28px auto 0 auto; text-align: center; }
-        .page-footer { position: absolute; right: 0.26in; bottom: 0.13in; color: #0b2e6d; font-weight: 700; font-size: 8.5pt; }
+        .page-footer { position: absolute; right: 0.24in; bottom: 0.13in; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; }
         .center { text-align: center; }
     </style>`;
 
