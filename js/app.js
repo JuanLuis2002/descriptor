@@ -602,6 +602,60 @@ function generarHTMLVersionCorta(d) {
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
     var firmaCT  = firmasGuardadas['ct_'  + d.id] || d.firmaCT  || null;
 
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function hasText(value) {
+        return value !== null && value !== undefined && String(value).trim() !== '';
+    }
+
+    function text(value) {
+        return hasText(value) ? escapeHtml(value) : '';
+    }
+
+    function enumText(value) {
+        if (!hasText(value)) return '';
+        return String(value).toLowerCase().split('_').map(function(part) {
+            return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join(' ');
+    }
+
+    function isFilledObject(item, keys) {
+        if (!item) return false;
+        for (var i = 0; i < keys.length; i++) {
+            if (hasText(item[keys[i]])) return true;
+        }
+        return false;
+    }
+
+    function filtrarObjetos(items, keys) {
+        var resultado = [];
+        items = items || [];
+        for (var i = 0; i < items.length; i++) {
+            if (isFilledObject(items[i], keys)) resultado.push(items[i]);
+        }
+        return resultado;
+    }
+
+    function filtrarTextos(items) {
+        var resultado = [];
+        items = items || [];
+        for (var i = 0; i < items.length; i++) {
+            if (hasText(items[i])) resultado.push(items[i]);
+        }
+        return resultado;
+    }
+
+    function emptyRow(colspan) {
+        return '<tr><td colspan="' + colspan + '" class="empty-cell">Sin información registrada</td></tr>';
+    }
+
     function getFirmaHtml(firmaDataUrl) {
         if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;vertical-align:middle;margin-left:8px;">';
         return '';
@@ -1286,6 +1340,60 @@ function generarHTMLVersionCorta(d) {
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
     var firmaCT  = firmasGuardadas['ct_'  + d.id] || d.firmaCT  || null;
 
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function hasText(value) {
+        return value !== null && value !== undefined && String(value).trim() !== '';
+    }
+
+    function text(value) {
+        return hasText(value) ? escapeHtml(value) : '';
+    }
+
+    function enumText(value) {
+        if (!hasText(value)) return '';
+        return String(value).toLowerCase().split('_').map(function(part) {
+            return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join(' ');
+    }
+
+    function isFilledObject(item, keys) {
+        if (!item) return false;
+        for (var i = 0; i < keys.length; i++) {
+            if (hasText(item[keys[i]])) return true;
+        }
+        return false;
+    }
+
+    function filtrarObjetos(items, keys) {
+        var resultado = [];
+        items = items || [];
+        for (var i = 0; i < items.length; i++) {
+            if (isFilledObject(items[i], keys)) resultado.push(items[i]);
+        }
+        return resultado;
+    }
+
+    function filtrarTextos(items) {
+        var resultado = [];
+        items = items || [];
+        for (var i = 0; i < items.length; i++) {
+            if (hasText(items[i])) resultado.push(items[i]);
+        }
+        return resultado;
+    }
+
+    function emptyRow(colspan) {
+        return '<tr><td colspan="' + colspan + '" class="empty-cell">Sin información registrada</td></tr>';
+    }
+
     function getFirmaHtml(firmaDataUrl) {
         if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;vertical-align:middle;margin-left:8px;">';
         return '';
@@ -1295,89 +1403,92 @@ function generarHTMLVersionCorta(d) {
     var logoHtml = LOGO_PATH ? '<img src="' + LOGO_PATH + '" height="45">' : '';
 
     var funcionesClavesRows = '';
-    if (d.funcionesClaves && d.funcionesClaves.length > 0) {
-        for (var i = 0; i < d.funcionesClaves.length; i++) {
-            var nombre = d.funcionesClaves[i].nombre || '';
-            if (!nombre) continue;
-            var codigo = d.funcionesClaves[i].codigo ? '[' + d.funcionesClaves[i].codigo + '] ' : '';
-            funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '. ' + codigo + nombre + '</td></tr>';
-        }
+    var funcionesClaves = filtrarObjetos(d.funcionesClaves, ['codigo', 'nombre']);
+    for (var i = 0; i < funcionesClaves.length; i++) {
+        var codigo = hasText(funcionesClaves[i].codigo) ? '[' + text(funcionesClaves[i].codigo) + '] ' : '';
+        funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i + 1) + '. ' + codigo + text(funcionesClaves[i].nombre) + '</td></tr>';
     }
-    if (!funcionesClavesRows) {
-        for (var i = 0; i < 5; i++) funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '.&nbsp;</td></tr>';
-    }
+    if (!funcionesClavesRows) funcionesClavesRows = '<tr><td style="padding:2px 6px;border:none;" class="empty-cell">Sin información registrada</td></tr>';
 
     var funcionesSecRows = '';
-    if (d.funcionesSecundarias && d.funcionesSecundarias.length > 0) {
-        for (var i = 0; i < d.funcionesSecundarias.length; i++) {
-            var fs = d.funcionesSecundarias[i] || '';
-            if (!fs) continue;
-            funcionesSecRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '. ' + fs + '</td></tr>';
-        }
+    var funcionesSecundarias = filtrarTextos(d.funcionesSecundarias);
+    for (var i = 0; i < funcionesSecundarias.length; i++) {
+        funcionesSecRows += '<tr><td style="padding:2px 6px;border:none;">' + (i + 1) + '. ' + text(funcionesSecundarias[i]) + '</td></tr>';
     }
-    if (!funcionesSecRows) {
-        for (var i = 0; i < 5; i++) funcionesSecRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '.&nbsp;</td></tr>';
-    }
+    if (!funcionesSecRows) funcionesSecRows = '<tr><td style="padding:2px 6px;border:none;" class="empty-cell">Sin información registrada</td></tr>';
 
     var kpisRows = '';
-    for (var i = 0; i < 5; i++) {
-        var indicador  = (d.kpis && d.kpis[i]) ? (d.kpis[i].indicador  || '') : '';
-        var frecuencia = (d.kpis && d.kpis[i]) ? (d.kpis[i].frecuencia || '') : '';
-        var meta       = (d.kpis && d.kpis[i]) ? (d.kpis[i].meta       || '') : '';
+    var kpis = filtrarObjetos(d.kpis, ['indicador', 'frecuencia', 'meta']);
+    for (var i = 0; i < kpis.length; i++) {
+        var indicador  = text(kpis[i].indicador);
+        var frecuencia = text(kpis[i].frecuencia);
+        var meta       = text(kpis[i].meta);
         var freqMeta   = (frecuencia && meta) ? frecuencia + ' / ' + meta : (frecuencia || meta);
         kpisRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;height:18px;">' + indicador + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;">'             + freqMeta  + '</td>'
             + '</tr>';
     }
+    if (!kpisRows) kpisRows = emptyRow(2);
 
     var eduRows = '';
-    for (var i = 0; i < 2; i++) {
-        var req  = (d.educacion && d.educacion[i]) ? (d.educacion[i].requisito        || '') : '';
-        var esp  = (d.educacion && d.educacion[i]) ? (d.educacion[i].especificaciones || '') : '';
-        var reqd = (d.educacion && d.educacion[i]) ? (d.educacion[i].requerido == 1   ? 'Requerido' : 'Deseable') : '';
+    var educacion = filtrarObjetos(d.educacion, ['requisito', 'especificaciones']);
+    for (var i = 0; i < educacion.length; i++) {
+        var req  = text(educacion[i].requisito);
+        var esp  = text(educacion[i].especificaciones);
+        var reqd = hasText(educacion[i].requerido) ? (educacion[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
         eduRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;height:18px;">' + req  + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;">' + esp  + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;width:18%;">' + reqd + '</td>'
             + '</tr>';
     }
+    if (!eduRows) eduRows = emptyRow(3);
 
     var expRows = '';
-    for (var i = 0; i < 2; i++) {
-        var reqExp  = (d.experiencia && d.experiencia[i]) ? (d.experiencia[i].requisito || '') : '';
-        var reqdExp = (d.experiencia && d.experiencia[i]) ? (d.experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
+    var experiencia = filtrarObjetos(d.experiencia, ['requisito']);
+    for (var i = 0; i < experiencia.length; i++) {
+        var reqExp  = text(experiencia[i].requisito);
+        var reqdExp = hasText(experiencia[i].requerido) ? (experiencia[i].requerido == 1 ? 'Requerido' : 'Deseable') : '';
         expRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;height:18px;">' + reqExp  + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;width:22%;">' + reqdExp + '</td>'
             + '</tr>';
     }
+    if (!expRows) expRows = emptyRow(2);
 
     var compTechRows = '';
-    for (var i = 0; i < 5; i++) {
-        var nom = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (d.competenciasTecnicas[i].nombre || '') : '';
-        var niv = (d.competenciasTecnicas && d.competenciasTecnicas[i]) ? (d.competenciasTecnicas[i].nivel  || '') : '';
+    var competenciasTecnicas = filtrarObjetos(d.competenciasTecnicas, ['nombre', 'nivel']);
+    for (var i = 0; i < competenciasTecnicas.length; i++) {
+        var nom = text(competenciasTecnicas[i].nombre);
+        var niv = text(competenciasTecnicas[i].nivel);
         compTechRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;width:12%;height:18px;">' + (nom ? (i+1) : '') + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;width:12%;height:18px;">' + (i + 1) + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;">' + nom + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;width:22%;">' + niv + '</td>'
             + '</tr>';
     }
+    if (!compTechRows) compTechRows = emptyRow(3);
 
     var compCondRows = '';
-    for (var i = 0; i < 3; i++) {
-        var nomCond  = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].nombre      || '') : '';
-        var descCond = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].descripcion || '') : '';
+    var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre', 'descripcion']);
+    for (var i = 0; i < competenciasConductuales.length; i++) {
+        var nomCond  = text(competenciasConductuales[i].nombre);
+        var descCond = text(competenciasConductuales[i].descripcion);
         compCondRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;width:40%;height:22px;">' + nomCond  + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;">' + descCond + '</td>'
             + '</tr>';
     }
+    if (!compCondRows) compCondRows = emptyRow(2);
 
-    var sexoDisplay = '';
-    if (d.perfil && d.perfil.sexo) {
-        sexoDisplay = d.perfil.sexo === 'MASCULINO' ? 'Masculino' : d.perfil.sexo === 'FEMENINO' ? 'Femenino' : 'Indiferente';
-    }
+    var perfil = d.perfil || {};
+    var responsabilidades = d.responsabilidades || {};
+    var entrenamiento = d.entrenamiento || {};
+    var sexoDisplay = enumText(perfil.sexo);
+    var edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ' - ' + text(perfil.edadMax) + ' años' : '');
+    var induccionText = (hasText(entrenamiento.duracion) ? 'Duración: ' + text(entrenamiento.duracion) : '') +
+        (hasText(entrenamiento.puestosResponsables) ? '<br>Responsable: ' + text(entrenamiento.puestosResponsables) : '');
 
     var CSS = `
     <style>
@@ -1402,6 +1513,7 @@ function generarHTMLVersionCorta(d) {
       .firma-val2 { width: 30%; }
       .page-break { page-break-before: always; }
       .footer { text-align: right; font-size: 8pt; color: #444; margin-top: 12px; }
+      .empty-cell { color: #777; font-style: italic; text-align: center; }
     </style>`;
 
     return `<!DOCTYPE html>
@@ -1420,27 +1532,27 @@ function generarHTMLVersionCorta(d) {
 </table>
 <table class="t">
   <tr><td colspan="4" class="sec">GENERALIDADES DEL PUESTO</td></tr>
-  <tr><td class="lbl" style="width:22%;">TITULO DEL PUESTO:</td><td style="width:30%;">${d.puesto || ''}</td><td class="lbl" style="width:20%;">CODIGO:</td><td>${d.codigo || ''}</td></tr>
-  <tr><td class="lbl">DIRECCION / DEPTO:</td><td>${d.area || ''}</td><td class="lbl">FECHA DE EMISION:</td><td>${d.fechaEmision || fechaActual}</td></tr>
-  <tr><td class="lbl">PUESTO AL QUE SE REPORTA:</td><td>${d.reportaA || ''}</td><td class="lbl">FECHA DE REVISION:</td><td>${fechaActual}</td></tr>
-  <tr><td class="lbl">N° de Personal a cargo:</td><td>${(d.entrenamiento && d.entrenamiento.personalCargo) ? d.entrenamiento.personalCargo : 'N/A'}</td><td class="lbl">PAGINAS:</td><td>1 de 2</td></tr>
+  <tr><td class="lbl" style="width:22%;">TITULO DEL PUESTO:</td><td style="width:30%;">${text(d.puesto)}</td><td class="lbl" style="width:20%;">CODIGO:</td><td>${text(d.codigo)}</td></tr>
+  <tr><td class="lbl">DIRECCION / DEPTO:</td><td>${text(d.area)}</td><td class="lbl">FECHA DE EMISION:</td><td>${text(d.fechaEmision) || fechaActual}</td></tr>
+  <tr><td class="lbl">PUESTO AL QUE SE REPORTA:</td><td>${text(d.reportaA)}</td><td class="lbl">FECHA DE REVISION:</td><td>${fechaActual}</td></tr>
+  <tr><td class="lbl">N° de Personal a cargo:</td><td>${text(entrenamiento.personalCargo)}</td><td class="lbl">PAGINAS:</td><td>1 de 2</td></tr>
 </table>
 <table class="t mt6">
-  <tr><td class="lbl" style="width:22%;vertical-align:top;">Objetivo del Puesto</td><td colspan="3">${d.objetivo || ''}</td></tr>
+  <tr><td class="lbl" style="width:22%;vertical-align:top;">Objetivo del Puesto</td><td colspan="3">${text(d.objetivo)}</td></tr>
   <tr><td class="lbl" style="vertical-align:top;">Funciones Claves</td><td colspan="3" style="padding:0;"><table style="width:100%;border-collapse:collapse;">${funcionesClavesRows}</table></td></tr>
   <tr><td class="lbl" style="vertical-align:top;">Funciones<br>Secundarias</td><td colspan="3" style="padding:0;"><table style="width:100%;border-collapse:collapse;">${funcionesSecRows}</table></td></tr>
 </table>
 <table class="t mt6"><tr><td colspan="2" class="sec">Indicadores de Desempeño</td></tr><tr class="col-hdr"><th style="width:55%;">Indicador</th><th>Frecuencia / Meta</th></tr>${kpisRows}</table>
 <table class="t mt6">
-  <tr><td class="lbl" style="width:22%;vertical-align:top;">Supervisa a:</td><td>${(d.responsabilidades && d.responsabilidades.equipo) ? d.responsabilidades.equipo : 'N/A'}</td></tr>
-  <tr><td class="lbl" style="vertical-align:top;">Inducción Específica<br>al Puesto</td><td>Duración: ${(d.entrenamiento && d.entrenamiento.duracion) ? d.entrenamiento.duracion : '2 semanas'}<br>Responsable: ${(d.entrenamiento && d.entrenamiento.puestosResponsables) ? d.entrenamiento.puestosResponsables : ''}</td></tr>
-  <tr><td class="lbl" style="vertical-align:top;">Impacto Económico<br>Institucional:</td><td>${(d.responsabilidades && d.responsabilidades.impactoEconomico) ? d.responsabilidades.impactoEconomico : 'Poco significativo, (menor a $50,000.00).'}</td></tr>
+  <tr><td class="lbl" style="width:22%;vertical-align:top;">Supervisa a:</td><td>${text(responsabilidades.personal)}</td></tr>
+  <tr><td class="lbl" style="vertical-align:top;">Inducción Específica<br>al Puesto</td><td>${induccionText}</td></tr>
+  <tr><td class="lbl" style="vertical-align:top;">Impacto Económico<br>Institucional:</td><td>${text(responsabilidades.impactoEconomico)}</td></tr>
 </table>
 <table class="t mt6">
   <tr><td colspan="4" class="sec">PERFIL DE PUESTO</td></tr>
-  <tr><td class="lbl" style="width:14%;">Edad:</td><td colspan="3">${(d.perfil && d.perfil.edadMin) ? d.perfil.edadMin : ''} ${(d.perfil && d.perfil.edadMax) ? '- ' + d.perfil.edadMax + ' años' : ''}</td></tr>
+  <tr><td class="lbl" style="width:14%;">Edad:</td><td colspan="3">${edadDisplay}</td></tr>
   <tr><td class="lbl">Sexo:</td><td colspan="3">${sexoDisplay}</td></tr>
-  <tr><td class="lbl">Modalidad de Trabajo:</td><td style="width:36%;">${(d.perfil && d.perfil.modalidadTrabajo) ? d.perfil.modalidadTrabajo : 'P'}</td><td class="lbl" style="width:14%;">Otros:</td><td>${(d.perfil && d.perfil.disponibilidadHorario) ? d.perfil.disponibilidadHorario : ''}</td></tr>
+  <tr><td class="lbl">Modalidad de Trabajo:</td><td style="width:36%;">${enumText(perfil.modalidadTrabajo)}</td><td class="lbl" style="width:14%;">Otros:</td><td>${enumText(perfil.disponibilidadHorario)}</td></tr>
 </table>
 <table class="t mt6"><tr><td colspan="3" class="sec">EDUCACION</td></tr><tr class="col-hdr"><th style="width:36%;">Requisito</th><th style="width:46%;">Especificaciones</th><th style="width:18%;">Requerido</th></tr>${eduRows}</table>
 <div class="page-break">
@@ -1449,7 +1561,7 @@ function generarHTMLVersionCorta(d) {
 <table class="t mt10"><tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
-  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">Ing. Juan Pérez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
+  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${text(d.titular)}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
   <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${d.creador || '_________________'}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
   <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
 </table>
@@ -1557,7 +1669,7 @@ function generarHTMLVersionExtensa(d) {
             '<tr><td class="label">TITULO DEL PUESTO:</td><td>' + text(d.puesto) + '</td><td class="label">CODIGO:</td><td>' + text(d.codigo) + '</td></tr>' +
             '<tr><td class="label">DIRECCION / DEPTO:</td><td>' + text(d.area) + '</td><td class="label">FECHA DE EMISION:</td><td>' + text(d.fechaEmision) + '</td></tr>' +
             '<tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>' + text(d.reportaA) + '</td><td class="label">FECHA DE REVISION:</td><td>' + fechaActual + '</td></tr>' +
-            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td></td></tr>' +
+            '<tr><td class="label">N° de Personal a cargo:</td><td>' + text(entrenamiento.personalCargo) + '</td><td class="label">PAGINAS:</td><td><span class="page-number">1</span> de <span class="page-total">1</span></td></tr>' +
             '</table>';
     }
 
@@ -1749,6 +1861,18 @@ function generarHTMLVersionExtensa(d) {
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
         .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
+        @media print {
+            .page-number,
+            .page-total { font-size: 0; }
+            .page-number::after {
+                content: counter(page);
+                font-size: 8pt;
+            }
+            .page-total::after {
+                content: counter(pages);
+                font-size: 8pt;
+            }
+        }
         .center { text-align: center; }
         .flow-block { break-inside: avoid; page-break-inside: avoid; }
         .section-label,
@@ -1791,5 +1915,22 @@ function generarHTMLVersionExtensa(d) {
             <tfoot><tr><td>${footerPagina()}</td></tr></tfoot>
         </table>
     </div>
+    <script>
+        (function() {
+            function actualizarPaginacion() {
+                var page = document.querySelector('.report-page');
+                if (!page) return;
+                var pageHeight = 1056;
+                var total = Math.max(1, Math.ceil(page.scrollHeight / pageHeight));
+                var totals = document.querySelectorAll('.page-total');
+                var numbers = document.querySelectorAll('.page-number');
+                for (var i = 0; i < totals.length; i++) totals[i].textContent = total;
+                for (var j = 0; j < numbers.length; j++) numbers[j].textContent = j + 1;
+            }
+            window.addEventListener('load', actualizarPaginacion);
+            setTimeout(actualizarPaginacion, 100);
+            setTimeout(actualizarPaginacion, 500);
+        })();
+    <\/script>
 </body></html>`;
 }
