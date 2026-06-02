@@ -223,7 +223,7 @@ var DescriptorService = {
         var descriptor = this.getById(id);
         if (descriptor) {
             var estadoAnterior = descriptor.estado;
-            descriptor.estado = 'BORRADOR';
+            descriptor.estado = 'ACTIVO';
             descriptor.fechaDesactivacion = null;
             descriptor.motivoDesactivacion = null;
             
@@ -232,7 +232,7 @@ var DescriptorService = {
                 usuario: usuario,
                 rol: rol,
                 estadoAnterior: estadoAnterior,
-                estado: 'BORRADOR',
+                estado: 'ACTIVO',
                 descripcion: 'Descriptor reactivado'
             });
             

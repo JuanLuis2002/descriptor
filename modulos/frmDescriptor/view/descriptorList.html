@@ -593,12 +593,20 @@ window.initDescriptorList = function() {
     
     function reactivarDescriptor(id) {
         var descriptor = DescriptorService.getById(id);
-        var versionPosterior = DescriptorService.getVersionPosteriorVigenteOEnProceso(descriptor);
-        if (versionPosterior) {
+        if (!descriptor) return;
+        
+        var descriptorVigente = DescriptorService.getDescriptorVigenteOEnProcesoByPuesto(descriptor.puesto, descriptor.id);
+        if (descriptorVigente) {
+            var esVersionPosterior = parseInt(descriptorVigente.version || 1, 10) > parseInt(descriptor.version || 1, 10);
+            var detalleVersion = descriptorVigente.version ? ' versión <strong>' + descriptorVigente.version + '</strong>' : '';
+            var mensaje = esVersionPosterior
+                ? 'No es posible reactivar este descriptor porque existe una versión más reciente del mismo puesto que se encuentra activa o en proceso de aprobación.<br><br>La versión actual deberá completar su ciclo de vida y ser desactivada antes de permitir la reactivación de versiones anteriores.'
+                : 'No es posible reactivar este descriptor porque ya existe otra versión vigente o en proceso para el puesto <strong>' + descriptor.puesto + '</strong>' + detalleVersion + '.<br><br>Solo puede existir una versión activa o en proceso por puesto.';
+            
             Swal.fire({
                 icon: 'warning',
                 title: 'No se puede reactivar',
-                html: 'No es posible reactivar este descriptor porque existe una versión más reciente del mismo puesto que se encuentra activa o en proceso de aprobación.<br><br>La versión actual deberá completar su ciclo de vida y ser desactivada antes de permitir la reactivación de versiones anteriores.',
+                html: mensaje,
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: '#0d6efd'
             });
@@ -607,7 +615,7 @@ window.initDescriptorList = function() {
         
         Swal.fire({
             title: 'Reactivar Descriptor',
-            text: '¿Está seguro de que desea reactivar este descriptor? Volverá a estado BORRADOR.',
+            text: '¿Está seguro de que desea reactivar este descriptor? Volverá a estado ACTIVO.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Sí, reactivar',
@@ -617,7 +625,7 @@ window.initDescriptorList = function() {
             if (result.isConfirmed) {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
                 DescriptorService.reactivar(id, currentUserGlobal.nombre, currentUserGlobal.rolNombre);
-                Swal.fire('Reactivado', 'Descriptor reactivado correctamente', 'success');
+                Swal.fire('Reactivado', 'Descriptor reactivado como activo correctamente', 'success');
                 cargarDescriptores();
             }
         });
