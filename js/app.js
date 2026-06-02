@@ -28,7 +28,7 @@ function checkAuth() {
 function loadUser() {
     if (!currentUser) return;
     
-    $('#headerUserName').html((currentUser.nombre || '').replace(/\s+/g, '<br>'));
+    $('#headerUserName').text(currentUser.nombre || '');
 }
 
 // Configurar eventos
@@ -93,11 +93,6 @@ function loadMenu() {
             <i class="fas fa-home"></i> <span>Home</span>
         </a>
         <div class="menu-group">
-            <i class="fas fa-chevron-right chevron"></i>
-            <i class="fas fa-list"></i>
-            <span>Generales</span>
-        </div>
-        <div class="menu-group">
             <i class="fas fa-chevron-down chevron"></i>
             <i class="far fa-id-card"></i>
             <span>Talento Humano</span>
@@ -108,26 +103,6 @@ function loadMenu() {
         </div>
         <div class="submenu-options">
             ${opciones}
-        </div>
-        <div class="menu-group">
-            <i class="fas fa-chevron-right chevron"></i>
-            <i class="fas fa-coins"></i>
-            <span>Contabilidad</span>
-        </div>
-        <div class="menu-group">
-            <i class="fas fa-chevron-right chevron"></i>
-            <i class="fas fa-users"></i>
-            <span>Selección y Contratación</span>
-        </div>
-        <div class="menu-group">
-            <i class="fas fa-chevron-right chevron"></i>
-            <i class="fas fa-shopping-cart"></i>
-            <span>Compras</span>
-        </div>
-        <div class="menu-group">
-            <i class="fas fa-chevron-right chevron"></i>
-            <i class="fas fa-key"></i>
-            <span>Seguridad</span>
         </div>
     `);
     
