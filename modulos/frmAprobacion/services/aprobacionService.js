@@ -3,7 +3,7 @@ var AprobacionService = {
     // Obtener descriptores pendientes de aprobación por Jefe Superior
     getPendientesAprobacion: function() {
         return DescriptorService.getAll().filter(function(d) {
-            return d.estado === 'ENVIADO_JF';
+            return d.estado === 'ENVIADO_JF' || d.estado === 'APROBADO_POR_JF';
         });
     },
     
@@ -36,8 +36,9 @@ var AprobacionService = {
     observar: function(id, observaciones) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'OBSERVADO';
+            descriptor.estado = 'OBSERVADO_JF';
             descriptor.observaciones = observaciones;
+            descriptor.observacionesJF = observaciones;
             descriptor.fechaObservacion = new Date().toISOString();
             DescriptorService.update(id, descriptor);
             return true;

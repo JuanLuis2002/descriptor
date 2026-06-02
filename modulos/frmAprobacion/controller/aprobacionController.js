@@ -25,6 +25,9 @@ var AprobacionController = {
         
         if (pendientes.length === 0) {
             $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de aprobación</h5></div>');
+            if (typeof actualizarContador === 'function') {
+                actualizarContador();
+            }
             return;
         }
         
@@ -32,14 +35,22 @@ var AprobacionController = {
         for (var i = 0; i < pendientes.length; i++) {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
+            var isAprobado = d.estado === 'APROBADO_POR_JF';
+            var headerClass = isAprobado ? 'bg-success text-white' : 'bg-warning text-dark';
+            var badgeClass = isAprobado ? 'bg-light text-success' : 'bg-warning text-dark';
+            var badgeText = isAprobado ? 'Aprobado' : 'Pendiente';
+            var buttonText = isAprobado ? 'Enviar a TH' : 'Revisar Descriptor';
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-warning text-dark"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-warning">Pendiente</span></div></div>' +
+                '<div class="card-header ' + headerClass + '"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '<br><i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm btn-info w-100" onclick="AprobacionController.verDetalle(' + d.id + ')"><i class="fas fa-eye"></i> Revisar Descriptor</button></div></div></div>';
+                '<div class="card-footer bg-white"><button class="btn btn-sm btn-info w-100" onclick="AprobacionController.verDetalle(' + d.id + ')"><i class="fas fa-eye"></i> ' + buttonText + '</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
+        if (typeof actualizarContador === 'function') {
+            actualizarContador();
+        }
     },
     
     verDetalle: function(id) {
@@ -178,8 +189,9 @@ var AprobacionController = {
                                     rol: AprobacionController.currentUser.rolNombre,
                                     estado: 'ENVIADO_TH'
                                 });
-                                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success');
-                                location.reload();
+                                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success').then(function() {
+                                    AprobacionController.cargarPendientes();
+                                });
                             }
                             return false;
                         });
@@ -194,8 +206,9 @@ var AprobacionController = {
                                     rol: AprobacionController.currentUser.rolNombre,
                                     estado: 'APROBADO_POR_JF'
                                 });
-                                Swal.fire('Aprobado', 'Descriptor aprobado', 'success');
-                                location.reload();
+                                Swal.fire('Aprobado', 'Descriptor aprobado correctamente. Ahora puede enviarlo a Talento Humano.', 'success').then(function() {
+                                    AprobacionController.cargarPendientes();
+                                });
                             }
                             return false;
                         });
@@ -213,8 +226,9 @@ var AprobacionController = {
                                     rol: AprobacionController.currentUser.rolNombre,
                                     estado: 'ENVIADO_JF'
                                 });
-                                Swal.fire('Devuelto', 'Descriptor vuelve a pendiente', 'info');
-                                location.reload();
+                                Swal.fire('Devuelto', 'Descriptor vuelve a pendiente', 'info').then(function() {
+                                    AprobacionController.cargarPendientes();
+                                });
                             }
                             return false;
                         });
@@ -239,8 +253,9 @@ var AprobacionController = {
                                 estado: 'OBSERVADO_JF',
                                 observacion: result.value
                             });
-                            Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning');
-                            location.reload();
+                            Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning').then(function() {
+                                AprobacionController.cargarPendientes();
+                            });
                         }
                         return false;
                     });
