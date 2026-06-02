@@ -299,7 +299,16 @@
             text-decoration: none;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease, color 0.2s ease;
+            border: 1px solid transparent;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .menu-link:hover,
+        .menu-group:hover,
+        .submenu-title:hover,
+        .submenu-link:hover {
+            border-color: #c9d8e5;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
         }
 
         .menu-link:hover,
@@ -332,9 +341,10 @@
             margin: 4px 0 4px 52px;
             padding: 10px 14px;
             border-radius: 6px;
+            border: 1px solid transparent;
             color: #0067b1;
             text-decoration: none;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .header-icon-btn {

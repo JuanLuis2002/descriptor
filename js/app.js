@@ -92,17 +92,20 @@ function loadMenu() {
         <a href="#" class="menu-link nav-link active" data-modulo="dashboard">
             <i class="fas fa-home"></i> <span>Home</span>
         </a>
-        <div class="menu-group">
+        <div class="menu-group tree-toggle" data-target="#talentoHumanoTree">
             <i class="fas fa-chevron-down chevron"></i>
             <i class="far fa-id-card"></i>
             <span>Talento Humano</span>
         </div>
-        <div class="submenu-title">
-            <i class="fas fa-th"></i>
-            <span>Tablas Generales.</span>
-        </div>
-        <div class="submenu-options">
-            ${opciones}
+        <div id="talentoHumanoTree" class="tree-section">
+            <div class="submenu-title tree-toggle" data-target="#tablasGeneralesTree">
+                <i class="fas fa-chevron-down chevron"></i>
+                <i class="fas fa-th"></i>
+                <span>Tablas Generales</span>
+            </div>
+            <div id="tablasGeneralesTree" class="submenu-options">
+                ${opciones}
+            </div>
         </div>
     `);
     
@@ -119,6 +122,14 @@ function loadMenu() {
         }
         
         cargarModulo(modulo);
+    });
+
+    $(document).off('click.treeMenu').on('click.treeMenu', '.tree-toggle', function(e) {
+        e.preventDefault();
+        const target = $($(this).data('target'));
+        const icon = $(this).find('.chevron').first();
+        target.stop(true, true).slideToggle(160);
+        icon.toggleClass('fa-chevron-down fa-chevron-right');
     });
 }
 
