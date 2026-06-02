@@ -11,6 +11,17 @@ var JTHService = {
         return resultado;
     },
     
+    getFirmados: function() {
+        var todos = DescriptorService.getAll();
+        var resultado = [];
+        for (var i = 0; i < todos.length; i++) {
+            if (todos[i].firmaJTH || this.getFirma(todos[i].id)) {
+                resultado.push(todos[i]);
+            }
+        }
+        return resultado;
+    },
+    
     getById: function(id) {
         return DescriptorService.getById(id);
     },

@@ -14,6 +14,7 @@ var JTHController = {
         $.get('modulos/frmFirmaJTH/view/jthView.html', function(html) {
             $('#contentContainer').html(html);
             self.cargarPendientes();
+            self.cargarFirmados();
         }).fail(function() {
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de firmas JTH</div>');
         });
@@ -31,6 +32,9 @@ var JTHController = {
         
         if (pendientes.length === 0) {
             $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de firma</h5><p>Cuando un descriptor sea aprobado por TH y se notifique a los firmantes, aparecerá aquí.</p></div>');
+            if (typeof actualizarContador === 'function') {
+                actualizarContador();
+            }
             return;
         }
         
@@ -52,6 +56,64 @@ var JTHController = {
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
+        if (typeof actualizarContador === 'function') {
+            actualizarContador();
+        }
+    },
+    
+    cargarFirmados: function() {
+        var firmados = JTHService.getFirmados();
+        
+        if (firmados.length === 0) {
+            $('#firmadosContainer').html('<div class="alert alert-info text-center">Aún no ha firmado descriptores.</div>');
+            return;
+        }
+        
+        var html = '<div class="row">';
+        for (var i = 0; i < firmados.length; i++) {
+            var d = firmados[i];
+            var fechaFirma = d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleString() : '-';
+            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
+                '<div class="card-header bg-success text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-light text-success">Firmado</span></div></div>' +
+                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
+                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar-check"></i> Firma: ' + fechaFirma + '<br><i class="fas fa-info-circle"></i> Estado actual: ' + (d.estado || '-') + '</p></div>' +
+                '<div class="card-footer bg-white"><button class="btn btn-sm btn-success w-100" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature"></i> Ver Firma</button></div></div></div>';
+        }
+        html += '</div>';
+        $('#firmadosContainer').html(html);
+    },
+    
+    verFirma: function(id) {
+        var descriptor = JTHService.getById(id);
+        if (!descriptor) return;
+        
+        var firma = JTHService.getFirma(id) || descriptor.firmaJTH;
+        if (!firma) {
+            Swal.fire('Sin firma', 'No se encontró una firma digital para este descriptor.', 'info');
+            return;
+        }
+        
+        var modalHtml = '<div class="text-center">' +
+            '<div class="alert alert-info text-start"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Fecha de firma:</strong> ' + (descriptor.fechaFirmaJTH ? new Date(descriptor.fechaFirmaJTH).toLocaleString() : '-') + '</div>' +
+            '<div class="border rounded mx-auto p-3 bg-white" style="max-width: 430px;"><img src="' + firma + '" alt="Firma JTH" style="max-width:100%; max-height:220px;"></div>' +
+            '<button id="descargarFirmaJTH" class="btn btn-info btn-sm mt-3"><i class="fas fa-download"></i> Descargar Firma</button>' +
+            '</div>';
+        
+        Swal.fire({
+            title: 'Firma Digital - Jefe de Talento Humano',
+            html: modalHtml,
+            width: '520px',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#0d6efd',
+            didOpen: function() {
+                $('#descargarFirmaJTH').click(function() {
+                    var link = document.createElement('a');
+                    link.download = 'firma_jth_' + id + '.png';
+                    link.href = firma;
+                    link.click();
+                });
+            }
+        });
     },
     
     firmar: function(id) {
@@ -123,8 +185,10 @@ var JTHController = {
                     rol: JTHController.currentUser.rolNombre,
                     estado: 'FIRMADO_JTH'
                 });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
-                JTHController.cargarPendientes();
+                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success').then(function() {
+                    JTHController.cargarPendientes();
+                    JTHController.cargarFirmados();
+                });
             }
         });
     }
