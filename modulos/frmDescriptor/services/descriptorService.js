@@ -124,6 +124,25 @@ var DescriptorService = {
         return ultimaVersion + 1;
     },
     
+    getVersionPosteriorVigenteOEnProceso: function(descriptor) {
+        if (!descriptor) return null;
+        var descriptors = this.getAll();
+        var puestoNormalizado = (descriptor.puesto || '').trim().toLowerCase();
+        var versionActual = parseInt(descriptor.version || 1, 10);
+        var versionPosterior = null;
+        for (var i = 0; i < descriptors.length; i++) {
+            var candidato = descriptors[i];
+            var mismoPuesto = (candidato.puesto || '').trim().toLowerCase() === puestoNormalizado;
+            var versionCandidato = parseInt(candidato.version || 1, 10);
+            if (mismoPuesto && candidato.id !== descriptor.id && versionCandidato > versionActual && candidato.estado !== 'INACTIVO') {
+                if (!versionPosterior || versionCandidato > parseInt(versionPosterior.version || 1, 10)) {
+                    versionPosterior = candidato;
+                }
+            }
+        }
+        return versionPosterior;
+    },
+    
     // Registrar evento en auditoría
     registrarEvento: function(id, evento) {
         var descriptor = this.getById(id);
