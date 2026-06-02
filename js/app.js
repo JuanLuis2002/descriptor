@@ -1485,6 +1485,19 @@ function generarHTMLVersionCorta(d) {
     var perfil = d.perfil || {};
     var responsabilidades = d.responsabilidades || {};
     var entrenamiento = d.entrenamiento || {};
+    var titularNombre = text(d.titular);
+    var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
+    if (!titularNombre) {
+        for (var i = 0; i < eventosAuditoria.length; i++) {
+            if (eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' && hasText(eventosAuditoria[i].usuario)) {
+                titularNombre = text(eventosAuditoria[i].usuario);
+                break;
+            }
+        }
+    }
+    if (!titularNombre && firmaCT) {
+        titularNombre = 'Ing. Juan Pérez';
+    }
     var sexoDisplay = enumText(perfil.sexo);
     var edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ' - ' + text(perfil.edadMax) + ' años' : '');
     var induccionText = (hasText(entrenamiento.duracion) ? 'Duración: ' + text(entrenamiento.duracion) : '') +
@@ -1561,7 +1574,7 @@ function generarHTMLVersionCorta(d) {
 <table class="t mt10"><tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
-  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${text(d.titular)}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
+  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
   <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${d.creador || '_________________'}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
   <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
 </table>
