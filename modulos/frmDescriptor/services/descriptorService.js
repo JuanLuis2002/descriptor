@@ -89,7 +89,7 @@ var DescriptorService = {
         return resultado;
     },
     
-    getDescriptorActivoByPuesto: function(puesto, excludeId) {
+    getDescriptorVigenteOEnProcesoByPuesto: function(puesto, excludeId) {
         var descriptors = this.getAll();
         var puestoNormalizado = (puesto || '').trim().toLowerCase();
         for (var i = 0; i < descriptors.length; i++) {
@@ -101,6 +101,10 @@ var DescriptorService = {
             }
         }
         return null;
+    },
+    
+    getDescriptorActivoByPuesto: function(puesto, excludeId) {
+        return this.getDescriptorVigenteOEnProcesoByPuesto(puesto, excludeId);
     },
     
     getSiguienteVersionByPuesto: function(puesto) {

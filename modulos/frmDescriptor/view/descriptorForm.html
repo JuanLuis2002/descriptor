@@ -326,6 +326,24 @@
         );
     }
     
+    function mostrarAdvertenciaDescriptorExistente(descriptor, puesto) {
+        var codigo = descriptor.codigo ? ' <strong>' + descriptor.codigo + '</strong>' : '';
+        var version = descriptor.version ? ' versión <strong>' + descriptor.version + '</strong>' : '';
+        var mensaje = descriptor.estado === 'ACTIVO'
+            ? 'Ya existe un descriptor activo para el puesto <strong>' + puesto + '</strong>.' +
+              '<br><br>Solo será posible crear una nueva versión cuando la versión actual' + codigo + version + ' haya sido desactivada.'
+            : 'Ya existe un descriptor para este puesto que se encuentra en proceso de aprobación.' +
+              '<br><br>Solo será posible crear una nueva versión cuando la versión actual' + codigo + version + ' haya sido activada y posteriormente desactivada.';
+        
+        Swal.fire({
+            icon: 'warning',
+            title: 'Descriptor existente',
+            html: mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0d6efd'
+        });
+    }
+    
     function saveDescriptor() {
         var funcionesClaves = [];
         $('#funcionesClavesContainer .dynamic-row').each(function() {
@@ -436,15 +454,9 @@
         if (window._isEditing && window._editingId) {
             var existingDescriptor = DescriptorService.getById(window._editingId);
             if (existingDescriptor) {
-                var descriptorDuplicado = DescriptorService.getDescriptorActivoByPuesto(formData.puesto, window._editingId);
+                var descriptorDuplicado = DescriptorService.getDescriptorVigenteOEnProcesoByPuesto(formData.puesto, window._editingId);
                 if (descriptorDuplicado) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Descriptor existente',
-                        html: 'Ya existe un descriptor para el puesto <strong>' + formData.puesto + '</strong>.<br><br>Si desea crear una nueva versión para este puesto, primero debe desactivar el descriptor actual <strong>' + (descriptorDuplicado.codigo || '') + '</strong>.',
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#0d6efd'
-                    });
+                    mostrarAdvertenciaDescriptorExistente(descriptorDuplicado, formData.puesto);
                     return;
                 }
                 
@@ -490,15 +502,9 @@
                 Swal.fire('Error', 'No se encontró el descriptor para actualizar', 'error');
             }
         } else {
-            var descriptorExistente = DescriptorService.getDescriptorActivoByPuesto(formData.puesto);
+            var descriptorExistente = DescriptorService.getDescriptorVigenteOEnProcesoByPuesto(formData.puesto);
             if (descriptorExistente) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Descriptor existente',
-                    html: 'Ya existe un descriptor para el puesto <strong>' + formData.puesto + '</strong>.<br><br>Si desea crear una nueva versión para este puesto, primero debe desactivar el descriptor actual <strong>' + (descriptorExistente.codigo || '') + '</strong>.',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#0d6efd'
-                });
+                mostrarAdvertenciaDescriptorExistente(descriptorExistente, formData.puesto);
                 return;
             }
             
