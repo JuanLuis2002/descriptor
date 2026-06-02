@@ -1022,7 +1022,7 @@ function generarVersionExtensa(id) {
     Swal.fire({
         title: 'Descriptor de Puesto - Versión Extensa',
         html: '<div id="pdfPreviewContainer" style="height: 72vh; overflow: auto; background: #e9ecef; padding: 12px; border-radius: 8px; text-align: center;">' +
-              '<iframe id="pdfPreviewFrame" title="Vista previa versión extensa" style="width: 8.5in; height: 11in; max-width: 100%; border: 0; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.18);"></iframe>' +
+              '<iframe id="pdfPreviewFrame" scrolling="no" title="Vista previa versión extensa" style="width: 8.5in; height: auto; min-height: 11in; max-width: 100%; border: 0; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.18); overflow: hidden;"></iframe>' +
               '</div>' +
               '<div class="mt-3 d-flex justify-content-center gap-2">' +
               '<button id="btnImprimirPDFExtenso" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>' +
@@ -1037,6 +1037,19 @@ function generarVersionExtensa(id) {
             previewDoc.open();
             previewDoc.write(pdfHtml);
             previewDoc.close();
+
+            function ajustarAlturaPreviewExtenso() {
+                var doc = previewFrame.contentWindow.document;
+                var height = Math.max(
+                    doc.body.scrollHeight,
+                    doc.documentElement.scrollHeight,
+                    doc.body.offsetHeight,
+                    doc.documentElement.offsetHeight
+                );
+                previewFrame.style.height = height + 'px';
+            }
+            previewFrame.onload = ajustarAlturaPreviewExtenso;
+            setTimeout(ajustarAlturaPreviewExtenso, 250);
             
             $('#btnImprimirPDFExtenso').click(function() {
                 previewFrame.contentWindow.focus();

@@ -580,6 +580,40 @@
             color: #bbf7d0 !important;
         }
 
+        body.dark-mode #pdfPreviewContainer {
+            background: #e9ecef !important;
+            color: #000 !important;
+        }
+
+        body.dark-mode #pdfContent,
+        body.dark-mode #pdfContent * {
+            color: revert !important;
+            border-color: revert !important;
+            box-shadow: none;
+        }
+
+        body.dark-mode #pdfContent {
+            background: #fff !important;
+        }
+
+        body.dark-mode #pdfContent table,
+        body.dark-mode #pdfContent thead,
+        body.dark-mode #pdfContent tbody,
+        body.dark-mode #pdfContent tfoot,
+        body.dark-mode #pdfContent tr,
+        body.dark-mode #pdfContent th,
+        body.dark-mode #pdfContent td {
+            background: revert !important;
+            color: revert !important;
+            border-color: revert !important;
+        }
+
+        body.dark-mode #pdfContent .sec,
+        body.dark-mode #pdfContent .col-hdr th {
+            background: revert !important;
+            color: revert !important;
+        }
+
         body.dark-mode .swal2-popup {
             background: #1f2937 !important;
             color: #e5e7eb !important;
