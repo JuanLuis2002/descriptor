@@ -28,10 +28,7 @@ function checkAuth() {
 function loadUser() {
     if (!currentUser) return;
     
-    $('#userName').text(currentUser.nombre);
-    $('#userRole').text(currentUser.rolNombre);
-    $('#userArea').text(currentUser.area);
-    $('#userRoleBadge').text(currentUser.rolNombre);
+    $('#headerUserName').html((currentUser.nombre || '').replace(/\s+/g, '<br>'));
 }
 
 // Configurar eventos
@@ -76,50 +73,66 @@ function setupEvents() {
 function loadMenu() {
     const nav = $('#mainNav');
     nav.empty();
-    
-    nav.append(`
-        <a href="#" class="nav-link text-white px-3 py-2 active" data-modulo="dashboard">
-            <i class="fas fa-tachometer-alt me-2"></i> <span>Dashboard</span>
-        </a>
-    `);
+    let opciones = '';
     
     if (currentUser.rol === 'JEFE_INMEDIATO') {
-        nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="nuevoDescriptor">
-                <i class="fas fa-plus-circle me-2"></i> <span>Nuevo Descriptor</span>
-            </a>
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="misDescriptores">
-                <i class="fas fa-list me-2"></i> <span>Mis Descriptores</span>
-            </a>
-        `);
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
     } else if (currentUser.rol === 'JEFE_SUPERIOR') {
-        nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="pendientesAprobar">
-                <i class="fas fa-clock me-2"></i> <span>Pendientes de Aprobación</span>
-            </a>
-        `);
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="pendientesAprobar">Pendientes de Aprobación</a>';
     } else if (currentUser.rol === 'TH_GENERALISTA') {
-        nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="revisionTH">
-                <i class="fas fa-check-double me-2"></i> <span>Revisión Técnica</span>
-            </a>
-        `);
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="revisionTH">Revisión Técnica</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
-        nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="firmasJTH">
-                <i class="fas fa-signature me-2"></i> <span>Firmas Pendientes</span>
-            </a>
-        `);
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Firmas Pendientes</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
-        nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="firmasCT">
-                <i class="fas fa-signature me-2"></i> <span>Mi Firma</span>
-            </a>
-        `);
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Firma</a>';
     }
+
+    nav.append(`
+        <a href="#" class="menu-link nav-link active" data-modulo="dashboard">
+            <i class="fas fa-home"></i> <span>Home</span>
+        </a>
+        <div class="menu-group">
+            <i class="fas fa-chevron-right chevron"></i>
+            <i class="fas fa-list"></i>
+            <span>Generales</span>
+        </div>
+        <div class="menu-group">
+            <i class="fas fa-chevron-down chevron"></i>
+            <i class="far fa-id-card"></i>
+            <span>Talento Humano</span>
+        </div>
+        <div class="submenu-title">
+            <i class="fas fa-th"></i>
+            <span>Tablas Generales.</span>
+        </div>
+        <div class="submenu-options">
+            ${opciones}
+        </div>
+        <div class="menu-group">
+            <i class="fas fa-chevron-right chevron"></i>
+            <i class="fas fa-coins"></i>
+            <span>Contabilidad</span>
+        </div>
+        <div class="menu-group">
+            <i class="fas fa-chevron-right chevron"></i>
+            <i class="fas fa-users"></i>
+            <span>Selección y Contratación</span>
+        </div>
+        <div class="menu-group">
+            <i class="fas fa-chevron-right chevron"></i>
+            <i class="fas fa-shopping-cart"></i>
+            <span>Compras</span>
+        </div>
+        <div class="menu-group">
+            <i class="fas fa-chevron-right chevron"></i>
+            <i class="fas fa-key"></i>
+            <span>Seguridad</span>
+        </div>
+    `);
     
     // Eventos de navegación
-    $(document).on('click', '.nav-link[data-modulo]', function(e) {
+    $(document).off('click.mainNav').on('click.mainNav', '.nav-link[data-modulo]', function(e) {
         e.preventDefault();
         const modulo = $(this).data('modulo');
         

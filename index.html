@@ -209,42 +209,201 @@
             background: #0d6efd;
             border-radius: 3px;
         }
+
+        /* Layout SGUEES */
+        .sidebar {
+            width: 335px;
+            background: #f7f7f7;
+            border-right: 1px solid #e1e1e1;
+            color: #111;
+            padding: 18px 10px;
+            top: 58px;
+            height: calc(100vh - 58px);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        @media (min-width: 769px) {
+            .main-content {
+                margin-left: 335px;
+                width: calc(100% - 335px);
+            }
+
+            .main-content.expanded {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+        }
+
+        .top-bar {
+            height: 58px;
+            background: #fff;
+            border-bottom: 1px solid #e6e6e6;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+        }
+
+        .brand-title {
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            color: #222;
+        }
+
+        .sidebar-search {
+            padding: 0 0 16px;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-search .form-control {
+            border-radius: 3px;
+            min-height: 34px;
+        }
+
+        .menu-tree {
+            color: #111;
+        }
+
+        .menu-link,
+        .menu-group,
+        .submenu-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #111;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .menu-link:hover,
+        .menu-link.active,
+        .submenu-link.active {
+            background: #d9e8f4;
+            color: #0067b1;
+        }
+
+        .menu-group {
+            border-top: 1px solid #e0e0e0;
+            border-radius: 0;
+            margin-top: 4px;
+        }
+
+        .menu-group .chevron {
+            width: 14px;
+            color: #666;
+        }
+
+        .submenu-title {
+            margin-left: 26px;
+            font-weight: 500;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .submenu-link {
+            display: block;
+            margin: 4px 0 4px 52px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #0067b1;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .header-icon-btn {
+            border: 1px solid #e5e5e5;
+            background: #fff;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar-btn {
+            border: 2px solid #0d9be6;
+            color: #0d9be6;
+            background: #f8fbff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+
+        .user-menu {
+            min-width: 150px;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+
+        .user-menu-name {
+            padding: 8px 14px;
+            line-height: 1.35;
+            border-bottom: 1px solid #eee;
+            color: #222;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                top: 58px;
+                height: calc(100vh - 58px);
+                width: 320px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header p-3 text-center border-bottom border-secondary">
-            <h3 class="text-white mb-0"><i class="fas fa-clipboard-list me-2"></i><span>Descriptor</span></h3>
-        </div>
-        
-        <div class="sidebar-user p-3 d-flex align-items-center gap-3">
-            <i class="fas fa-user-circle fa-2x text-white"></i>
-            <div class="user-info text-white">
-                <strong id="userName">Cargando...</strong>
-                <small id="userRole" class="d-block opacity-75"></small>
-                <small id="userArea" class="d-block opacity-50" style="font-size: 0.7rem;"></small>
+        <div class="sidebar-search">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search" aria-label="Search">
             </div>
         </div>
-        
-        <nav class="nav flex-column mt-3" id="mainNav">
-        </nav>
-        
-        <div class="sidebar-footer mt-auto p-3 border-top border-secondary">
-            <div id="btnLogout" class="logout-btn text-white-50 text-decoration-none d-flex align-items-center gap-3">
-                <i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span>
-            </div>
-        </div>
+        <nav class="menu-tree" id="mainNav"></nav>
     </aside>
 
     <main class="main-content" id="mainContent">
         <header class="top-bar d-flex justify-content-between align-items-center px-3 px-md-4 py-2 py-md-3">
-            <button id="toggleSidebar" class="toggle-btn btn btn-link text-dark text-decoration-none p-0">
-                <i class="fas fa-bars fa-lg"></i>
-            </button>
-            <div class="page-title fw-semibold text-dark" id="pageTitle">Dashboard Principal</div>
-            <div class="user-badge badge rounded-pill px-3 py-1 text-white" id="userRoleBadge"></div>
+            <div class="d-flex align-items-center gap-3">
+                <button id="toggleSidebar" class="toggle-btn btn btn-link text-dark text-decoration-none p-0">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+                <span class="brand-title">SGUEES</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="header-icon-btn" title="Modo oscuro">
+                    <i class="far fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="user-avatar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end user-menu">
+                        <div class="user-menu-name" id="headerUserName">Cargando...</div>
+                        <a class="dropdown-item" href="#">
+                            <i class="far fa-user-circle me-2"></i> Perfil
+                        </a>
+                        <button class="dropdown-item" type="button" id="btnLogout">
+                            <i class="fas fa-running me-2"></i> Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
         </header>
         
         <div class="content-container p-3 p-md-4" id="contentContainer">
