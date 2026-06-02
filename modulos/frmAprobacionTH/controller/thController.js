@@ -90,6 +90,12 @@ var THController = {
             var accion = ultima && ultima.accion ? ultima.accion : 'Gestión registrada';
             var estadoTexto = this.getEstadoTexto(d.estado);
             var estadoClass = this.getEstadoBadgeClass(d.estado);
+            var botonesReportes = d.estado === 'ACTIVO'
+                ? '<div class="btn-group w-100" role="group">' +
+                    '<button class="btn btn-sm btn-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+                  '</div>'
+                : '';
             
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
                 '<div class="card-header"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></div></div>' +
@@ -97,10 +103,8 @@ var THController = {
                 '<p class="card-text text-muted small"><i class="fas fa-calendar-check"></i> Última acción: ' + fecha + '<br><i class="fas fa-clipboard-check"></i> ' + accion + '</p></div>' +
                 '<div class="card-footer bg-white">' +
                 '<button class="btn btn-sm btn-outline-secondary w-100 mb-2" onclick="THController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history"></i> Ver historial</button>' +
-                '<div class="btn-group w-100" role="group">' +
-                '<button class="btn btn-sm btn-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-                '<button class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
-                '</div></div></div></div>';
+                botonesReportes +
+                '</div></div></div>';
         }
         html += '</div>';
         $('#gestionadosContainer').html(html);
@@ -228,12 +232,15 @@ var THController = {
             riesgosHtml = '<p class="text-muted text-center">No hay riesgos registrados</p>';
         }
         
+        var reportesHtml = descriptor.estado === 'ACTIVO'
+            ? '<div class="btn-group w-100 mb-3" role="group">' +
+                '<button type="button" class="btn btn-sm btn-success" onclick="generarVersionCorta(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
+                '<button type="button" class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+              '</div>'
+            : '';
         var modalHtml = '<div class="text-start" style="max-height: 550px; overflow-y: auto;">' +
             '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
-            '<div class="btn-group w-100 mb-3" role="group">' +
-            '<button type="button" class="btn btn-sm btn-success" onclick="generarVersionCorta(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-            '<button type="button" class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
-            '</div>' +
+            reportesHtml +
             
             '<h6 class="border-bottom pb-2">Información General</h6>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '<br><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
