@@ -346,6 +346,10 @@
         });
     }
     
+    function normalizarPuesto(puesto) {
+        return (puesto || '').trim().toLowerCase();
+    }
+    
     function saveDescriptor() {
         var funcionesClaves = [];
         $('#funcionesClavesContainer .dynamic-row').each(function() {
@@ -465,7 +469,12 @@
                 formData.id = existingDescriptor.id;
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
-                formData.version = existingDescriptor.version || 1;
+                
+                if (normalizarPuesto(existingDescriptor.puesto) === normalizarPuesto(formData.puesto)) {
+                    formData.version = existingDescriptor.version || 1;
+                } else {
+                    formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
+                }
                 
                 // CORRECCIÓN: Mantener el estado original según el caso
                 if (existingDescriptor.estado === 'OBSERVADO_TH') {
