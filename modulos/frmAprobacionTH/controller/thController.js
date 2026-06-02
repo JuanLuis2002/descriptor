@@ -533,19 +533,19 @@ var THController = {
 
 // Funciones auxiliares
 window.agregarRelacionInterna = function() { 
-    $('#relacionesInternasEditor').append('<div class="row mb-2"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
+    $('#relacionesInternasEditor').prepend('<div class="row mb-2"><div class="col-5"><input type="text" class="form-control" name="relInternaPuesto" placeholder="Puesto/Área"></div><div class="col-5"><input type="text" class="form-control" name="relInternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
 };
 
 window.agregarRelacionExterna = function() { 
-    $('#relacionesExternasEditor').append('<div class="row mb-2"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
+    $('#relacionesExternasEditor').prepend('<div class="row mb-2"><div class="col-5"><input type="text" class="form-control" name="relExternaEntidad" placeholder="Entidad externa"></div><div class="col-5"><input type="text" class="form-control" name="relExternaRazon" placeholder="Razón"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
 };
 
 window.agregarRequerimiento = function() { 
-    $('#requerimientosEditor').append('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
+    $('#requerimientosEditor').prepend('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="requerimiento" placeholder="Requerimiento organizacional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
 };
 
 window.agregarRiesgo = function() { 
-    $('#riesgosLista').append('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
+    $('#riesgosLista').prepend('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
 };
 
 window.THController = THController;
