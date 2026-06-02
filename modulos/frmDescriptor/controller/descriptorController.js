@@ -6,8 +6,17 @@ var DescriptorController = {
     init: function(user, idToEdit) {
         this.currentUser = user;
         this.descriptorIdToEdit = idToEdit || null;
+        if (!this.descriptorIdToEdit) {
+            this.resetFormState();
+        }
         console.log('DescriptorController iniciado para:', user.nombre, 'Editando ID:', idToEdit);
         this.loadForm();
+    },
+    
+    resetFormState: function() {
+        window._isEditing = false;
+        window._editingId = null;
+        window._savedActividades = null;
     },
     
     loadForm: function() {
@@ -49,6 +58,7 @@ var DescriptorController = {
         
         $('#pageTitle').text('Editar Descriptor');
         $('#saveBtn').text('Actualizar Descriptor');
+        window._savedActividades = null;
         
         // Datos básicos
         $('select[name="puesto"]').val(descriptor.puesto);

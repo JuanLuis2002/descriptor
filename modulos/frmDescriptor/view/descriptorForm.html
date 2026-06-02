@@ -274,6 +274,8 @@
         restaurarActividades();
     }
     
+    window.actualizarActividadesGlobal = actualizarActividades;
+    
     window.agregarActividad = function(funcionId) {
         var container = $('#actividades-funcion-' + funcionId);
         if (container.length === 0) return;
@@ -508,15 +510,10 @@
                 return;
             }
             
-            var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
-            formData.id = descriptores.length + 1;
-            formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');
-            formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
-            formData.fechaCreacion = new Date().toISOString();
-            formData.estado = 'BORRADOR';
-            descriptores.push(formData);
-            localStorage.setItem('descriptores', JSON.stringify(descriptores));
-            Swal.fire('Éxito', 'Descriptor ' + formData.codigo + ' guardado', 'success').then(function() {
+            var descriptorGuardado = DescriptorService.save(formData);
+            Swal.fire('Éxito', 'Descriptor ' + descriptorGuardado.codigo + ' guardado', 'success').then(function() {
+                window._isEditing = false;
+                window._editingId = null;
                 limpiarActividadesGuardadas();
                 if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
                 else location.reload();
