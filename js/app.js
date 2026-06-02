@@ -5,6 +5,7 @@ let isMobile = window.innerWidth <= 768;
 // Inicializar
 $(document).ready(function() {
     checkAuth();
+    applyDarkModePreference();
     loadUser();
     setupEvents();
     loadMenu();
@@ -41,6 +42,11 @@ function setupEvents() {
             $('#mainContent').toggleClass('expanded');
         }
     });
+
+    $('#darkModeToggle').click(function() {
+        const enabled = !$('body').hasClass('dark-mode');
+        setDarkMode(enabled);
+    });
     
     $('#sidebarOverlay').click(function() {
         closeMobileSidebar();
@@ -67,6 +73,24 @@ function setupEvents() {
     $(window).resize(function() {
         checkMobile();
     });
+}
+
+// Modo oscuro global
+function applyDarkModePreference() {
+    const savedTheme = localStorage.getItem('sgueesTheme');
+    setDarkMode(savedTheme === 'dark', false);
+}
+
+function setDarkMode(enabled, persist = true) {
+    $('body').toggleClass('dark-mode', enabled);
+    $('#darkModeToggle')
+        .attr('title', enabled ? 'Modo claro' : 'Modo oscuro')
+        .attr('aria-label', enabled ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    $('#darkModeToggle i').attr('class', enabled ? 'fas fa-sun dark-mode-icon' : 'far fa-moon dark-mode-icon');
+
+    if (persist) {
+        localStorage.setItem('sgueesTheme', enabled ? 'dark' : 'light');
+    }
 }
 
 // Cargar menú según el rol del usuario
