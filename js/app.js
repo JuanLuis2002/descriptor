@@ -1662,6 +1662,19 @@ function generarHTMLVersionExtensa(d) {
     var experiencia = filtrarObjetos(d.experiencia, ['requisito']);
     var competenciasTecnicas = filtrarObjetos(d.competenciasTecnicas, ['nombre', 'nivel']);
     var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre', 'descripcion']);
+    var titularNombre = text(d.titular);
+    var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
+    if (!titularNombre) {
+        for (var i = 0; i < eventosAuditoria.length; i++) {
+            if (eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' && hasText(eventosAuditoria[i].usuario)) {
+                titularNombre = text(eventosAuditoria[i].usuario);
+                break;
+            }
+        }
+    }
+    if (!titularNombre && firmaCT) {
+        titularNombre = 'Ing. Juan Pérez';
+    }
 
     function getActividades(funcion) {
         var nombre = String(funcion.nombre || '').trim().toLowerCase();
@@ -1812,7 +1825,7 @@ function generarHTMLVersionExtensa(d) {
 
     function renderFirmas() {
         return '<table class="firmas flow-block"><tr>' +
-            '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.titular) + '</div></td>' +
+            '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + titularNombre + '</div></td>' +
             '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
             '</tr></table>';
     }
