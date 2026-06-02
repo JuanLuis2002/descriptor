@@ -154,7 +154,7 @@
         <div class="section-buttons">
             <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;"><i class="fas fa-arrow-left"></i> Anterior</button>
             <button type="button" class="btn btn-primary" id="nextBtn">Siguiente <i class="fas fa-arrow-right"></i></button>
-            <button type="button" class="btn btn-success" id="saveBtn" style="display: none;"><i class="fas fa-save"></i> Guardar</button>
+            <button type="button" class="btn btn-success" id="saveBtn"><i class="fas fa-save"></i> Guardar</button>
         </div>
     </form>
 </div>
@@ -302,7 +302,7 @@
         }
         $('#prevBtn').toggle(currentStep > 1);
         $('#nextBtn').toggle(currentStep < totalSteps);
-        $('#saveBtn').toggle(currentStep === totalSteps);
+        $('#saveBtn').show();
         
         if (currentStep !== 4 && funcionesClavesList.length > 0) guardarActividadesActuales();
         if (currentStep === 4) actualizarActividades();
@@ -351,6 +351,10 @@
     }
     
     function saveDescriptor() {
+        if (currentStep !== 4) {
+            actualizarActividades();
+        }
+        
         var funcionesClaves = [];
         $('#funcionesClavesContainer .dynamic-row').each(function() {
             funcionesClaves.push({ 
