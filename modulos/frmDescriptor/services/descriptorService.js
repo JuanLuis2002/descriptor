@@ -9,6 +9,7 @@ var DescriptorService = {
         var descriptors = this.getAll();
         descriptor.id = descriptors.length + 1;
         descriptor.codigo = 'DES-' + (descriptors.length + 1).toString().padStart(4, '0');
+        descriptor.version = this.getSiguienteVersionByPuesto(descriptor.puesto);
         descriptor.estado = 'BORRADOR';
         descriptor.fechaCreacion = new Date().toISOString();
         
@@ -100,6 +101,23 @@ var DescriptorService = {
             }
         }
         return null;
+    },
+    
+    getSiguienteVersionByPuesto: function(puesto) {
+        var descriptors = this.getAll();
+        var puestoNormalizado = (puesto || '').trim().toLowerCase();
+        var ultimaVersion = 0;
+        for (var i = 0; i < descriptors.length; i++) {
+            var descriptor = descriptors[i];
+            var mismoPuesto = (descriptor.puesto || '').trim().toLowerCase() === puestoNormalizado;
+            if (mismoPuesto) {
+                var version = parseInt(descriptor.version || 1, 10);
+                if (version > ultimaVersion) {
+                    ultimaVersion = version;
+                }
+            }
+        }
+        return ultimaVersion + 1;
     },
     
     // Registrar evento en auditoría
