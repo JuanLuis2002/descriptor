@@ -597,11 +597,10 @@ window.initDescriptorList = function() {
         
         var descriptorVigente = DescriptorService.getDescriptorVigenteOEnProcesoByPuesto(descriptor.puesto, descriptor.id);
         if (descriptorVigente) {
-            var esVersionPosterior = parseInt(descriptorVigente.version || 1, 10) > parseInt(descriptor.version || 1, 10);
             var detalleVersion = descriptorVigente.version ? ' versión <strong>' + descriptorVigente.version + '</strong>' : '';
-            var mensaje = esVersionPosterior
-                ? 'No es posible reactivar este descriptor porque existe una versión más reciente del mismo puesto que se encuentra activa o en proceso de aprobación.<br><br>La versión actual deberá completar su ciclo de vida y ser desactivada antes de permitir la reactivación de versiones anteriores.'
-                : 'No es posible reactivar este descriptor porque ya existe otra versión vigente o en proceso para el puesto <strong>' + descriptor.puesto + '</strong>' + detalleVersion + '.<br><br>Solo puede existir una versión activa o en proceso por puesto.';
+            var mensaje = descriptorVigente.estado === 'ACTIVO'
+                ? 'No es posible reactivar este descriptor porque ya existe una versión activa para el puesto <strong>' + descriptor.puesto + '</strong>' + detalleVersion + '.<br><br>Primero debe desactivar esa versión activa antes de reactivar otra versión del mismo puesto.'
+                : 'No es posible reactivar este descriptor porque ya existe otra versión del puesto <strong>' + descriptor.puesto + '</strong>' + detalleVersion + ' que se encuentra en proceso de aprobación.<br><br>La versión en proceso deberá completar su ciclo de vida y ser desactivada antes de permitir la reactivación de otra versión.';
             
             Swal.fire({
                 icon: 'warning',
