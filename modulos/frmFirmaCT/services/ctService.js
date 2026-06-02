@@ -17,6 +17,18 @@ var CTService = {
         return resultado;
     },
     
+    getFirmados: function(nombreTitular) {
+        var todos = DescriptorService.getAll();
+        var resultado = [];
+        for (var i = 0; i < todos.length; i++) {
+            var d = todos[i];
+            if (d.firmaCT || this.getFirma(d.id)) {
+                resultado.push(d);
+            }
+        }
+        return resultado;
+    },
+    
     getById: function(id) {
         return DescriptorService.getById(id);
     },

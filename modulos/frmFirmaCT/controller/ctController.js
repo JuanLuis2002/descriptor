@@ -14,34 +14,20 @@ var CTController = {
         $.get('modulos/frmFirmaCT/view/ctView.html', function(html) {
             $('#contentContainer').html(html);
             self.cargarPendientes();
+            self.cargarFirmados();
         }).fail(function() {
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de firmas CT</div>');
         });
     },
     
     cargarPendientes: function() {
-        // Buscar descriptores con estado FIRMADO_JTH o FIRMADO_CT (si ya firmó)
-        var todos = DescriptorService.getAll();
-        var pendientes = [];
-        for (var i = 0; i < todos.length; i++) {
-            var d = todos[i];
-            // El colaborador puede firmar si está en FIRMADO_JTH y es el titular
-            // O si ya firmó y quiere ver su firma (FIRMADO_CT)
-            /*
-            if (d.estado === 'FIRMADO_JTH' && d.titular === this.currentUser.nombre) {
-                pendientes.push(d);
-            } else if (d.estado === 'FIRMADO_CT' && d.titular === this.currentUser.nombre) {
-                pendientes.push(d);
-            }*/
-            if (d.estado === 'FIRMADO_JTH') { //&& (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()
-                pendientes.push(d);
-            } else if (d.estado === 'FIRMADO_CT') { //&& (d.titular || '').trim().toLowerCase() === (this.currentUser.nombre || '').trim().toLowerCase()
-                pendientes.push(d);
-            }
-        }
+        var pendientes = CTService.getPendientesFirma(this.currentUser.nombre);
         
         if (pendientes.length === 0) {
             $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de su firma</h5><p>Cuando el Jefe de TH firme un descriptor, aparecerá aquí para que usted firme como titular.</p></div>');
+            if (typeof actualizarContador === 'function') {
+                actualizarContador();
+            }
             return;
         }
         
@@ -49,20 +35,73 @@ var CTController = {
         for (var i = 0; i < pendientes.length; i++) {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-            var tieneFirma = CTService.getFirma(d.id);
-            var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
-            var badgeText = tieneFirma ? 'Firmado' : 'Pendiente';
-            var btnText = tieneFirma ? 'Ver Firma' : 'Firmar Documento';
-            var btnClass = tieneFirma ? 'btn-success' : 'btn-warning';
             
             html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
+                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-warning text-dark">Pendiente</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '<br><i class="fas fa-user"></i> Titular: ' + (d.titular || 'No asignado') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm ' + btnClass + ' w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button></div></div></div>';
+                '<div class="card-footer bg-white"><button class="btn btn-sm btn-warning w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> Firmar Documento</button></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
+        if (typeof actualizarContador === 'function') {
+            actualizarContador();
+        }
+    },
+    
+    cargarFirmados: function() {
+        var firmados = CTService.getFirmados(this.currentUser.nombre);
+        
+        if (firmados.length === 0) {
+            $('#firmadosContainer').html('<div class="alert alert-info text-center">Aún no ha firmado descriptores.</div>');
+            return;
+        }
+        
+        var html = '<div class="row">';
+        for (var i = 0; i < firmados.length; i++) {
+            var d = firmados[i];
+            var fechaFirma = d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleString() : '-';
+            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
+                '<div class="card-header bg-success text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-light text-success">Firmado</span></div></div>' +
+                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
+                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar-check"></i> Firma: ' + fechaFirma + '<br><i class="fas fa-info-circle"></i> Estado actual: ' + (d.estado || '-') + '</p></div>' +
+                '<div class="card-footer bg-white"><button class="btn btn-sm btn-success w-100" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-signature"></i> Ver Firma</button></div></div></div>';
+        }
+        html += '</div>';
+        $('#firmadosContainer').html(html);
+    },
+    
+    verFirma: function(id) {
+        var descriptor = CTService.getById(id);
+        if (!descriptor) return;
+        
+        var firma = CTService.getFirma(id) || descriptor.firmaCT;
+        if (!firma) {
+            Swal.fire('Sin firma', 'No se encontró una firma digital para este descriptor.', 'info');
+            return;
+        }
+        
+        var modalHtml = '<div class="text-center">' +
+            '<div class="alert alert-info text-start"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Fecha de firma:</strong> ' + (descriptor.fechaFirmaCT ? new Date(descriptor.fechaFirmaCT).toLocaleString() : '-') + '</div>' +
+            '<div class="border rounded mx-auto p-3 bg-white" style="max-width: 430px;"><img src="' + firma + '" alt="Firma CT" style="max-width:100%; max-height:220px;"></div>' +
+            '<button id="descargarFirmaCT" class="btn btn-info btn-sm mt-3"><i class="fas fa-download"></i> Descargar Firma</button>' +
+            '</div>';
+        
+        Swal.fire({
+            title: 'Firma Digital - ' + (descriptor.titular || 'Colaborador'),
+            html: modalHtml,
+            width: '520px',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#0d6efd',
+            didOpen: function() {
+                $('#descargarFirmaCT').click(function() {
+                    var link = document.createElement('a');
+                    link.download = 'firma_ct_' + id + '.png';
+                    link.href = firma;
+                    link.click();
+                });
+            }
+        });
     },
     
     firmar: function(id) {
@@ -134,8 +173,10 @@ var CTController = {
                     rol: CTController.currentUser.rolNombre,
                     estado: 'FIRMADO_CT'
                 });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success');
-                CTController.cargarPendientes();
+                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success').then(function() {
+                    CTController.cargarPendientes();
+                    CTController.cargarFirmados();
+                });
             }
         });
     }
