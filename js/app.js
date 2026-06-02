@@ -100,8 +100,8 @@ function loadMenu() {
         `);
     } else if (currentUser.rol === 'TH_GENERALISTA') {
         nav.append(`
-            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="complementarTH">
-                <i class="fas fa-pen me-2"></i> <span>Complementar Descriptor</span>
+            <a href="#" class="nav-link text-white px-3 py-2" data-modulo="revisionTH">
+                <i class="fas fa-check-double me-2"></i> <span>Revisión Técnica</span>
             </a>
         `);
     } else if (currentUser.rol === 'JEFE_TH') {
