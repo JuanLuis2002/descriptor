@@ -7,6 +7,34 @@ var AprobacionService = {
         });
     },
     
+    getGestionadosPorUsuario: function(usuario) {
+        return DescriptorService.getAll().filter(function(d) {
+            var eventos = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
+            return eventos.some(function(ev) {
+                return ev.usuario === usuario && (
+                    ev.accion === 'APROBACIÓN POR JEFE SUPERIOR' ||
+                    ev.accion === 'OBSERVACIÓN POR JEFE SUPERIOR' ||
+                    ev.accion === 'ENVÍO A TALENTO HUMANO'
+                );
+            });
+        });
+    },
+    
+    getEventosUsuario: function(descriptor, usuario) {
+        var eventos = (descriptor.auditoria && descriptor.auditoria.eventos) ? descriptor.auditoria.eventos : [];
+        return eventos.filter(function(ev) {
+            return ev.usuario === usuario;
+        });
+    },
+    
+    getUltimaAccionUsuario: function(descriptor, usuario) {
+        var eventos = this.getEventosUsuario(descriptor, usuario);
+        if (eventos.length === 0) return null;
+        return eventos.sort(function(a, b) {
+            return new Date(b.fecha) - new Date(a.fecha);
+        })[0];
+    },
+    
     // Aprobar descriptor (pasa a estado pre-aprobado, pendiente de envío a TH)
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);

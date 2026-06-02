@@ -15,6 +15,7 @@ var THController = {
             $('#contentContainer').html(html);
             console.log('Vista de TH cargada correctamente');
             self.cargarPendientes();
+            self.cargarGestionados();
         }).fail(function() {
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de TH.</div>');
         });
@@ -46,6 +47,78 @@ var THController = {
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
+    },
+    
+    getEstadoTexto: function(estado) {
+        var estados = {
+            'ENVIADO_TH': 'Pendiente de revisión TH',
+            'OBSERVADO_TH': 'Observado por TH',
+            'FIRMA_JTH': 'Pendiente firma JTH',
+            'FIRMADO_JTH': 'Firmado por JTH',
+            'FIRMADO_CT': 'Firmado por colaborador',
+            'ACTIVO': 'Activo',
+            'INACTIVO': 'Inactivo'
+        };
+        return estados[estado] || estado;
+    },
+    
+    getEstadoBadgeClass: function(estado) {
+        var classes = {
+            'ENVIADO_TH': 'bg-warning text-dark',
+            'OBSERVADO_TH': 'bg-warning text-dark',
+            'FIRMA_JTH': 'bg-primary',
+            'FIRMADO_JTH': 'bg-primary',
+            'FIRMADO_CT': 'bg-primary',
+            'ACTIVO': 'bg-success',
+            'INACTIVO': 'bg-danger'
+        };
+        return classes[estado] || 'bg-secondary';
+    },
+    
+    cargarGestionados: function() {
+        var gestionados = THService.getGestionadosPorUsuario(this.currentUser.nombre);
+        if (gestionados.length === 0) {
+            $('#gestionadosContainer').html('<div class="alert alert-info text-center">Aún no ha gestionado descriptores.</div>');
+            return;
+        }
+        
+        var html = '<div class="row">';
+        for (var i = 0; i < gestionados.length; i++) {
+            var d = gestionados[i];
+            var ultima = THService.getUltimaAccionUsuario(d, this.currentUser.nombre);
+            var fecha = ultima && ultima.fecha ? new Date(ultima.fecha).toLocaleString() : '-';
+            var accion = ultima && ultima.accion ? ultima.accion : 'Gestión registrada';
+            var estadoTexto = this.getEstadoTexto(d.estado);
+            var estadoClass = this.getEstadoBadgeClass(d.estado);
+            
+            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
+                '<div class="card-header"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></div></div>' +
+                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
+                '<p class="card-text text-muted small"><i class="fas fa-calendar-check"></i> Última acción: ' + fecha + '<br><i class="fas fa-clipboard-check"></i> ' + accion + '</p></div>' +
+                '<div class="card-footer bg-white"><button class="btn btn-sm btn-outline-secondary w-100" onclick="THController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history"></i> Ver historial</button></div></div></div>';
+        }
+        html += '</div>';
+        $('#gestionadosContainer').html(html);
+    },
+    
+    verHistorialGestion: function(id) {
+        var descriptor = THService.getById(id);
+        if (!descriptor) return;
+        var eventos = THService.getEventosUsuario(descriptor, this.currentUser.nombre);
+        var html = '<div class="text-start">';
+        html += '<div class="alert alert-info"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Estado actual:</strong> ' + this.getEstadoTexto(descriptor.estado) + '</div>';
+        if (eventos.length === 0) {
+            html += '<p class="text-muted">No hay eventos registrados.</p>';
+        } else {
+            eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+            for (var i = 0; i < eventos.length; i++) {
+                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
+                if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+        Swal.fire({ title: 'Historial de participación', html: html, width: '650px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
     
     verDetalle: function(id) {
@@ -221,6 +294,7 @@ var THController = {
                             });
                             Swal.fire('Aprobado', 'Descriptor enviado para firmas', 'success').then(function() {
                                 THController.cargarPendientes();
+                                THController.cargarGestionados();
                             });
                         }
                         return false;
@@ -249,6 +323,7 @@ var THController = {
                         });
                         Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning').then(function() {
                             THController.cargarPendientes();
+                            THController.cargarGestionados();
                         });
                     }
                     return false;

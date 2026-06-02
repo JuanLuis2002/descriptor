@@ -15,6 +15,7 @@ var AprobacionController = {
             $('#contentContainer').html(html);
             console.log('Vista de aprobación cargada correctamente');
             self.cargarPendientes();
+            self.cargarGestionados();
         }).fail(function() {
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de aprobación.</div>');
         });
@@ -51,6 +52,87 @@ var AprobacionController = {
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
+    },
+    
+    getEstadoTexto: function(estado) {
+        var estados = {
+            'ENVIADO_JF': 'Pendiente de aprobación',
+            'APROBADO_POR_JF': 'Aprobado por Jefe Superior',
+            'ENVIADO_TH': 'Enviado a TH',
+            'OBSERVADO_JF': 'Observado por Jefe Superior',
+            'OBSERVADO_TH': 'Observado por TH',
+            'FIRMA_JTH': 'Pendiente firma JTH',
+            'FIRMADO_JTH': 'Firmado por JTH',
+            'FIRMADO_CT': 'Firmado por colaborador',
+            'ACTIVO': 'Activo',
+            'INACTIVO': 'Inactivo'
+        };
+        return estados[estado] || estado;
+    },
+    
+    getEstadoBadgeClass: function(estado) {
+        var classes = {
+            'ENVIADO_JF': 'bg-warning text-dark',
+            'APROBADO_POR_JF': 'bg-success',
+            'ENVIADO_TH': 'bg-info text-dark',
+            'OBSERVADO_JF': 'bg-warning text-dark',
+            'OBSERVADO_TH': 'bg-warning text-dark',
+            'FIRMA_JTH': 'bg-primary',
+            'FIRMADO_JTH': 'bg-primary',
+            'FIRMADO_CT': 'bg-primary',
+            'ACTIVO': 'bg-success',
+            'INACTIVO': 'bg-danger'
+        };
+        return classes[estado] || 'bg-secondary';
+    },
+    
+    cargarGestionados: function() {
+        var gestionados = AprobacionService.getGestionadosPorUsuario(this.currentUser.nombre);
+        if (gestionados.length === 0) {
+            $('#gestionadosContainer').html('<div class="alert alert-info text-center">Aún no ha gestionado descriptores.</div>');
+            return;
+        }
+        
+        var html = '<div class="row">';
+        for (var i = 0; i < gestionados.length; i++) {
+            var d = gestionados[i];
+            var ultima = AprobacionService.getUltimaAccionUsuario(d, this.currentUser.nombre);
+            var fecha = ultima && ultima.fecha ? new Date(ultima.fecha).toLocaleString() : '-';
+            var accion = ultima && ultima.accion ? ultima.accion : 'Gestión registrada';
+            var estadoTexto = this.getEstadoTexto(d.estado);
+            var estadoClass = this.getEstadoBadgeClass(d.estado);
+            var botonEstado = d.estado === 'ENVIADO_TH'
+                ? '<button class="btn btn-sm btn-info w-100" disabled><i class="fas fa-check"></i> Enviado a TH</button>'
+                : '<button class="btn btn-sm btn-outline-secondary w-100" onclick="AprobacionController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history"></i> Ver historial</button>';
+            
+            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
+                '<div class="card-header"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></div></div>' +
+                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
+                '<p class="card-text text-muted small"><i class="fas fa-calendar-check"></i> Última acción: ' + fecha + '<br><i class="fas fa-clipboard-check"></i> ' + accion + '</p></div>' +
+                '<div class="card-footer bg-white">' + botonEstado + '</div></div></div>';
+        }
+        html += '</div>';
+        $('#gestionadosContainer').html(html);
+    },
+    
+    verHistorialGestion: function(id) {
+        var descriptor = AprobacionService.getDetalle(id);
+        if (!descriptor) return;
+        var eventos = AprobacionService.getEventosUsuario(descriptor, this.currentUser.nombre);
+        var html = '<div class="text-start">';
+        html += '<div class="alert alert-info"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Estado actual:</strong> ' + this.getEstadoTexto(descriptor.estado) + '</div>';
+        if (eventos.length === 0) {
+            html += '<p class="text-muted">No hay eventos registrados.</p>';
+        } else {
+            eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+            for (var i = 0; i < eventos.length; i++) {
+                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
+                if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+        Swal.fire({ title: 'Historial de participación', html: html, width: '650px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
     
     verDetalle: function(id) {
@@ -124,6 +206,7 @@ var AprobacionController = {
         
         var modalHtml = '<div class="text-start" style="max-height: 550px; overflow-y: auto;">' +
             '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
+            (isAprobado ? '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Ya ha registrado su aprobación para este descriptor. No es posible agregar nuevas observaciones ni modificar la aprobación otorgada.</div>' : '') +
             
             '<h6 class="border-bottom pb-2">Información General</h6>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '<br><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
@@ -171,7 +254,7 @@ var AprobacionController = {
             html: modalHtml,
             width: '750px',
             showCancelButton: true,
-            showDenyButton: true,
+            showDenyButton: !isAprobado,
             confirmButtonText: confirmButtonText,
             denyButtonText: denyButtonText,
             cancelButtonText: 'Cancelar',
@@ -191,6 +274,7 @@ var AprobacionController = {
                                 });
                                 Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success').then(function() {
                                     AprobacionController.cargarPendientes();
+                                    AprobacionController.cargarGestionados();
                                 });
                             }
                             return false;
@@ -208,6 +292,7 @@ var AprobacionController = {
                                 });
                                 Swal.fire('Aprobado', 'Descriptor aprobado correctamente. Ahora puede enviarlo a Talento Humano.', 'success').then(function() {
                                     AprobacionController.cargarPendientes();
+                                    AprobacionController.cargarGestionados();
                                 });
                             }
                             return false;
@@ -228,6 +313,7 @@ var AprobacionController = {
                                 });
                                 Swal.fire('Devuelto', 'Descriptor vuelve a pendiente', 'info').then(function() {
                                     AprobacionController.cargarPendientes();
+                                    AprobacionController.cargarGestionados();
                                 });
                             }
                             return false;
@@ -255,6 +341,7 @@ var AprobacionController = {
                             });
                             Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning').then(function() {
                                 AprobacionController.cargarPendientes();
+                                AprobacionController.cargarGestionados();
                             });
                         }
                         return false;
