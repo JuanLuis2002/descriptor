@@ -245,6 +245,10 @@ function checkMobile() {
         $('#sidebar').css('transform', '');
         $('#sidebar').removeClass('mobile-open');
         $('#sidebarOverlay').removeClass('show');
+    } else {
+        $('#sidebar').removeClass('collapsed');
+        $('#mainContent').removeClass('expanded');
+        closeMobileSidebar();
     }
 }
 
