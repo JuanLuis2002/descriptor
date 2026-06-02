@@ -52,7 +52,12 @@ var JTHController = {
                 '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm ' + btnClass + ' w-100" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button></div></div></div>';
+                '<div class="card-footer bg-white">' +
+                '<button class="btn btn-sm ' + btnClass + ' w-100 mb-2" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> ' + btnText + '</button>' +
+                '<div class="btn-group w-100" role="group">' +
+                '<button class="btn btn-sm btn-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
+                '<button class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+                '</div></div></div></div>';
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
@@ -77,7 +82,12 @@ var JTHController = {
                 '<div class="card-header bg-success text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-light text-success">Firmado</span></div></div>' +
                 '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
                 '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar-check"></i> Firma: ' + fechaFirma + '<br><i class="fas fa-info-circle"></i> Estado actual: ' + (d.estado || '-') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm btn-success w-100" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature"></i> Ver Firma</button></div></div></div>';
+                '<div class="card-footer bg-white">' +
+                '<button class="btn btn-sm btn-success w-100 mb-2" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature"></i> Ver Firma</button>' +
+                '<div class="btn-group w-100" role="group">' +
+                '<button class="btn btn-sm btn-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
+                '<button class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
+                '</div></div></div></div>';
         }
         html += '</div>';
         $('#firmadosContainer').html(html);
