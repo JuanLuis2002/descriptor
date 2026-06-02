@@ -477,6 +477,18 @@
                 Swal.fire('Error', 'No se encontró el descriptor para actualizar', 'error');
             }
         } else {
+            var descriptorExistente = DescriptorService.getDescriptorActivoByPuesto(formData.puesto);
+            if (descriptorExistente) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Descriptor existente',
+                    html: 'Ya existe un descriptor para el puesto <strong>' + formData.puesto + '</strong>.<br><br>Si desea crear una nueva versión para este puesto, primero debe desactivar el descriptor actual <strong>' + (descriptorExistente.codigo || '') + '</strong>.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+            
             var descriptores = JSON.parse(localStorage.getItem('descriptores') || '[]');
             formData.id = descriptores.length + 1;
             formData.codigo = 'DES-' + (descriptores.length + 1).toString().padStart(4, '0');

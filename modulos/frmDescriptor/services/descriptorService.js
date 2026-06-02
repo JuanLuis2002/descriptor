@@ -88,6 +88,20 @@ var DescriptorService = {
         return resultado;
     },
     
+    getDescriptorActivoByPuesto: function(puesto, excludeId) {
+        var descriptors = this.getAll();
+        var puestoNormalizado = (puesto || '').trim().toLowerCase();
+        for (var i = 0; i < descriptors.length; i++) {
+            var descriptor = descriptors[i];
+            var mismoPuesto = (descriptor.puesto || '').trim().toLowerCase() === puestoNormalizado;
+            var esOtroDescriptor = !excludeId || descriptor.id !== excludeId;
+            if (mismoPuesto && esOtroDescriptor && descriptor.estado !== 'INACTIVO') {
+                return descriptor;
+            }
+        }
+        return null;
+    },
+    
     // Registrar evento en auditoría
     registrarEvento: function(id, evento) {
         var descriptor = this.getById(id);
