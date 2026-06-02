@@ -1,0 +1,23 @@
+Usuarios del Sistema Demo:
+
+juan.hercules
+Jefe Inmediato
+Crea y gestiona descriptores de su área
+
+roberto.chang
+Jefe Superior
+Aprueba descriptores antes de enviar a TH
+
+ana.lopez
+TH Generalista
+Revisa y complementa descriptores
+
+carlos.gomez
+Jefe de Talento Humano
+Validación final y firma legal
+
+juan.perez
+Colaborador / Titular
+Firma como constancia de conocimiento
+
+Contraseña para todos: 123456
