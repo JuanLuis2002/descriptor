@@ -25,6 +25,9 @@ var THController = {
         
         if (pendientes.length === 0) {
             $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de revisión</h5></div>');
+            if (typeof actualizarContador === 'function') {
+                actualizarContador();
+            }
             return;
         }
         
@@ -40,6 +43,9 @@ var THController = {
         }
         html += '</div>';
         $('#pendientesContainer').html(html);
+        if (typeof actualizarContador === 'function') {
+            actualizarContador();
+        }
     },
     
     verDetalle: function(id) {
@@ -213,8 +219,9 @@ var THController = {
                                 rol: THController.currentUser.rolNombre,
                                 estado: 'FIRMA_JTH'
                             });
-                            Swal.fire('Aprobado', 'Descriptor enviado para firmas', 'success');
-                            location.reload();
+                            Swal.fire('Aprobado', 'Descriptor enviado para firmas', 'success').then(function() {
+                                THController.cargarPendientes();
+                            });
                         }
                         return false;
                     });
@@ -240,8 +247,9 @@ var THController = {
                             estado: 'OBSERVADO_TH',
                             observacion: result.value
                         });
-                        Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning');
-                        location.reload();
+                        Swal.fire('Observado', 'Descriptor devuelto con observaciones', 'warning').then(function() {
+                            THController.cargarPendientes();
+                        });
                     }
                     return false;
                 });

@@ -31,7 +31,7 @@ var THService = {
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'ACTIVO';
+            descriptor.estado = 'FIRMA_JTH';
             descriptor.comentariosTH = comentarios;
             descriptor.fechaAprobacionTH = new Date().toISOString();
             DescriptorService.update(id, descriptor);
@@ -44,7 +44,7 @@ var THService = {
     observar: function(id, observaciones) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'OBSERVADO';
+            descriptor.estado = 'OBSERVADO_TH';
             descriptor.observacionesTH = observaciones;
             descriptor.fechaObservacionTH = new Date().toISOString();
             DescriptorService.update(id, descriptor);
