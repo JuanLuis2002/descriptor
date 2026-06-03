@@ -577,7 +577,7 @@
                 window._isEditing = false;
                 window._editingId = null;
                 limpiarActividadesGuardadas();
-                if(typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor();
+                if(typeof window.cargarMisDescriptores === 'function') window.cargarMisDescriptores();
                 else location.reload();
             });
         }
