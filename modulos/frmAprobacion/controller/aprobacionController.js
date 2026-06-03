@@ -53,7 +53,8 @@ var AprobacionController = {
             var isAprobado = d.estado === 'APROBADO_POR_JF';
             var badgeClass = this.getEstadoBadgeClass(d.estado);
             var badgeText = this.getEstadoTexto(d.estado);
-            var buttonText = isAprobado ? 'Enviar a TH' : 'Revisar Descriptor';
+            var puedeGestionar = d.estado === 'ENVIADO_JF' || d.estado === 'APROBADO_POR_JF';
+            var buttonText = puedeGestionar ? (isAprobado ? 'Enviar a TH' : 'Revisar Descriptor') : 'Ver detalle';
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
                 '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' +
@@ -186,6 +187,7 @@ var AprobacionController = {
         if (!descriptor) return;
         
         var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
+        var puedeGestionar = descriptor.estado === 'ENVIADO_JF' || descriptor.estado === 'APROBADO_POR_JF';
         
         // Funciones Claves
         var funcionesHtml = '';
@@ -221,7 +223,7 @@ var AprobacionController = {
         // KPIs - CORREGIDO
         var kpisHtml = '';
         if (descriptor.kpis && descriptor.kpis.length > 0) {
-            kpisHtml = '<table class="table table-sm table-bordered">' +
+            kpisHtml = '<div class="table-responsive"><table class="table table-sm table-bordered descriptor-detail-table">' +
                 '<thead class="table-light">' +
                 '<tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr>' +
                 '</thead><tbody>';
@@ -232,7 +234,7 @@ var AprobacionController = {
                     '<td>' + (descriptor.kpis[i].meta || '-') + '</td>' +
                     '</tr>';
             }
-            kpisHtml += '</tbody></table>';
+            kpisHtml += '</tbody></table></div>';
         } else {
             kpisHtml = '<p class="text-muted">No hay KPIs registrados</p>';
         }
@@ -240,19 +242,35 @@ var AprobacionController = {
         // Perfil del Puesto - CORREGIDO
         var perfilHtml = '';
         if (descriptor.perfil) {
-            perfilHtml = '<table class="table table-sm">' +
-                '<tr><th style="width: 35%;">Edad Mínima:</th><td>' + (descriptor.perfil.edadMin || '-') + ' años</td><th style="width: 35%;">Edad Máxima:</th><td>' + (descriptor.perfil.edadMax || '-') + ' años</td></tr>' +
-                '<tr><th>Sexo:</th><td>' + (descriptor.perfil.sexo === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.sexo === 'MASCULINO' ? 'Masculino' : 'Femenino')) + '</td><th>Estado Familiar:</th><td>' + (descriptor.perfil.estadoFamiliar === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.estadoFamiliar || '-')) + '</td></tr>' +
-                '<tr><th>Disponibilidad Horaria:</th><td>' + (descriptor.perfil.disponibilidadHorario === 'TIEMPO_COMPLETO' ? 'Tiempo Completo' : (descriptor.perfil.disponibilidadHorario === 'MEDIO_TIEMPO' ? 'Medio Tiempo' : descriptor.perfil.disponibilidadHorario || '-')) + '</td><th>Modalidad de Trabajo:</th><td>' + (descriptor.perfil.modalidadTrabajo === 'PRESENCIAL' ? 'Presencial' : (descriptor.perfil.modalidadTrabajo === 'HIBRIDO' ? 'Híbrido' : (descriptor.perfil.modalidadTrabajo === 'REMOTO' ? 'Remoto' : descriptor.perfil.modalidadTrabajo || '-'))) + '</td></tr>' +
-                '<tr><th>Poseer Licencia:</th><td colspan="3">' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</td></tr>' +
-                '</table>';
+            perfilHtml = '<div class="row g-2 descriptor-detail-grid">' +
+                '<div class="col-md-6"><div class="detail-field"><span>Edad mínima</span><strong>' + (descriptor.perfil.edadMin || '-') + ' años</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Edad máxima</span><strong>' + (descriptor.perfil.edadMax || '-') + ' años</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Sexo</span><strong>' + (descriptor.perfil.sexo === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.sexo === 'MASCULINO' ? 'Masculino' : 'Femenino')) + '</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Estado familiar</span><strong>' + (descriptor.perfil.estadoFamiliar === 'INDIFERENTE' ? 'Indiferente' : (descriptor.perfil.estadoFamiliar || '-')) + '</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Disponibilidad horaria</span><strong>' + (descriptor.perfil.disponibilidadHorario === 'TIEMPO_COMPLETO' ? 'Tiempo Completo' : (descriptor.perfil.disponibilidadHorario === 'MEDIO_TIEMPO' ? 'Medio Tiempo' : descriptor.perfil.disponibilidadHorario || '-')) + '</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Modalidad de trabajo</span><strong>' + (descriptor.perfil.modalidadTrabajo === 'PRESENCIAL' ? 'Presencial' : (descriptor.perfil.modalidadTrabajo === 'HIBRIDO' ? 'Híbrido' : (descriptor.perfil.modalidadTrabajo === 'REMOTO' ? 'Remoto' : descriptor.perfil.modalidadTrabajo || '-'))) + '</strong></div></div>' +
+                '<div class="col-md-6"><div class="detail-field"><span>Poseer licencia</span><strong>' + (descriptor.perfil.poseerLicencia == '1' ? 'Sí' : 'No') + '</strong></div></div>' +
+                '</div>';
         } else {
             perfilHtml = '<p class="text-muted">No hay perfil registrado</p>';
         }
         
-        var modalHtml = '<div class="text-start" style="max-height: 550px; overflow-y: auto;">' +
+        var modalHtml = '<style>' +
+            '.descriptor-detail-modal{max-height:60vh;overflow-y:auto;padding-right:6px;text-align:left;}' +
+            '.descriptor-detail-modal h6{font-weight:700;margin-top:18px;}' +
+            '.descriptor-detail-table th,.descriptor-detail-table td{white-space:normal;word-break:break-word;vertical-align:top;}' +
+            '.detail-field{border:1px solid #dee2e6;border-radius:8px;padding:10px 12px;min-height:68px;background:#f8f9fa;}' +
+            '.detail-field span{display:block;font-size:.78rem;color:#6c757d;margin-bottom:4px;text-transform:uppercase;letter-spacing:.02em;}' +
+            '.detail-field strong{display:block;font-size:.95rem;color:#212529;white-space:normal;word-break:break-word;}' +
+            'body.dark-mode .detail-field{background:#111827;border-color:#4b5563;}' +
+            'body.dark-mode .detail-field span{color:#cbd5e1;}' +
+            'body.dark-mode .detail-field strong{color:#f9fafb;}' +
+            'body.dark-mode .descriptor-detail-table td,body.dark-mode .descriptor-detail-table th{background:#1f2937!important;color:#e5e7eb!important;}' +
+            '</style>' +
+            '<div class="descriptor-detail-modal">' +
             '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
             (isAprobado ? '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Ya ha registrado su aprobación para este descriptor. No es posible agregar nuevas observaciones ni modificar la aprobación otorgada.</div>' : '') +
+            (!puedeGestionar ? '<div class="alert alert-warning"><i class="fas fa-clock"></i> Este descriptor no está pendiente de gestión para Jefe Superior. Si fue observado, deberá esperar a que el Jefe Inmediato lo corrija y lo reenvíe para poder aprobar u observar nuevamente.</div>' : '') +
             
             '<h6 class="border-bottom pb-2">Información General</h6>' +
             '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '<br><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
@@ -290,7 +308,7 @@ var AprobacionController = {
             '<p><strong>Puestos responsables:</strong> ' + (descriptor.entrenamiento?.puestosResponsables || '-') + '</p>' +
             '</div>';
         
-        var confirmButtonText = isAprobado ? '<i class="fas fa-paper-plane"></i> Enviar a TH' : '<i class="fas fa-check"></i> Aprobar';
+        var confirmButtonText = !puedeGestionar ? 'Cerrar' : (isAprobado ? '<i class="fas fa-paper-plane"></i> Enviar a TH' : '<i class="fas fa-check"></i> Aprobar');
         var denyButtonText = isAprobado ? '<i class="fas fa-undo"></i> Volver' : '<i class="fas fa-times"></i> Observar';
         var confirmButtonColor = isAprobado ? '#0d6efd' : '#198754';
         var denyButtonColor = isAprobado ? '#6c757d' : '#ffc107';
@@ -299,14 +317,17 @@ var AprobacionController = {
             title: 'Revisar Descriptor: ' + descriptor.puesto,
             html: modalHtml,
             width: '750px',
-            showCancelButton: true,
-            showDenyButton: !isAprobado,
+            showCancelButton: puedeGestionar,
+            showDenyButton: puedeGestionar && !isAprobado,
             confirmButtonText: confirmButtonText,
             denyButtonText: denyButtonText,
             cancelButtonText: 'Cancelar',
             confirmButtonColor: confirmButtonColor,
             denyButtonColor: denyButtonColor,
             preConfirm: function() {
+                if (!puedeGestionar) {
+                    return true;
+                }
                 if (isAprobado) {
                     return Swal.fire({ title: 'Enviar a Talento Humano', text: '¿Está seguro de enviar este descriptor a Talento Humano?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
                         .then(function(result) {
