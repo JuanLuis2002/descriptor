@@ -41,6 +41,7 @@
             .col-area,
             .col-reporta,
             .col-fecha { display: none; }
+            .col-version { display: none; }
         }
     </style>
 </head>
@@ -247,7 +248,7 @@ window.initDescriptorList = function() {
             '<th>Código</th>' +
             '<th>Puesto</th>' +
             '<th class="col-area">Área</th>' +
-            '<th>Versión</th>' +
+            '<th class="col-version">Versión</th>' +
             '<th>Estado</th>' +
             '<th class="col-reporta">Reporta a</th>' +
             '<th class="col-fecha">Fecha</th>' +
@@ -268,7 +269,7 @@ window.initDescriptorList = function() {
             }
             html += '</td>' +
                 '<td class="col-area">' + (d.area || 'N/A') + '</td>' +
-                '<td><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle"><i class="fas fa-code-branch me-1"></i>Versión ' + version + '</span></td>' +
+                '<td class="col-version"><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle"><i class="fas fa-code-branch me-1"></i>Versión ' + version + '</span></td>' +
                 '<td><span class="status-badge status-' + estadoClass + '">' + estadoTexto + '</span></td>' +
                 '<td class="col-reporta">' + (d.reportaA || 'N/A') + '</td>' +
                 '<td class="col-fecha">' + fecha + '</td>' +
