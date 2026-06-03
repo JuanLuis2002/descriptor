@@ -367,9 +367,12 @@ var AprobacionController = {
                 } else {
                     return Swal.fire({
                         title: 'Observaciones',
-                        html: '<textarea id="observaciones" class="swal2-textarea" placeholder="Escriba las observaciones..." rows="4" style="width:100%"></textarea>',
+                        html: '<div class="text-start px-1"><label for="observaciones" class="form-label fw-semibold">Detalle de la observación</label><textarea id="observaciones" class="form-control" placeholder="Escriba las observaciones..." rows="5" style="resize: vertical;"></textarea></div>',
+                        width: '560px',
                         showCancelButton: true,
                         confirmButtonText: 'Enviar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#0d6efd',
                         preConfirm: function() {
                             var obs = document.getElementById('observaciones').value;
                             if (!obs || obs.trim() === '') { Swal.showValidationMessage('Debe ingresar observaciones'); return false; }
