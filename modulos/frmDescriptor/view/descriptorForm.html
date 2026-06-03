@@ -35,7 +35,8 @@
         <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">Perfil</div></div>
         <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Competencias</div></div>
         <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Responsab.</div></div>
-        <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Resumen</div></div>
+        <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Entrenam.</div></div>
+        <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Resumen</div></div>
     </div>
 
     <form id="descriptorForm">
@@ -109,17 +110,20 @@
             <div><div class="d-flex justify-content-between mb-2"><h6>Conductuales</h6><button type="button" class="btn btn-sm btn-outline-primary" id="addCompetenciaConductual"><i class="fas fa-plus"></i></button></div><div id="competenciasConductualesContainer"></div></div>
         </div>
 
-        <!-- SECCIÓN 8: RESPONSABILIDADES Y ENTRENAMIENTO -->
+        <!-- SECCIÓN 8: RESPONSABILIDADES -->
         <div class="form-section" data-section="8">
-            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades y Entrenamiento</h5>
-            <h6 class="border-bottom pb-2 mb-3">Responsabilidades</h6>
+            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
             <div class="mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
             <div class="mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
-            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Entrenamiento</h6>
+        </div>
+
+        <!-- SECCIÓN 9: ENTRENAMIENTO -->
+        <div class="form-section" data-section="9">
+            <h5 class="mb-4"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Entrenamiento</h5>
             <div class="row">
                 <div class="col-md-6 mb-3"><label class="form-label">Personal a cargo</label><input type="number" class="form-control" name="personalCargo" value="0"></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" name="tipoEntrenamiento"><option>Inducción específica</option><option>Capacitación técnica</option></select></div>
@@ -128,8 +132,8 @@
             </div>
         </div>
 
-        <!-- SECCIÓN 9: RESUMEN -->
-        <div class="form-section" data-section="9">
+        <!-- SECCIÓN 10: RESUMEN -->
+        <div class="form-section" data-section="10">
             <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-primary"></i>Resumen</h5>
             <div id="resumenContent" class="p-3 bg-light rounded"></div>
         </div>
@@ -153,7 +157,7 @@
     var funcionesClavesList = [];
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 1;
-    var totalSteps = 9;
+    var totalSteps = 10;
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
         { codigo: 'SEMANAL', descripcion: 'Semanal', activo: true },
