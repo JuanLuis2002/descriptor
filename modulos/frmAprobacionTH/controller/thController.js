@@ -627,7 +627,7 @@ window.agregarRequerimiento = function() {
 };
 
 window.agregarRiesgo = function() { 
-    $('#riesgosLista').prepend('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
+    $('#riesgosLista').append('<div class="row mb-2"><div class="col-10"><input type="text" class="form-control" name="riesgo" placeholder="Riesgo profesional"></div><div class="col-2"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.row\').remove()"><i class="fas fa-trash"></i></button></div></div>'); 
 };
 
 window.THController = THController;
