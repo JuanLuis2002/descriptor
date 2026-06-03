@@ -33,7 +33,30 @@
         .auditoria-accion { font-weight: bold; }
         .auditoria-usuario { color: #0d6efd; }
         .auditoria-estado { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-left: 8px; }
-        @media (max-width: 768px) { .stat-item { border-right: none; margin-bottom: 10px; } }
+        .descriptores-table-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .descriptores-table-card .table { margin-bottom: 0; vertical-align: middle; }
+        .descriptores-table-card th { font-size: 0.78rem; color: #495057; white-space: nowrap; background: #f8f9fa; }
+        .descriptores-table-card td { font-size: 0.86rem; white-space: nowrap; }
+        .descriptor-table-title { min-width: 220px; white-space: normal; }
+        .descriptor-actions .dropdown-toggle { min-width: 38px; }
+        .descriptor-actions .dropdown-menu { min-width: 210px; }
+        .pagination-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-top: 1px solid #dee2e6; flex-wrap: wrap; }
+        .page-size-options { display: flex; align-items: center; gap: 6px; }
+        .page-size-btn { border: 0; background: transparent; color: #495057; border-radius: 50%; min-width: 32px; height: 32px; font-size: 0.82rem; }
+        .page-size-btn.active { background: #0d6efd; color: #fff; }
+        .pagination-sm .page-link { border-radius: 50% !important; min-width: 32px; height: 32px; text-align: center; margin: 0 2px; border: 0; }
+        @media (max-width: 768px) {
+            .stat-item { border-right: none; margin-bottom: 10px; }
+            .filtro-busqueda .btn { width: 100%; }
+            .descriptores-table-card th,
+            .descriptores-table-card td { font-size: 0.78rem; }
+            .col-area,
+            .col-reporta,
+            .col-fecha { display: none; }
+            .descriptor-table-title { min-width: 170px; }
+            .pagination-footer { align-items: stretch; flex-direction: column; }
+            .pagination-footer nav { display: flex; justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -90,6 +113,8 @@ window.initDescriptorList = function() {
     
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var allDescriptors = [];
+    var currentPage = 1;
+    var pageSize = 5;
     
     function cargarDescriptores() {
         if (typeof DescriptorListService !== 'undefined') {
@@ -118,7 +143,8 @@ window.initDescriptorList = function() {
         }
     }
     
-    function filtrarYMostrar() {
+    function filtrarYMostrar(resetPage) {
+        if (resetPage) currentPage = 1;
         var filtered = [...allDescriptors];
         var searchTerm = $('#searchInput').val();
         if (searchTerm && typeof DescriptorListService !== 'undefined') {
@@ -173,100 +199,115 @@ window.initDescriptorList = function() {
         return classes[estado] || 'borrador';
     }
     
+    function buildAccionesDropdown(d) {
+        var html = '<div class="dropdown descriptor-actions">' +
+            '<button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+            '<i class="fas fa-ellipsis-v"></i></button>' +
+            '<ul class="dropdown-menu dropdown-menu-end">';
+        html += '<li><button class="dropdown-item btn-ver" data-id="' + d.id + '"><i class="fas fa-eye me-2 text-info"></i>Ver detalle</button></li>';
+        html += '<li><button class="dropdown-item btn-auditoria" data-id="' + d.id + '"><i class="fas fa-history me-2 text-secondary"></i>Auditoría</button></li>';
+
+        if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH') {
+            html += '<li><button class="dropdown-item btn-editar" data-id="' + d.id + '"><i class="fas fa-edit me-2 text-warning"></i>Editar</button></li>';
+        }
+        if (d.estado === 'BORRADOR') {
+            html += '<li><button class="dropdown-item btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-primary"></i>Enviar a JF</button></li>';
+        }
+        if (d.estado === 'OBSERVADO_JF') {
+            html += '<li><button class="dropdown-item btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-warning"></i>Reenviar a JF</button></li>';
+        }
+        if (d.estado === 'OBSERVADO_TH') {
+            html += '<li><button class="dropdown-item btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Reenviar a TH</button></li>';
+        }
+        if (d.estado === 'APROBADO_POR_JF') {
+            html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
+        }
+        if (d.estado === 'FIRMA_JTH') {
+            html += '<li><button class="dropdown-item btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell me-2 text-primary"></i>Notificar firmantes</button></li>';
+        }
+        if (d.estado === 'FIRMADO_CT') {
+            html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature me-2 text-primary"></i>Firmar documento</button></li>';
+        }
+        if (d.estado === 'ACTIVO') {
+            html += '<li><hr class="dropdown-divider"></li>';
+            html += '<li><button class="dropdown-item btn-version-corta" data-id="' + d.id + '"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>';
+            html += '<li><button class="dropdown-item btn-version-extensa" data-id="' + d.id + '"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>';
+            html += '<li><button class="dropdown-item btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban me-2 text-danger"></i>Desactivar</button></li>';
+        }
+        if (d.estado === 'INACTIVO') {
+            html += '<li><button class="dropdown-item btn-reactivar" data-id="' + d.id + '"><i class="fas fa-sync-alt me-2 text-success"></i>Reactivar</button></li>';
+        }
+        html += '</ul></div>';
+        return html;
+    }
+
     function mostrarLista(descriptores) {
         var container = $('#descriptoresListContainer');
         if (descriptores.length === 0) {
-            container.html('<div class="text-center py-5"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No hay descriptores</h5><button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()"><i class="fas fa-plus"></i> Crear primero</button></div>');
+            container.html('<div class="text-center py-5 descriptores-table-card"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No hay descriptores</h5><button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()"><i class="fas fa-plus"></i> Crear primero</button></div>');
             return;
         }
-        
-        var html = '<div class="row">';
-        for (var i = 0; i < descriptores.length; i++) {
-            var d = descriptores[i];
+
+        var totalPages = Math.max(1, Math.ceil(descriptores.length / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        var start = (currentPage - 1) * pageSize;
+        var pageItems = descriptores.slice(start, start + pageSize);
+        var end = Math.min(start + pageSize, descriptores.length);
+
+        var html = '<div class="descriptores-table-card">' +
+            '<div class="table-responsive">' +
+            '<table class="table table-hover align-middle">' +
+            '<thead><tr>' +
+            '<th style="width:70px;">Opciones</th>' +
+            '<th>Código</th>' +
+            '<th>Puesto</th>' +
+            '<th class="col-area">Área</th>' +
+            '<th>Versión</th>' +
+            '<th>Estado</th>' +
+            '<th class="col-reporta">Reporta a</th>' +
+            '<th class="col-fecha">Fecha</th>' +
+            '</tr></thead><tbody>';
+
+        for (var i = 0; i < pageItems.length; i++) {
+            var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var estadoTexto = getEstadoTexto(d.estado);
             var estadoClass = getEstadoClass(d.estado);
             var version = d.version || 1;
-            
-            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="descriptor-card" data-id="' + d.id + '">' +
-                '<div class="d-flex justify-content-between align-items-start mb-3">' +
-                '<div><h6 class="mb-0">' + (d.codigo || 'DES-' + d.id) + '</h6><small class="text-muted">' + fecha + '</small></div>' +
-                '<span class="status-badge status-' + estadoClass + '">' + estadoTexto + '</span></div>' +
-                '<div class="mb-2"><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle"><i class="fas fa-code-branch me-1"></i>Versión ' + version + '</span></div>' +
-                '<h5 class="mb-2">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="text-muted small mb-3"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br>' +
-                '<i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p>';
-            
+            html += '<tr>' +
+                '<td>' + buildAccionesDropdown(d) + '</td>' +
+                '<td><span class="fw-semibold">' + (d.codigo || 'DES-' + d.id) + '</span></td>' +
+                '<td class="descriptor-table-title">' + (d.puesto || 'Sin título');
             if ((d.estado === 'OBSERVADO_JF' && d.observacionesJF) || (d.estado === 'OBSERVADO_TH' && d.observacionesTH)) {
-                var obsTexto = d.estado === 'OBSERVADO_JF' ? d.observacionesJF : d.observacionesTH;
-                var obsOrigen = d.estado === 'OBSERVADO_JF' ? 'Jefe Superior' : 'Talento Humano';
-                html += '<div class="observacion-box"><i class="fas fa-comment me-1"></i> <strong>Observaciones (' + obsOrigen + '):</strong><br>' + obsTexto + '</div>';
+                html += '<div class="small text-warning mt-1"><i class="fas fa-comment me-1"></i>Con observaciones</div>';
             }
-            
-            html += '<div class="d-flex justify-content-end gap-2 mt-2">' +
-                '<button class="btn btn-sm btn-outline-info btn-ver" data-id="' + d.id + '"><i class="fas fa-eye"></i> Ver</button>' +
-                '<button class="btn btn-sm btn-outline-secondary btn-auditoria" data-id="' + d.id + '"><i class="fas fa-history"></i> Auditoría</button>';
-            
-            // Botón Editar (para BORRADOR, OBSERVADO_JF, OBSERVADO_TH)
-            if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH') {
-                html += '<button class="btn btn-sm btn-outline-warning btn-editar" data-id="' + d.id + '"><i class="fas fa-edit"></i> Editar</button>';
-            }
-            
-            // Botón Enviar a JF (solo para BORRADOR)
-            if (d.estado === 'BORRADOR') {
-                html += '<button class="btn btn-sm btn-outline-primary btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a JF</button>';
-            }
-            
-            // Botón Reenviar a JF (para OBSERVADO_JF después de corregir)
-            if (d.estado === 'OBSERVADO_JF') {
-                html += '<button class="btn btn-sm btn-warning btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Reenviar a JF</button>';
-            }
-            
-            // Botón Reenviar a TH (para OBSERVADO_TH después de corregir)
-            if (d.estado === 'OBSERVADO_TH') {
-                html += '<button class="btn btn-sm btn-success btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Reenviar a TH</button>';
-            }
-            
-            // Botón Enviar a TH (para APROBADO_POR_JF)
-            if (d.estado === 'APROBADO_POR_JF') {
-                html += '<button class="btn btn-sm btn-success btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane"></i> Enviar a TH</button>';
-            }
-            
-            // Botón Notificar a Firmantes (para FIRMA_JTH)
-            if (d.estado === 'FIRMA_JTH') {
-                html += '<button class="btn btn-sm btn-primary btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell"></i> Notificar Firmantes</button>';
-            }
-            
-            // Botón Firmar para Jefe Inmediato (cuando estado es FIRMADO_CT)
-            if (d.estado === 'FIRMADO_CT') {
-                html += '<button class="btn btn-sm btn-primary btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature"></i> Firmar Documento</button>';
-            }
-            
-            // Botón Desactivar (solo para ACTIVO)
-            /*
-            if (d.estado === 'ACTIVO') {
-                html += '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i> Desactivar</button>';
-            }*/
-
-            // Botones para ACTIVO
-            if (d.estado === 'ACTIVO') {
-                html += '<div class="btn-group w-100 gap-1">' +
-                '<button class="btn btn-sm btn-success btn-version-corta" data-id="' + d.id + '"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-                '<button class="btn btn-sm btn-secondary btn-version-extensa" data-id="' + d.id + '"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
-                '<button class="btn btn-sm btn-danger btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban"></i></button>' +
-                '</div>';
-            }
-            
-            // Botón Reactivar (solo para INACTIVO)
-            if (d.estado === 'INACTIVO') {
-                html += '<button class="btn btn-sm btn-success btn-reactivar" data-id="' + d.id + '"><i class="fas fa-sync-alt"></i> Reactivar</button>';
-            }
-            
-            html += '</div></div></div>';
+            html += '</td>' +
+                '<td class="col-area">' + (d.area || 'N/A') + '</td>' +
+                '<td><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle">V' + version + '</span></td>' +
+                '<td><span class="status-badge status-' + estadoClass + '">' + estadoTexto + '</span></td>' +
+                '<td class="col-reporta">' + (d.reportaA || 'N/A') + '</td>' +
+                '<td class="col-fecha">' + fecha + '</td>' +
+                '</tr>';
         }
-        html += '</div>';
+
+        html += '</tbody></table></div>';
+        html += '<div class="pagination-footer">' +
+            '<div class="page-size-options">' +
+            '<button class="page-size-btn ' + (pageSize === 5 ? 'active' : '') + '" data-size="5">5</button>' +
+            '<button class="page-size-btn ' + (pageSize === 10 ? 'active' : '') + '" data-size="10">10</button>' +
+            '<button class="page-size-btn ' + (pageSize === 25 ? 'active' : '') + '" data-size="25">25</button>' +
+            '</div>' +
+            '<div class="small text-muted">Mostrando ' + (start + 1) + ' a ' + end + ' de ' + descriptores.length + ' registros</div>' +
+            '<nav><ul class="pagination pagination-sm mb-0">' +
+            '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '"><button class="page-link page-link-descriptores" data-page="' + (currentPage - 1) + '"><i class="fas fa-chevron-left"></i></button></li>';
+        for (var p = 1; p <= totalPages; p++) {
+            html += '<li class="page-item ' + (p === currentPage ? 'active' : '') + '"><button class="page-link page-link-descriptores" data-page="' + p + '">' + p + '</button></li>';
+        }
+        html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '"><button class="page-link page-link-descriptores" data-page="' + (currentPage + 1) + '"><i class="fas fa-chevron-right"></i></button></li>' +
+            '</ul></nav></div></div>';
+
         container.html(html);
-        
+
         $('.btn-ver').off('click').on('click', function(e) { e.stopPropagation(); verDescriptor($(this).data('id')); });
         $('.btn-auditoria').off('click').on('click', function(e) { e.stopPropagation(); verAuditoria($(this).data('id')); });
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
@@ -278,7 +319,6 @@ window.initDescriptorList = function() {
         $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
-        $('.descriptor-card').off('click').on('click', function(e) { if (!$(e.target).closest('.btn').length) verDescriptor($(this).data('id')); });
         // Eventos para versión corta y extensa
         $('.btn-version-corta').off('click').on('click', function(e) { 
             e.stopPropagation(); 
@@ -288,6 +328,20 @@ window.initDescriptorList = function() {
             e.stopPropagation(); 
             generarVersionExtensa($(this).data('id'));
             //Swal.fire('En desarrollo', 'Versión extensa próximamente disponible', 'info'); 
+        });
+        $('.page-link-descriptores').off('click').on('click', function(e) {
+            e.preventDefault();
+            var page = parseInt($(this).data('page'), 10);
+            if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                currentPage = page;
+                filtrarYMostrar(false);
+            }
+        });
+        $('.page-size-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            pageSize = parseInt($(this).data('size'), 10);
+            currentPage = 1;
+            filtrarYMostrar(false);
         });
     }
     
@@ -630,9 +684,9 @@ window.initDescriptorList = function() {
         });
     }
     
-    $('#searchInput').off('keyup').on('keyup', filtrarYMostrar);
-    $('#estadoFilter').off('change').on('change', filtrarYMostrar);
-    $('#sortBy').off('change').on('change', filtrarYMostrar);
+    $('#searchInput').off('keyup').on('keyup', function() { filtrarYMostrar(true); });
+    $('#estadoFilter').off('change').on('change', function() { filtrarYMostrar(true); });
+    $('#sortBy').off('change').on('change', function() { filtrarYMostrar(true); });
     $('#btnNuevoDescriptor').off('click').on('click', function() { if (typeof window.cargarNuevoDescriptor === 'function') window.cargarNuevoDescriptor(); });
     
     cargarDescriptores();
