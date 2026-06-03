@@ -23,9 +23,14 @@ var AprobacionController = {
     
     cargarPendientes: function() {
         var pendientes = AprobacionService.getPendientesAprobacion();
+        var gestionados = AprobacionService.getGestionadosPorUsuario(this.currentUser.nombre);
+        var todos = {};
+        for (var p = 0; p < pendientes.length; p++) todos[pendientes[p].id] = pendientes[p];
+        for (var g = 0; g < gestionados.length; g++) todos[gestionados[g].id] = gestionados[g];
+        var lista = Object.keys(todos).map(function(id) { return todos[id]; });
         
-        if (pendientes.length === 0) {
-            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de aprobación</h5></div>');
+        if (lista.length === 0) {
+            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores para mostrar</h5></div>');
             if (typeof actualizarContador === 'function') {
                 actualizarContador();
             }
@@ -34,16 +39,20 @@ var AprobacionController = {
         
         var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
             '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Creador</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
-        for (var i = 0; i < pendientes.length; i++) {
-            var d = pendientes[i];
+        for (var i = 0; i < lista.length; i++) {
+            var d = lista[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var isAprobado = d.estado === 'APROBADO_POR_JF';
-            var badgeClass = isAprobado ? 'bg-light text-success' : 'bg-warning text-dark';
-            var badgeText = isAprobado ? 'Aprobado' : 'Pendiente';
+            var badgeClass = this.getEstadoBadgeClass(d.estado);
+            var badgeText = this.getEstadoTexto(d.estado);
             var buttonText = isAprobado ? 'Enviar a TH' : 'Revisar Descriptor';
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="AprobacionController.verDetalle(' + d.id + ')"><i class="fas fa-eye me-2 text-info"></i>' + buttonText + '</button></li></ul></div></td>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' +
+                '<li><button class="dropdown-item" onclick="AprobacionController.verDetalle(' + d.id + ')"><i class="fas fa-eye me-2 text-info"></i>' + buttonText + '</button></li>' +
+                '<li><button class="dropdown-item" onclick="AprobacionController.verAuditoriaCompleta(' + d.id + ')"><i class="fas fa-list me-2 text-primary"></i>Auditoría completa</button></li>' +
+                '<li><button class="dropdown-item" onclick="AprobacionController.verHistorialGestion(' + d.id + ')"><i class="fas fa-user-clock me-2 text-secondary"></i>Mis acciones</button></li>' +
+                '</ul></div></td>' +
                 '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
                 '<td>' + (d.puesto || 'Sin título') + '</td>' +
                 '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
@@ -54,6 +63,7 @@ var AprobacionController = {
         }
         html += '</tbody></table></div>';
         $('#pendientesContainer').html(html);
+        $('#gestionadosContainer').empty();
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
@@ -92,35 +102,27 @@ var AprobacionController = {
     },
     
     cargarGestionados: function() {
-        var gestionados = AprobacionService.getGestionadosPorUsuario(this.currentUser.nombre);
-        if (gestionados.length === 0) {
-            $('#gestionadosContainer').html('<div class="alert alert-info text-center">Aún no ha gestionado descriptores.</div>');
-            return;
+        $('#gestionadosContainer').empty();
+    },
+
+    verAuditoriaCompleta: function(id) {
+        var descriptor = AprobacionService.getDetalle(id);
+        if (!descriptor) return;
+        var eventos = (descriptor.auditoria && descriptor.auditoria.eventos) ? descriptor.auditoria.eventos.slice() : [];
+        var html = '<div class="text-start" style="max-height:520px;overflow-y:auto;">';
+        html += '<div class="alert alert-info"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Estado actual:</strong> ' + this.getEstadoTexto(descriptor.estado) + '</div>';
+        if (eventos.length === 0) {
+            html += '<p class="text-muted">No hay eventos registrados.</p>';
+        } else {
+            eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+            for (var i = 0; i < eventos.length; i++) {
+                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small>';
+                if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
+                html += '</div>';
+            }
         }
-        
-        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
-            '<th>Opciones</th><th>Código</th><th>Puesto</th><th>Estado</th><th class="d-none d-md-table-cell">Última acción</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
-        for (var i = 0; i < gestionados.length; i++) {
-            var d = gestionados[i];
-            var ultima = AprobacionService.getUltimaAccionUsuario(d, this.currentUser.nombre);
-            var fecha = ultima && ultima.fecha ? new Date(ultima.fecha).toLocaleString() : '-';
-            var accion = ultima && ultima.accion ? ultima.accion : 'Gestión registrada';
-            var estadoTexto = this.getEstadoTexto(d.estado);
-            var estadoClass = this.getEstadoBadgeClass(d.estado);
-            html += '<tr>' +
-                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="AprobacionController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history me-2 text-secondary"></i>Ver historial</button></li>' +
-                (d.estado === 'ENVIADO_TH' ? '<li><span class="dropdown-item-text text-info"><i class="fas fa-check me-2"></i>Enviado a TH</span></li>' : '') +
-                '</ul></div></td>' +
-                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
-                '<td>' + (d.puesto || 'Sin título') + '</td>' +
-                '<td><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></td>' +
-                '<td class="d-none d-md-table-cell">' + accion + '</td>' +
-                '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
-                '</tr>';
-        }
-        html += '</tbody></table></div>';
-        $('#gestionadosContainer').html(html);
+        html += '</div>';
+        Swal.fire({ title: 'Auditoría completa', html: html, width: '700px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
     
     verHistorialGestion: function(id) {

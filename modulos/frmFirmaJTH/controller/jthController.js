@@ -29,9 +29,14 @@ var JTHController = {
                 pendientes.push(todos[i]);
             }
         }
+        var firmados = JTHService.getFirmados();
+        var unificados = {};
+        for (var p = 0; p < pendientes.length; p++) unificados[pendientes[p].id] = pendientes[p];
+        for (var f = 0; f < firmados.length; f++) unificados[firmados[f].id] = firmados[f];
+        var lista = Object.keys(unificados).map(function(id) { return unificados[id]; });
         
-        if (pendientes.length === 0) {
-            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores pendientes de firma</h5><p>Cuando un descriptor sea aprobado por TH y se notifique a los firmantes, aparecerá aquí.</p></div>');
+        if (lista.length === 0) {
+            $('#pendientesContainer').html('<div class="alert alert-info text-center"><i class="fas fa-inbox fa-3x mb-3 d-block"></i><h5>No hay descriptores para mostrar</h5></div>');
             if (typeof actualizarContador === 'function') {
                 actualizarContador();
             }
@@ -40,17 +45,27 @@ var JTHController = {
         
         var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
             '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Creador</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
-        for (var i = 0; i < pendientes.length; i++) {
-            var d = pendientes[i];
+        for (var i = 0; i < lista.length; i++) {
+            var d = lista[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var tieneFirma = JTHService.getFirma(d.id);
             var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
             var badgeText = tieneFirma ? 'Firmado' : 'Pendiente';
             var btnText = tieneFirma ? 'Ver Firma' : 'Firmar Documento';
+            var accionFirma = tieneFirma
+                ? '<li><button class="dropdown-item" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature me-2 text-success"></i>Ver Firma</button></li>'
+                : '<li><button class="dropdown-item" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature me-2 text-warning"></i>' + btnText + '</button></li>';
+            var reportes = d.estado === 'ACTIVO'
+                ? '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>' +
+                  '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
+                : '';
             
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature me-2 text-warning"></i>' + btnText + '</button></li></ul></div></td>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' + accionFirma +
+                '<li><button class="dropdown-item" onclick="JTHController.verAuditoriaCompleta(' + d.id + ')"><i class="fas fa-list me-2 text-primary"></i>Auditoría completa</button></li>' +
+                '<li><button class="dropdown-item" onclick="JTHController.verMisAcciones(' + d.id + ')"><i class="fas fa-user-clock me-2 text-secondary"></i>Mis acciones</button></li>' +
+                reportes + '</ul></div></td>' +
                 '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
                 '<td>' + (d.puesto || 'Sin título') + '</td>' +
                 '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
@@ -61,40 +76,46 @@ var JTHController = {
         }
         html += '</tbody></table></div>';
         $('#pendientesContainer').html(html);
+        $('#firmadosContainer').empty();
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
     },
     
     cargarFirmados: function() {
-        var firmados = JTHService.getFirmados();
-        
-        if (firmados.length === 0) {
-            $('#firmadosContainer').html('<div class="alert alert-info text-center">Aún no ha firmado descriptores.</div>');
-            return;
+        $('#firmadosContainer').empty();
+    },
+
+    verAuditoriaCompleta: function(id) {
+        var descriptor = JTHService.getById(id);
+        if (!descriptor) return;
+        var eventos = (descriptor.auditoria && descriptor.auditoria.eventos) ? descriptor.auditoria.eventos.slice() : [];
+        this.mostrarEventosAuditoria('Auditoría completa', descriptor, eventos);
+    },
+
+    verMisAcciones: function(id) {
+        var descriptor = JTHService.getById(id);
+        if (!descriptor) return;
+        var usuario = this.currentUser.nombre;
+        var eventos = ((descriptor.auditoria && descriptor.auditoria.eventos) ? descriptor.auditoria.eventos : []).filter(function(ev) {
+            return ev.usuario === usuario;
+        });
+        this.mostrarEventosAuditoria('Mis acciones', descriptor, eventos);
+    },
+
+    mostrarEventosAuditoria: function(titulo, descriptor, eventos) {
+        var html = '<div class="text-start" style="max-height:520px;overflow-y:auto;">';
+        html += '<div class="alert alert-info"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + descriptor.id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Estado actual:</strong> ' + (descriptor.estado || '-') + '</div>';
+        if (!eventos || eventos.length === 0) {
+            html += '<p class="text-muted">No hay eventos registrados.</p>';
+        } else {
+            eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+            for (var i = 0; i < eventos.length; i++) {
+                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small></div>';
+            }
         }
-        
-        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
-            '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Fecha firma</th></tr></thead><tbody>';
-        for (var i = 0; i < firmados.length; i++) {
-            var d = firmados[i];
-            var fechaFirma = d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleString() : '-';
-            var reportes = d.estado === 'ACTIVO'
-                ? '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>' +
-                  '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
-                : '';
-            html += '<tr>' +
-                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature me-2 text-success"></i>Ver Firma</button></li>' + reportes + '</ul></div></td>' +
-                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
-                '<td>' + (d.puesto || 'Sin título') + '</td>' +
-                '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
-                '<td><span class="badge bg-success">Firmado</span></td>' +
-                '<td class="d-none d-lg-table-cell">' + fechaFirma + '</td>' +
-                '</tr>';
-        }
-        html += '</tbody></table></div>';
-        $('#firmadosContainer').html(html);
+        html += '</div>';
+        Swal.fire({ title: titulo, html: html, width: '700px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
     
     verFirma: function(id) {
