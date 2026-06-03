@@ -758,6 +758,8 @@
             .workflow-table-card th,
             .workflow-table-card td {
                 font-size: 0.78rem;
+                white-space: normal;
+                word-break: break-word;
             }
 
             .workflow-table-card {
@@ -766,14 +768,20 @@
             }
 
             .workflow-table-card .table-responsive {
-                overflow-x: auto;
+                overflow-x: visible;
                 overflow-y: visible;
-                -webkit-overflow-scrolling: touch;
             }
 
             .workflow-table-card .table {
-                min-width: 560px;
+                min-width: 0;
                 width: 100%;
+                table-layout: auto;
+            }
+
+            .workflow-table-card th:first-child,
+            .workflow-table-card td:first-child {
+                width: 58px;
+                min-width: 58px;
             }
 
             .workflow-table-title {
