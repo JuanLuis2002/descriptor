@@ -44,7 +44,7 @@ var CTController = {
         var pageItems = lista.slice(start, start + this.pageSize);
         var end = Math.min(start + this.pageSize, lista.length);
 
-        var html = '<div class="bg-white rounded shadow-sm" style="overflow: visible;"><div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+        var html = '<div class="workflow-table-card"><div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr>' +
             '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Titular</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < pageItems.length; i++) {
             var d = pageItems[i];
@@ -62,7 +62,7 @@ var CTController = {
                 '<li><button class="dropdown-item" onclick="CTController.verMisAcciones(' + d.id + ')"><i class="fas fa-user-clock me-2 text-secondary"></i>Mis acciones</button></li>' +
                 '</ul></div></td>' +
                 '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
-                '<td>' + (d.puesto || 'Sin título') + '</td>' +
+                '<td class="workflow-table-title">' + (d.puesto || 'Sin título') + '</td>' +
                 '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
                 '<td>' + estadoBadge + '</td>' +
                 '<td class="d-none d-lg-table-cell">' + (d.titular || 'No asignado') + '</td>' +
@@ -78,11 +78,11 @@ var CTController = {
     },
 
     renderPagination: function(total, start, end, totalPages) {
-        var html = '<div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 p-3 border-top">' +
-            '<div class="d-flex gap-2">' +
-            '<button class="btn btn-sm ' + (this.pageSize === 5 ? 'btn-primary' : 'btn-link') + '" onclick="CTController.cambiarPageSize(5)">5</button>' +
-            '<button class="btn btn-sm ' + (this.pageSize === 10 ? 'btn-primary' : 'btn-link') + '" onclick="CTController.cambiarPageSize(10)">10</button>' +
-            '<button class="btn btn-sm ' + (this.pageSize === 25 ? 'btn-primary' : 'btn-link') + '" onclick="CTController.cambiarPageSize(25)">25</button>' +
+        var html = '<div class="workflow-pagination-footer">' +
+            '<div class="workflow-page-size-options">' +
+            '<button class="workflow-page-size-btn ' + (this.pageSize === 5 ? 'active' : '') + '" onclick="CTController.cambiarPageSize(5)">5</button>' +
+            '<button class="workflow-page-size-btn ' + (this.pageSize === 10 ? 'active' : '') + '" onclick="CTController.cambiarPageSize(10)">10</button>' +
+            '<button class="workflow-page-size-btn ' + (this.pageSize === 25 ? 'active' : '') + '" onclick="CTController.cambiarPageSize(25)">25</button>' +
             '</div><div class="small text-muted">Mostrando ' + (start + 1) + ' a ' + end + ' de ' + total + ' registros</div>' +
             '<nav><ul class="pagination pagination-sm mb-0">' +
             '<li class="page-item ' + (this.currentPage === 1 ? 'disabled' : '') + '"><button class="page-link" onclick="CTController.cambiarPagina(' + (this.currentPage - 1) + ')"><i class="fas fa-chevron-left"></i></button></li>';

@@ -410,6 +410,79 @@
             font-size: 0.92rem;
         }
 
+        .workflow-table-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: visible;
+        }
+
+        .workflow-table-card .table-responsive {
+            overflow: visible;
+        }
+
+        .workflow-table-card .table {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+
+        .workflow-table-card th {
+            font-size: 0.78rem;
+            color: #495057;
+            white-space: nowrap;
+            background: #f8f9fa;
+        }
+
+        .workflow-table-card td {
+            font-size: 0.86rem;
+            white-space: nowrap;
+        }
+
+        .workflow-table-title {
+            min-width: 220px;
+            white-space: normal;
+        }
+
+        .workflow-pagination-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 16px;
+            border-top: 1px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+
+        .workflow-page-size-options {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .workflow-page-size-btn {
+            border: 0;
+            background: transparent;
+            color: #495057;
+            border-radius: 50%;
+            min-width: 32px;
+            height: 32px;
+            font-size: 0.82rem;
+        }
+
+        .workflow-page-size-btn.active {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        .workflow-pagination-footer .page-link {
+            border-radius: 50% !important;
+            min-width: 32px;
+            height: 32px;
+            text-align: center;
+            margin: 0 2px;
+            border: 0;
+        }
+
         /* Modo oscuro global */
         body.dark-mode {
             background: #111827;
@@ -419,6 +492,7 @@
         body.dark-mode .top-bar,
         body.dark-mode .app-footer,
         body.dark-mode .sidebar,
+        body.dark-mode .workflow-table-card,
         body.dark-mode .welcome-card,
         body.dark-mode .info-card,
         body.dark-mode .card,
@@ -455,6 +529,19 @@
             background: #2563eb !important;
             color: #fff !important;
             border-color: #2563eb !important;
+        }
+
+        body.dark-mode .workflow-pagination-footer {
+            border-color: #374151 !important;
+        }
+
+        body.dark-mode .workflow-page-size-btn {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .workflow-page-size-btn.active {
+            background: #2563eb;
+            color: #fff;
         }
 
         body.dark-mode .main-content,
@@ -641,6 +728,25 @@
         }
 
         @media (max-width: 768px) {
+            .workflow-table-card th,
+            .workflow-table-card td {
+                font-size: 0.78rem;
+            }
+
+            .workflow-table-title {
+                min-width: 170px;
+            }
+
+            .workflow-pagination-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .workflow-pagination-footer nav {
+                display: flex;
+                justify-content: center;
+            }
+
             .sidebar {
                 top: 58px;
                 height: calc(100vh - 58px);
