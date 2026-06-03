@@ -171,6 +171,25 @@
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 1;
     var totalSteps = 13;
+    var catalogoFrecuenciasKPI = [
+        { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
+        { codigo: 'SEMANAL', descripcion: 'Semanal', activo: true },
+        { codigo: 'MENSUAL', descripcion: 'Mensual', activo: true },
+        { codigo: 'TRIMESTRAL', descripcion: 'Trimestral', activo: true },
+        { codigo: 'SEMESTRAL', descripcion: 'Semestral', activo: true },
+        { codigo: 'ANUAL', descripcion: 'Anual', activo: true }
+    ];
+
+    function buildFrecuenciasKPIOptions(selectedValue) {
+        var options = '';
+        for (var i = 0; i < catalogoFrecuenciasKPI.length; i++) {
+            var item = catalogoFrecuenciasKPI[i];
+            if (!item.activo) continue;
+            var selected = item.descripcion === selectedValue || item.codigo === selectedValue ? ' selected' : '';
+            options += '<option value="' + item.descripcion + '"' + selected + '>' + item.descripcion + '</option>';
+        }
+        return options;
+    }
     
     function addFuncionClaveRow() {
         $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
@@ -181,7 +200,7 @@
     }
     
     function addKPIRow() {
-        $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
+        $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions() + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
     }
     
     function addEducacionRow() {

@@ -236,15 +236,32 @@ function addFuncionSecundariaRowWithData(texto) {
     $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria">' + (texto || '') + '</textarea></div>');
 }
 
+var catalogoFrecuenciasKPI = [
+    { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
+    { codigo: 'SEMANAL', descripcion: 'Semanal', activo: true },
+    { codigo: 'MENSUAL', descripcion: 'Mensual', activo: true },
+    { codigo: 'TRIMESTRAL', descripcion: 'Trimestral', activo: true },
+    { codigo: 'SEMESTRAL', descripcion: 'Semestral', activo: true },
+    { codigo: 'ANUAL', descripcion: 'Anual', activo: true }
+];
+
+function buildFrecuenciasKPIOptions(selectedValue) {
+    var options = '';
+    for (var i = 0; i < catalogoFrecuenciasKPI.length; i++) {
+        var item = catalogoFrecuenciasKPI[i];
+        if (!item.activo) continue;
+        var selected = item.descripcion === selectedValue || item.codigo === selectedValue ? ' selected' : '';
+        options += '<option value="' + item.descripcion + '"' + selected + '>' + item.descripcion + '</option>';
+    }
+    return options;
+}
+
 function addKPIRow() {
-    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
+    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions() + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
 }
 
 function addKPIRowWithData(indicador, frecuencia, meta) {
-    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador" value="' + (indicador || '') + '"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]"><option>Diaria</option><option>Semanal</option><option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta" value="' + (meta || '') + '"></div></div></div>');
-    if (frecuencia) {
-        $('#kpisContainer .dynamic-row:last select[name="kpiFrecuencia[]"]').val(frecuencia);
-    }
+    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador" value="' + (indicador || '') + '"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions(frecuencia) + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta" value="' + (meta || '') + '"></div></div></div>');
 }
 
 function addEducacionRow() {
