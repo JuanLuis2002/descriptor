@@ -1,6 +1,8 @@
 // Controlador de Firmas - Jefe de Talento Humano
 var JTHController = {
     currentUser: null,
+    currentPage: 1,
+    pageSize: 5,
     
     init: function(user) {
         this.currentUser = user;
@@ -43,10 +45,16 @@ var JTHController = {
             return;
         }
         
-        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+        var totalPages = Math.max(1, Math.ceil(lista.length / this.pageSize));
+        if (this.currentPage > totalPages) this.currentPage = totalPages;
+        var start = (this.currentPage - 1) * this.pageSize;
+        var pageItems = lista.slice(start, start + this.pageSize);
+        var end = Math.min(start + this.pageSize, lista.length);
+
+        var html = '<div class="bg-white rounded shadow-sm" style="overflow: visible;"><div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
             '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Creador</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
-        for (var i = 0; i < lista.length; i++) {
-            var d = lista[i];
+        for (var i = 0; i < pageItems.length; i++) {
+            var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var tieneFirma = JTHService.getFirma(d.id);
             var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
@@ -74,12 +82,40 @@ var JTHController = {
                 '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
                 '</tr>';
         }
-        html += '</tbody></table></div>';
+        html += '</tbody></table></div>' + this.renderPagination(lista.length, start, end, totalPages) + '</div>';
         $('#pendientesContainer').html(html);
         $('#firmadosContainer').empty();
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
+    },
+
+    renderPagination: function(total, start, end, totalPages) {
+        var html = '<div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 p-3 border-top">' +
+            '<div class="d-flex gap-2">' +
+            '<button class="btn btn-sm ' + (this.pageSize === 5 ? 'btn-primary' : 'btn-link') + '" onclick="JTHController.cambiarPageSize(5)">5</button>' +
+            '<button class="btn btn-sm ' + (this.pageSize === 10 ? 'btn-primary' : 'btn-link') + '" onclick="JTHController.cambiarPageSize(10)">10</button>' +
+            '<button class="btn btn-sm ' + (this.pageSize === 25 ? 'btn-primary' : 'btn-link') + '" onclick="JTHController.cambiarPageSize(25)">25</button>' +
+            '</div><div class="small text-muted">Mostrando ' + (start + 1) + ' a ' + end + ' de ' + total + ' registros</div>' +
+            '<nav><ul class="pagination pagination-sm mb-0">' +
+            '<li class="page-item ' + (this.currentPage === 1 ? 'disabled' : '') + '"><button class="page-link" onclick="JTHController.cambiarPagina(' + (this.currentPage - 1) + ')"><i class="fas fa-chevron-left"></i></button></li>';
+        for (var p = 1; p <= totalPages; p++) {
+            html += '<li class="page-item ' + (p === this.currentPage ? 'active' : '') + '"><button class="page-link" onclick="JTHController.cambiarPagina(' + p + ')">' + p + '</button></li>';
+        }
+        html += '<li class="page-item ' + (this.currentPage === totalPages ? 'disabled' : '') + '"><button class="page-link" onclick="JTHController.cambiarPagina(' + (this.currentPage + 1) + ')"><i class="fas fa-chevron-right"></i></button></li>' +
+            '</ul></nav></div>';
+        return html;
+    },
+
+    cambiarPagina: function(page) {
+        this.currentPage = page;
+        this.cargarPendientes();
+    },
+
+    cambiarPageSize: function(size) {
+        this.pageSize = size;
+        this.currentPage = 1;
+        this.cargarPendientes();
     },
     
     cargarFirmados: function() {
