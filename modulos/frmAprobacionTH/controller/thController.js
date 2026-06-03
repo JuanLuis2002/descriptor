@@ -32,17 +32,23 @@ var THController = {
             return;
         }
         
-        var html = '<div class="row">';
+        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Creador</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < pendientes.length; i++) {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-warning">Pendiente</span></div></div>' +
-                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-user"></i> Creador: ' + (d.creador || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '<br><i class="fas fa-chart-line"></i> Reporta a: ' + (d.reportaA || 'N/A') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm btn-info w-100" onclick="THController.verDetalle(' + d.id + ')"><i class="fas fa-eye"></i> Revisar</button></div></div></div>';
+            html += '<tr>' +
+                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="THController.verDetalle(' + d.id + ')"><i class="fas fa-eye me-2 text-info"></i>Revisar</button></li></ul></div></td>' +
+                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
+                '<td>' + (d.puesto || 'Sin título') + '</td>' +
+                '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
+                '<td><span class="badge bg-warning text-dark">Pendiente</span></td>' +
+                '<td class="d-none d-lg-table-cell">' + (d.creador || 'N/A') + '</td>' +
+                '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
+                '</tr>';
         }
-        html += '</div>';
+        html += '</tbody></table></div>';
         $('#pendientesContainer').html(html);
         if (typeof actualizarContador === 'function') {
             actualizarContador();
@@ -82,7 +88,8 @@ var THController = {
             return;
         }
         
-        var html = '<div class="row">';
+        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th>Estado</th><th class="d-none d-md-table-cell">Última acción</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < gestionados.length; i++) {
             var d = gestionados[i];
             var ultima = THService.getUltimaAccionUsuario(d, this.currentUser.nombre);
@@ -90,23 +97,22 @@ var THController = {
             var accion = ultima && ultima.accion ? ultima.accion : 'Gestión registrada';
             var estadoTexto = this.getEstadoTexto(d.estado);
             var estadoClass = this.getEstadoBadgeClass(d.estado);
-            var botonesReportes = d.estado === 'ACTIVO'
-                ? '<div class="btn-group w-100" role="group">' +
-                    '<button class="btn btn-sm btn-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-                    '<button class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
-                  '</div>'
+            var reportes = d.estado === 'ACTIVO'
+                ? '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>' +
+                  '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
                 : '';
-            
-            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></div></div>' +
-                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="card-text text-muted small"><i class="fas fa-calendar-check"></i> Última acción: ' + fecha + '<br><i class="fas fa-clipboard-check"></i> ' + accion + '</p></div>' +
-                '<div class="card-footer bg-white">' +
-                '<button class="btn btn-sm btn-outline-secondary w-100 mb-2" onclick="THController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history"></i> Ver historial</button>' +
-                botonesReportes +
-                '</div></div></div>';
+
+            html += '<tr>' +
+                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="THController.verHistorialGestion(' + d.id + ')"><i class="fas fa-history me-2 text-secondary"></i>Ver historial</button></li>' + reportes + '</ul></div></td>' +
+                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
+                '<td>' + (d.puesto || 'Sin título') + '</td>' +
+                '<td><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></td>' +
+                '<td class="d-none d-md-table-cell">' + accion + '</td>' +
+                '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
+                '</tr>';
         }
-        html += '</div>';
+        html += '</tbody></table></div>';
         $('#gestionadosContainer').html(html);
     },
     

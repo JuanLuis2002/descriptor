@@ -31,18 +31,24 @@ var CTController = {
             return;
         }
         
-        var html = '<div class="row">';
+        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Titular</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < pendientes.length; i++) {
             var d = pendientes[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             
-            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-primary text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-warning text-dark">Pendiente</span></div></div>' +
-                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar"></i> Fecha: ' + fecha + '<br><i class="fas fa-user"></i> Titular: ' + (d.titular || 'No asignado') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm btn-warning w-100" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature"></i> Firmar Documento</button></div></div></div>';
+            html += '<tr>' +
+                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature me-2 text-warning"></i>Firmar Documento</button></li></ul></div></td>' +
+                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
+                '<td>' + (d.puesto || 'Sin título') + '</td>' +
+                '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
+                '<td><span class="badge bg-warning text-dark">Pendiente</span></td>' +
+                '<td class="d-none d-lg-table-cell">' + (d.titular || 'No asignado') + '</td>' +
+                '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
+                '</tr>';
         }
-        html += '</div>';
+        html += '</tbody></table></div>';
         $('#pendientesContainer').html(html);
         if (typeof actualizarContador === 'function') {
             actualizarContador();
@@ -57,17 +63,22 @@ var CTController = {
             return;
         }
         
-        var html = '<div class="row">';
+        var html = '<div class="table-responsive" style="overflow: visible;"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>' +
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Fecha firma</th></tr></thead><tbody>';
         for (var i = 0; i < firmados.length; i++) {
             var d = firmados[i];
             var fechaFirma = d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleString() : '-';
-            html += '<div class="col-12 col-md-6 col-lg-4 mb-3"><div class="card h-100">' +
-                '<div class="card-header bg-success text-white"><div class="d-flex justify-content-between"><span class="fw-bold">' + (d.codigo || 'DES-' + d.id) + '</span><span class="badge bg-light text-success">Firmado</span></div></div>' +
-                '<div class="card-body"><h5 class="card-title">' + (d.puesto || 'Sin título') + '</h5>' +
-                '<p class="card-text text-muted small"><i class="fas fa-building"></i> ' + (d.area || 'N/A') + '<br><i class="fas fa-calendar-check"></i> Firma: ' + fechaFirma + '<br><i class="fas fa-info-circle"></i> Estado actual: ' + (d.estado || '-') + '</p></div>' +
-                '<div class="card-footer bg-white"><button class="btn btn-sm btn-success w-100" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-signature"></i> Ver Firma</button></div></div></div>';
+            html += '<tr>' +
+                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;"><li><button class="dropdown-item" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-signature me-2 text-success"></i>Ver Firma</button></li></ul></div></td>' +
+                '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
+                '<td>' + (d.puesto || 'Sin título') + '</td>' +
+                '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
+                '<td><span class="badge bg-success">Firmado</span></td>' +
+                '<td class="d-none d-lg-table-cell">' + fechaFirma + '</td>' +
+                '</tr>';
         }
-        html += '</div>';
+        html += '</tbody></table></div>';
         $('#firmadosContainer').html(html);
     },
     
