@@ -31,15 +31,11 @@
         <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Objetivo</div></div>
         <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Funciones</div></div>
         <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Actividades</div></div>
-        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Funciones Sec.</div></div>
-        <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
-        <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
-        <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Educación</div></div>
-        <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Experiencia</div></div>
-        <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Competencias</div></div>
-        <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Responsabilidades</div></div>
-        <div class="step" data-step="12"><div class="step-circle">12</div><div class="step-label">Entrenamiento</div></div>
-        <div class="step" data-step="13"><div class="step-circle">13</div><div class="step-label">Resumen</div></div>
+        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">KPIs</div></div>
+        <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">Perfil</div></div>
+        <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Competencias</div></div>
+        <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Responsab.</div></div>
+        <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Resumen</div></div>
     </div>
 
     <form id="descriptorForm">
@@ -68,29 +64,27 @@
             <small class="text-muted d-block mt-2">Cada función clave tendrá sus propias actividades en la siguiente sección</small>
         </div>
 
-        <!-- SECCIÓN 4: ACTIVIDADES -->
+        <!-- SECCIÓN 4: ACTIVIDADES Y FUNCIONES SECUNDARIAS -->
         <div class="form-section" data-section="4">
-            <h5 class="mb-4"><i class="fas fa-list-check me-2 text-primary"></i>Actividades por Función Clave</h5>
+            <h5 class="mb-4"><i class="fas fa-list-check me-2 text-primary"></i>Actividades y Funciones Secundarias</h5>
+            <h6 class="border-bottom pb-2 mb-3">Actividades por Función Clave</h6>
             <div id="actividadesContainer"></div>
-        </div>
-
-        <!-- SECCIÓN 5: FUNCIONES SECUNDARIAS -->
-        <div class="form-section" data-section="5">
-            <h5 class="mb-4"><i class="fas fa-chart-simple me-2 text-primary"></i>Funciones Secundarias</h5>
+            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-chart-simple me-2 text-primary"></i>Funciones Secundarias</h6>
             <div id="funcionesSecundariasContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addFuncionSecundaria"><i class="fas fa-plus"></i> Agregar</button>
         </div>
 
-        <!-- SECCIÓN 6: KPIs -->
-        <div class="form-section" data-section="6">
+        <!-- SECCIÓN 5: KPIs -->
+        <div class="form-section" data-section="5">
             <h5 class="mb-4"><i class="fas fa-chart-line me-2 text-primary"></i>KPIs</h5>
             <div id="kpisContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addKPI"><i class="fas fa-plus"></i> Agregar KPI</button>
         </div>
 
-        <!-- SECCIÓN 7: PERFIL -->
-        <div class="form-section" data-section="7">
-            <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil</h5>
+        <!-- SECCIÓN 6: PERFIL, EDUCACIÓN Y EXPERIENCIA -->
+        <div class="form-section" data-section="6">
+            <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil, Educación y Experiencia</h5>
+            <h6 class="border-bottom pb-2 mb-3">Perfil del Puesto</h6>
             <div class="row">
                 <div class="col-md-3 mb-3"><label class="form-label">Edad Mínima</label><input type="number" class="form-control" name="edadMin" value="18"></div>
                 <div class="col-md-3 mb-3"><label class="form-label">Edad Máxima</label><input type="number" class="form-control" name="edadMax" value="65"></div>
@@ -100,43 +94,32 @@
                 <div class="col-md-4 mb-3"><label class="form-label">Modalidad</label><select class="form-select" name="modalidadTrabajo"><option value="PRESENCIAL">Presencial</option><option value="HIBRIDO">Híbrido</option><option value="REMOTO">Remoto</option></select></div>
                 <div class="col-md-4 mb-3"><label class="form-label">Licencia</label><select class="form-select" name="poseerLicencia"><option value="0">No</option><option value="1">Sí</option></select></div>
             </div>
-        </div>
-
-        <!-- SECCIÓN 8: EDUCACIÓN -->
-        <div class="form-section" data-section="8">
-            <h5 class="mb-4"><i class="fas fa-graduation-cap me-2 text-primary"></i>Educación</h5>
+            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-graduation-cap me-2 text-primary"></i>Educación</h6>
             <div id="educacionContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addEducacion"><i class="fas fa-plus"></i> Agregar</button>
-        </div>
-
-        <!-- SECCIÓN 9: EXPERIENCIA -->
-        <div class="form-section" data-section="9">
-            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Experiencia</h5>
+            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-briefcase me-2 text-primary"></i>Experiencia</h6>
             <div id="experienciaContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addExperiencia"><i class="fas fa-plus"></i> Agregar</button>
         </div>
 
-        <!-- SECCIÓN 10: COMPETENCIAS -->
-        <div class="form-section" data-section="10">
+        <!-- SECCIÓN 7: COMPETENCIAS -->
+        <div class="form-section" data-section="7">
             <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>Competencias</h5>
             <div class="mb-4"><div class="d-flex justify-content-between mb-2"><h6>Técnicas</h6><button type="button" class="btn btn-sm btn-outline-primary" id="addCompetenciaTecnica"><i class="fas fa-plus"></i></button></div><div id="competenciasTecnicasContainer"></div></div>
             <div><div class="d-flex justify-content-between mb-2"><h6>Conductuales</h6><button type="button" class="btn btn-sm btn-outline-primary" id="addCompetenciaConductual"><i class="fas fa-plus"></i></button></div><div id="competenciasConductualesContainer"></div></div>
         </div>
 
-        <!-- SECCIÓN 11: RESPONSABILIDADES -->
-        <div class="form-section" data-section="11">
-            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
+        <!-- SECCIÓN 8: RESPONSABILIDADES Y ENTRENAMIENTO -->
+        <div class="form-section" data-section="8">
+            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades y Entrenamiento</h5>
+            <h6 class="border-bottom pb-2 mb-3">Responsabilidades</h6>
             <div class="mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
             <div class="mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea></div>
             <div class="mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
-        </div>
-
-        <!-- SECCIÓN 12: ENTRENAMIENTO -->
-        <div class="form-section" data-section="12">
-            <h5 class="mb-4"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Entrenamiento</h5>
+            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Entrenamiento</h6>
             <div class="row">
                 <div class="col-md-6 mb-3"><label class="form-label">Personal a cargo</label><input type="number" class="form-control" name="personalCargo" value="0"></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" name="tipoEntrenamiento"><option>Inducción específica</option><option>Capacitación técnica</option></select></div>
@@ -145,8 +128,8 @@
             </div>
         </div>
 
-        <!-- SECCIÓN 13: RESUMEN -->
-        <div class="form-section" data-section="13">
+        <!-- SECCIÓN 9: RESUMEN -->
+        <div class="form-section" data-section="9">
             <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-primary"></i>Resumen</h5>
             <div id="resumenContent" class="p-3 bg-light rounded"></div>
         </div>
@@ -170,7 +153,7 @@
     var funcionesClavesList = [];
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 1;
-    var totalSteps = 13;
+    var totalSteps = 9;
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
         { codigo: 'SEMANAL', descripcion: 'Semanal', activo: true },
