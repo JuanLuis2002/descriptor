@@ -33,30 +33,14 @@
         .auditoria-accion { font-weight: bold; }
         .auditoria-usuario { color: #0d6efd; }
         .auditoria-estado { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-left: 8px; }
-        .descriptores-table-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: visible; }
-        .descriptores-table-card .table-responsive { overflow: visible; }
-        .descriptores-table-card .table { margin-bottom: 0; vertical-align: middle; }
-        .descriptores-table-card th { font-size: 0.78rem; color: #495057; white-space: nowrap; background: #f8f9fa; }
-        .descriptores-table-card td { font-size: 0.86rem; white-space: nowrap; }
-        .descriptor-table-title { min-width: 220px; white-space: normal; }
         .descriptor-actions .dropdown-toggle { min-width: 38px; }
         .descriptor-actions .dropdown-menu { min-width: 210px; z-index: 2100; }
-        .pagination-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-top: 1px solid #dee2e6; flex-wrap: wrap; }
-        .page-size-options { display: flex; align-items: center; gap: 6px; }
-        .page-size-btn { border: 0; background: transparent; color: #495057; border-radius: 50%; min-width: 32px; height: 32px; font-size: 0.82rem; }
-        .page-size-btn.active { background: #0d6efd; color: #fff; }
-        .pagination-sm .page-link { border-radius: 50% !important; min-width: 32px; height: 32px; text-align: center; margin: 0 2px; border: 0; }
         @media (max-width: 768px) {
             .stat-item { border-right: none; margin-bottom: 10px; }
             .filtro-busqueda .btn { width: 100%; }
-            .descriptores-table-card th,
-            .descriptores-table-card td { font-size: 0.78rem; }
             .col-area,
             .col-reporta,
             .col-fecha { display: none; }
-            .descriptor-table-title { min-width: 170px; }
-            .pagination-footer { align-items: stretch; flex-direction: column; }
-            .pagination-footer nav { display: flex; justify-content: center; }
         }
     </style>
 </head>
@@ -245,7 +229,7 @@ window.initDescriptorList = function() {
     function mostrarLista(descriptores) {
         var container = $('#descriptoresListContainer');
         if (descriptores.length === 0) {
-            container.html('<div class="text-center py-5 descriptores-table-card"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No hay descriptores</h5><button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()"><i class="fas fa-plus"></i> Crear primero</button></div>');
+            container.html('<div class="text-center py-5 workflow-table-card"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No hay descriptores</h5><button class="btn btn-primary" onclick="window.cargarNuevoDescriptor()"><i class="fas fa-plus"></i> Crear primero</button></div>');
             return;
         }
 
@@ -255,7 +239,7 @@ window.initDescriptorList = function() {
         var pageItems = descriptores.slice(start, start + pageSize);
         var end = Math.min(start + pageSize, descriptores.length);
 
-        var html = '<div class="descriptores-table-card">' +
+        var html = '<div class="workflow-table-card">' +
             '<div class="table-responsive">' +
             '<table class="table table-hover align-middle">' +
             '<thead><tr>' +
@@ -278,7 +262,7 @@ window.initDescriptorList = function() {
             html += '<tr>' +
                 '<td>' + buildAccionesDropdown(d) + '</td>' +
                 '<td><span class="fw-semibold">' + (d.codigo || 'DES-' + d.id) + '</span></td>' +
-                '<td class="descriptor-table-title">' + (d.puesto || 'Sin título');
+                '<td class="workflow-table-title">' + (d.puesto || 'Sin título');
             if ((d.estado === 'OBSERVADO_JF' && d.observacionesJF) || (d.estado === 'OBSERVADO_TH' && d.observacionesTH)) {
                 html += '<div class="small text-warning mt-1"><i class="fas fa-comment me-1"></i>Con observaciones</div>';
             }
@@ -292,11 +276,11 @@ window.initDescriptorList = function() {
         }
 
         html += '</tbody></table></div>';
-        html += '<div class="pagination-footer">' +
-            '<div class="page-size-options">' +
-            '<button class="page-size-btn ' + (pageSize === 5 ? 'active' : '') + '" data-size="5">5</button>' +
-            '<button class="page-size-btn ' + (pageSize === 10 ? 'active' : '') + '" data-size="10">10</button>' +
-            '<button class="page-size-btn ' + (pageSize === 25 ? 'active' : '') + '" data-size="25">25</button>' +
+        html += '<div class="workflow-pagination-footer">' +
+            '<div class="workflow-page-size-options">' +
+            '<button class="workflow-page-size-btn page-size-btn ' + (pageSize === 5 ? 'active' : '') + '" data-size="5">5</button>' +
+            '<button class="workflow-page-size-btn page-size-btn ' + (pageSize === 10 ? 'active' : '') + '" data-size="10">10</button>' +
+            '<button class="workflow-page-size-btn page-size-btn ' + (pageSize === 25 ? 'active' : '') + '" data-size="25">25</button>' +
             '</div>' +
             '<div class="small text-muted">Mostrando ' + (start + 1) + ' a ' + end + ' de ' + descriptores.length + ' registros</div>' +
             '<nav><ul class="pagination pagination-sm mb-0">' +
