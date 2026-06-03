@@ -909,7 +909,7 @@ function generarHTMLVersionCorta(d) {
   </tr>
   <tr>
     <td class="lbl" style="vertical-align:top;">Impacto Económico<br>Institucional:</td>
-    <td>${(d.responsabilidades && d.responsabilidades.impactoEconomico) ? d.responsabilidades.impactoEconomico : 'Poco significativo, (menor a $50,000.00).'}</td>
+    <td>${(d.responsabilidades && d.responsabilidades.impactoEconomico) ? d.responsabilidades.impactoEconomico : 'Rango 1: Poco significativo - menor a $50,000'}</td>
   </tr>
 </table>
 
@@ -1317,7 +1317,7 @@ function generarHTMLVersionExtensa(d) {
             <tr><td><strong>De documentos:</strong></td><td>${d.responsabilidades?.documentos || 'N/A'}</td></tr>
             <tr><td><strong>Toma de decisiones:</strong></td><td>${d.responsabilidades?.tomaDecisiones || 'N/A'}</td></tr>
             <tr><td><strong>De personal:</strong></td><td>${d.responsabilidades?.personal || 'N/A'}</td></tr>
-            <tr><td><strong>Impacto Económico:</strong></td><td>${d.responsabilidades?.impactoEconomico || 'Poco significativo'}</td></tr>
+            <tr><td><strong>Impacto Económico:</strong></td><td>${d.responsabilidades?.impactoEconomico || 'Rango 1: Poco significativo - menor a $50,000'}</td></tr>
         </table>
         
         <h4 style="background:#D9D9D9;padding:5px;margin:15px 0 5px 0;">ENTRENAMIENTO</h4>

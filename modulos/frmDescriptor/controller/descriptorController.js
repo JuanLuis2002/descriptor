@@ -184,7 +184,11 @@ var DescriptorController = {
             $('textarea[name="respDocumentos"]').val(descriptor.responsabilidades.documentos);
             $('textarea[name="tomaDecisiones"]').val(descriptor.responsabilidades.tomaDecisiones);
             $('textarea[name="respPersonal"]').val(descriptor.responsabilidades.personal);
-            $('select[name="impactoEconomico"]').val(descriptor.responsabilidades.impactoEconomico);
+            var impactoEconomico = descriptor.responsabilidades.impactoEconomico;
+            if (impactoEconomico === 'Poco significativo') {
+                impactoEconomico = 'Rango 1: Poco significativo - menor a $50,000';
+            }
+            $('select[name="impactoEconomico"]').val(impactoEconomico);
         }
         
         // Entrenamiento
