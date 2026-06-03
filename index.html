@@ -483,6 +483,34 @@
             border: 0;
         }
 
+        @media (max-width: 1200px) {
+            .workflow-table-card th,
+            .workflow-table-card td {
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .workflow-table-card .table {
+                table-layout: auto;
+                width: 100%;
+            }
+
+            .workflow-table-title {
+                min-width: 160px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .workflow-table-card th,
+            .workflow-table-card td {
+                font-size: 0.8rem;
+            }
+
+            .workflow-table-title {
+                min-width: 140px;
+            }
+        }
+
         /* Modo oscuro global */
         body.dark-mode {
             background: #111827;
