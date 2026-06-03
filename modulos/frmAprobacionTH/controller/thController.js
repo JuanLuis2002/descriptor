@@ -181,6 +181,7 @@ var THController = {
     verDetalle: function(id) {
         var descriptor = THService.getById(id);
         if (!descriptor) return;
+        var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         
         // Funciones Claves
         var funcionesHtml = '';
@@ -289,6 +290,13 @@ var THController = {
                 '<button type="button" class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
               '</div>'
             : '';
+        var avisoSoloLectura = !puedeGestionar
+            ? '<div class="alert alert-warning"><i class="fas fa-clock"></i> Este descriptor no está pendiente de revisión técnica. Si fue observado por TH, deberá esperar a que el Jefe Inmediato lo corrija y lo reenvíe para poder aprobar, observar o complementar nuevamente.</div>'
+            : '';
+        var botonEditarRelacionesInternas = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Internas</button>' : '';
+        var botonEditarRelacionesExternas = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Externas</button>' : '';
+        var botonEditarRequerimientos = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i> Editar Requerimientos</button>' : '';
+        var botonEditarRiesgos = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i> Editar Riesgos</button>' : '';
         var modalHtml = '<style>' +
             '.descriptor-detail-modal{max-height:60vh;overflow-y:auto;padding-right:6px;text-align:left;}' +
             '.descriptor-detail-modal h6{font-weight:700;margin-top:18px;}' +
@@ -303,6 +311,7 @@ var THController = {
             '</style>' +
             '<div class="descriptor-detail-modal">' +
             '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
+            avisoSoloLectura +
             reportesHtml +
             
             '<h6 class="border-bottom pb-2">Información General</h6>' +
@@ -320,19 +329,19 @@ var THController = {
             '<h6 class="border-bottom pb-2 mt-3 text-primary">V. RELACIONES LABORALES <small>(Editable por TH)</small></h6>' +
             '<div class="mb-3"><label class="fw-bold">Relaciones Internas</label>' +
             '<div id="modalRelacionesInternas">' + relacionesInternasHtml + '</div>' +
-            '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Internas</button></div>' +
+            botonEditarRelacionesInternas + '</div>' +
             
             '<div class="mb-3"><label class="fw-bold">Relaciones Externas</label>' +
             '<div id="modalRelacionesExternas">' + relacionesExternasHtml + '</div>' +
-            '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Externas</button></div>' +
+            botonEditarRelacionesExternas + '</div>' +
             
             '<h6 class="border-bottom pb-2 mt-3 text-primary">VI. REQUERIMIENTOS ORGANIZACIONALES <small>(Editable por TH)</small></h6>' +
             '<div><div id="modalRequerimientos">' + requerimientosHtml + '</div>' +
-            '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i> Editar Requerimientos</button></div>' +
+            botonEditarRequerimientos + '</div>' +
             
             '<h6 class="border-bottom pb-2 mt-3 text-primary">VII. RIESGOS FISICOS DEL PUESTO <small>(Editable por TH)</small></h6>' +
             '<div><div id="modalRiesgos">' + riesgosHtml + '</div>' +
-            '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i> Editar Riesgos</button></div>' +
+            botonEditarRiesgos + '</div>' +
             
             '<h6 class="border-bottom pb-2 mt-3">Responsabilidades a Cargo</h6>' +
             '<p><strong>De equipo:</strong> ' + (descriptor.responsabilidades?.equipo || '-') + '</p>' +
@@ -353,14 +362,17 @@ var THController = {
             title: 'Revisar Descriptor: ' + descriptor.puesto,
             html: modalHtml,
             width: '800px',
-            showCancelButton: true,
-            showDenyButton: true,
-            confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
+            showCancelButton: puedeGestionar,
+            showDenyButton: puedeGestionar,
+            confirmButtonText: puedeGestionar ? '<i class="fas fa-check"></i> Aprobar' : 'Cerrar',
             denyButtonText: '<i class="fas fa-times"></i> Observar',
             cancelButtonText: 'Cerrar',
             confirmButtonColor: '#198754',
             denyButtonColor: '#ffc107',
             preConfirm: function() {
+                if (!puedeGestionar) {
+                    return true;
+                }
                 return Swal.fire({ title: 'Aprobar Descriptor', text: '¿Está seguro de aprobar este descriptor? Se enviará para firmas.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
                     .then(function(result) {
                         if (result.isConfirmed) {
