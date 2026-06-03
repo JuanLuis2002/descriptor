@@ -762,7 +762,7 @@
 
             .workflow-table-card {
                 max-width: 100%;
-                overflow: hidden;
+                overflow: visible;
             }
 
             .workflow-table-card .table-responsive {
@@ -772,11 +772,18 @@
             }
 
             .workflow-table-card .table {
-                min-width: 620px;
+                min-width: 560px;
+                width: 100%;
             }
 
             .workflow-table-title {
-                min-width: 170px;
+                min-width: 120px;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .workflow-table-card .dropdown-menu {
+                z-index: 3000;
             }
 
             .workflow-pagination-footer {
@@ -842,6 +849,25 @@
 
             .user-menu {
                 min-width: 170px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .workflow-table-card {
+                overflow: visible;
+            }
+
+            .workflow-table-card .table-responsive {
+                overflow-x: visible;
+            }
+
+            .workflow-table-card .table {
+                min-width: 0;
+            }
+
+            .workflow-table-card th,
+            .workflow-table-card td {
+                white-space: normal;
             }
         }
     </style>
