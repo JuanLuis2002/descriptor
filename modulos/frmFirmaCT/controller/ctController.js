@@ -151,9 +151,9 @@ var CTController = {
             return;
         }
         
-        var modalHtml = '<div class="text-center">' +
+        var modalHtml = '<div class="text-center signature-modal">' +
             '<div class="alert alert-info text-start"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Fecha de firma:</strong> ' + (descriptor.fechaFirmaCT ? new Date(descriptor.fechaFirmaCT).toLocaleString() : '-') + '</div>' +
-            '<div class="border rounded mx-auto p-3 bg-white" style="max-width: 430px;"><img src="' + firma + '" alt="Firma CT" style="max-width:100%; max-height:220px;"></div>' +
+            '<div class="border rounded mx-auto p-3 bg-white signature-preview-box" style="max-width: 430px;"><img src="' + firma + '" alt="Firma CT" style="max-width:100%; max-height:220px;"></div>' +
             '<button id="descargarFirmaCT" class="btn btn-info btn-sm mt-3"><i class="fas fa-download"></i> Descargar Firma</button>' +
             '</div>';
         
@@ -180,9 +180,9 @@ var CTController = {
         
         var firmaExistente = CTService.getFirma(id);
         
-        var modalHtml = '<div class="text-center">' +
+        var modalHtml = '<div class="text-center signature-modal">' +
             '<p class="mb-2">Firme en el recuadro con el mouse o dedo:</p>' +
-            '<div id="signature-pad" class="border rounded mx-auto" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;">' +
+            '<div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;">' +
             '<canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas>' +
             '</div>' +
             '<div class="mt-3">' +
