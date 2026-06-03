@@ -54,6 +54,9 @@ function setupEvents() {
     
     $('#btnLogout').click(function(e) {
         e.preventDefault();
+        if (isMobile) {
+            closeMobileSidebar();
+        }
         Swal.fire({
             title: '¿Cerrar sesión?',
             text: '¿Estás seguro de que deseas salir?',
