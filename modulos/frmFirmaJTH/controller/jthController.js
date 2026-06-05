@@ -12,6 +12,7 @@ var JTHController = {
     
     loadView: function() {
         var self = this;
+        $('#pageTitle').text('Firma Jefe de Talento Humano');
         $('#contentContainer').empty();
         $.get('modulos/frmFirmaJTH/view/jthView.html', function(html) {
             $('#contentContainer').html(html);
@@ -65,7 +66,9 @@ var JTHController = {
             
             html += '<tr>' +
                 '<td><div class="dropdown workflow-actions"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-display="static"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 5000;">' + accionFirma +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 5000;">' +
+                '<li><button class="dropdown-item" onclick="JTHController.verDetalle(' + d.id + ')"><i class="fas fa-eye me-2 text-info"></i>Ver detalle</button></li>' +
+                accionFirma +
                 '<li><button class="dropdown-item" onclick="JTHController.verAuditoriaCompleta(' + d.id + ')"><i class="fas fa-list me-2 text-primary"></i>Auditoría completa</button></li>' +
                 '<li><button class="dropdown-item" onclick="JTHController.verMisAcciones(' + d.id + ')"><i class="fas fa-user-clock me-2 text-secondary"></i>Mis acciones</button></li>' +
                 reportes + '</ul></div></td>' +
@@ -143,6 +146,80 @@ var JTHController = {
     
     cargarFirmados: function() {
         $('#firmadosContainer').empty();
+    },
+
+    verDetalle: function(id) {
+        var descriptor = JTHService.getById(id);
+        if (!descriptor) return;
+        if (typeof DescriptorController === 'undefined') {
+            Swal.fire('Error', 'No se puede abrir el detalle del descriptor', 'error');
+            return;
+        }
+
+        $('#pageTitle').text('Detalle del Descriptor');
+        DescriptorController.init(this.currentUser, id, { readOnly: true });
+
+        var self = this;
+        var intentos = 0;
+        function insertarPanelFirmas() {
+            intentos++;
+            if ($('#descriptorForm').length === 0 && intentos < 20) {
+                setTimeout(insertarPanelFirmas, 150);
+                return;
+            }
+            self.renderPanelFirmas(id, JTHService.getById(id) || descriptor);
+        }
+        setTimeout(insertarPanelFirmas, 150);
+    },
+
+    renderPanelFirmas: function(id, descriptor) {
+        $('#jthFirmaStatusPanel').remove();
+
+        var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
+        var firmaJTH = descriptor.firmaJTH || firmasGuardadas['jth_' + id];
+        var firmaCT = descriptor.firmaCT || firmasGuardadas['ct_' + id];
+        var firmaJI = descriptor.firmaJI || firmasGuardadas['ji_' + id];
+        var puedeFirmar = !firmaJTH && ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(descriptor.estado) !== -1;
+
+        function firmaItem(nombre, firmada, fecha) {
+            return '<div class="firma-status-item">' +
+                '<div><i class="fas ' + (firmada ? 'fa-check-circle text-success' : 'fa-clock text-warning') + ' me-1"></i><strong>' + nombre + '</strong></div>' +
+                '<span class="badge ' + (firmada ? 'bg-success' : 'bg-warning text-dark') + '">' + (firmada ? 'Firmado' : 'Pendiente') + '</span>' +
+                (firmada && fecha ? '<small class="text-muted d-block mt-1">' + new Date(fecha).toLocaleString() + '</small>' : '') +
+                '</div>';
+        }
+
+        var panel = '<style>' +
+            '.firma-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;}' +
+            '.firma-status-item{border:1px solid #d9e6f8;border-radius:12px;background:#f8fbff;padding:10px 12px;min-height:76px;}' +
+            'body.dark-mode .firma-status-item{background:#111827;border-color:#374151;color:#e5e7eb;}' +
+            '@media(max-width:768px){.firma-status-grid{grid-template-columns:1fr;}}' +
+            '</style>' +
+            '<div id="jthFirmaStatusPanel" class="alert alert-primary border-primary-subtle mb-3">' +
+            '<div class="d-flex flex-wrap align-items-start justify-content-between gap-3">' +
+            '<div>' +
+            '<h6 class="mb-1"><i class="fas fa-signature me-1"></i> Estado de firmas del descriptor</h6>' +
+            '<div class="small">Descriptor <strong>' + (descriptor.codigo || 'DES-' + id) + '</strong> | Puesto: <strong>' + (descriptor.puesto || '-') + '</strong> | Estado: <strong>' + (descriptor.estado || '-') + '</strong></div>' +
+            '</div>' +
+            '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
+            '<button type="button" class="btn btn-outline-secondary" onclick="JTHController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+            (firmaJTH ? '<button type="button" class="btn btn-outline-success" onclick="JTHController.verFirma(' + id + ')"><i class="fas fa-signature me-1"></i> Ver firma</button>' : '') +
+            (puedeFirmar ? '<button type="button" class="btn btn-success" onclick="JTHController.firmar(' + id + ')"><i class="fas fa-pen-nib me-1"></i> Firmar documento</button>' : '') +
+            '</div>' +
+            '</div>' +
+            '<div class="firma-status-grid">' +
+            firmaItem('Jefe de Talento Humano', !!firmaJTH, descriptor.fechaFirmaJTH) +
+            firmaItem('Colaborador / Titular', !!firmaCT, descriptor.fechaFirmaCT) +
+            firmaItem('Jefe Inmediato', !!firmaJI, descriptor.fechaFirmaJI) +
+            '</div>' +
+            '</div>';
+
+        var $alert = $('#readOnlyDescriptorAlert');
+        if ($alert.length) {
+            $alert.after(panel);
+        } else {
+            $('.descriptor-save-top').after(panel);
+        }
     },
 
     verAuditoriaCompleta: function(id) {
