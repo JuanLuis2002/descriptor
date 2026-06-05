@@ -1863,7 +1863,7 @@ function generarHTMLVersionExtensa(d) {
         if (requerimientos.length === 0) return '';
         var html = '';
         for (var i = 0; i < requerimientos.length; i++) html += '<div>' + (i + 1) + '.&nbsp; ' + text(requerimientos[i]) + '</div>';
-        return '<div class="flow-block"><div class="section-label center">VI. &nbsp; REQUERIMIENTOS ORGANIZACIONALES</div><div class="border-box small-pad">' + html + '</div></div>';
+        return '<div class="flow-block"><div class="section-label">VI. &nbsp; REQUERIMIENTOS ORGANIZACIONALES</div><div class="border-box small-pad">' + html + '</div></div>';
     }
 
     function renderRiesgos() {
@@ -1881,7 +1881,7 @@ function generarHTMLVersionExtensa(d) {
 
     function renderEntrenamiento() {
         if (!hasText(entrenamiento.tipoEntrenamiento) && !hasText(entrenamiento.duracion) && !hasText(entrenamiento.puestosResponsables)) return '';
-        return '<div class="flow-block"><div class="section-label center">VIII. &nbsp; ENTRENAMIENTO INICIAL EN EL PUESTO</div><table class="tabla compacta"><tr><th>ENTRENAMIENTOS</th><th>DURACIÓN</th><th>PUESTOS RESPONSABLES</th></tr><tr><td>' + text(entrenamiento.tipoEntrenamiento) + '</td><td class="center">' + text(entrenamiento.duracion) + '</td><td>' + text(entrenamiento.puestosResponsables) + '</td></tr></table></div>';
+        return '<div class="flow-block"><div class="section-label">VIII. &nbsp; ENTRENAMIENTO INICIAL EN EL PUESTO</div><table class="tabla compacta"><tr><th>ENTRENAMIENTOS</th><th>DURACIÓN</th><th>PUESTOS RESPONSABLES</th></tr><tr><td>' + text(entrenamiento.tipoEntrenamiento) + '</td><td class="center">' + text(entrenamiento.duracion) + '</td><td>' + text(entrenamiento.puestosResponsables) + '</td></tr></table></div>';
     }
 
     function renderPerfil() {
@@ -1959,7 +1959,6 @@ function generarHTMLVersionExtensa(d) {
         .generalidades td:nth-child(4) { width: 21%; }
         .bar-title { background: #595959; color: #fff; font-weight: 700; padding: 4px 8px; margin-top: 10px; font-size: 9.5pt; }
         .section-label { font-weight: 700; padding: 3px 5px; line-height: 1.05; }
-        .section-label.center { text-align: center; }
         .indent { padding-left: 33px; }
         .objective-box { border: 0.8px solid #000; min-height: 24px; padding: 4px 6px; margin-bottom: 4px; }
         .compacta th, .compacta td { padding: 2px 5px; height: 16px; }
