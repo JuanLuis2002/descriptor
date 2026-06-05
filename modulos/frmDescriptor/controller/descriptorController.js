@@ -3,12 +3,15 @@ var DescriptorController = {
     currentUser: null,
     descriptorIdToEdit: null,
     readOnlyMode: false,
+    canEditThComplements: false,
     
     init: function(user, idToEdit, options) {
         this.currentUser = user;
         this.descriptorIdToEdit = idToEdit || null;
         this.readOnlyMode = !!(options && options.readOnly);
+        this.canEditThComplements = !!(options && options.canEditThComplements);
         window._thReviewMode = !!(options && options.thReview);
+        window._canEditThComplements = this.canEditThComplements;
         window._readOnlyDescriptor = this.readOnlyMode;
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
@@ -23,6 +26,7 @@ var DescriptorController = {
         window._savedActividades = null;
         window._readOnlyDescriptor = false;
         window._thReviewMode = false;
+        window._canEditThComplements = false;
     },
     
     loadForm: function() {
@@ -265,9 +269,12 @@ var DescriptorController = {
         ).hide();
         $('#descriptorForm').find('.btn-outline-danger').hide();
         $('#descriptorForm').find('.funciones-add-btn').not('.actividad-btn').hide();
-        if (window._thReviewMode) {
+        if (window._thReviewMode && window._canEditThComplements) {
             $('#descriptorForm').find('.th-editable-section input, .th-editable-section select, .th-editable-section textarea').prop('disabled', false);
             $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').show();
+        } else if (window._thReviewMode) {
+            $('#descriptorForm').find('.th-editable-section input, .th-editable-section select, .th-editable-section textarea').prop('disabled', true);
+            $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').hide();
         }
         if ($('#readOnlyDescriptorAlert').length === 0) {
             var mensajeSoloLectura = window._thReviewMode

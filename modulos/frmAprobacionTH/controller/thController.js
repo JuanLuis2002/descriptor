@@ -217,7 +217,11 @@ var THController = {
         }
 
         $('#pageTitle').text('Revisión Técnica TH');
-        DescriptorController.init(this.currentUser, id, { readOnly: true, thReview: true });
+        DescriptorController.init(this.currentUser, id, {
+            readOnly: true,
+            thReview: true,
+            canEditThComplements: descriptor.estado === 'ENVIADO_TH'
+        });
 
         var self = this;
         var intentos = 0;
@@ -276,6 +280,12 @@ var THController = {
     guardarComplementosDesdeFormulario: function(id, silent) {
         var descriptor = THService.getById(id);
         if (!this.validarComplementoExtenso(descriptor)) return;
+        if (descriptor.estado !== 'ENVIADO_TH') {
+            if (!silent) {
+                Swal.fire('Solo lectura', 'Los complementos técnicos solo pueden modificarse mientras el descriptor está pendiente de revisión TH.', 'info');
+            }
+            return false;
+        }
 
         var internas = [];
         $('#relacionesInternasTableBody tr').each(function() {
