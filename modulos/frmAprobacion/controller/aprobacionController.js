@@ -228,7 +228,11 @@ var AprobacionController = {
         }
 
         $('#pageTitle').text('Revisar Descriptor');
-        DescriptorController.init(this.currentUser, id, { readOnly: true });
+        DescriptorController.init(this.currentUser, id, {
+            readOnly: true,
+            thReview: this.tieneComplementosTHExtensos(descriptor),
+            canEditThComplements: false
+        });
 
         var self = this;
         var intentos = 0;
@@ -241,6 +245,18 @@ var AprobacionController = {
             self.renderPanelRevision(id, descriptor);
         }
         setTimeout(insertarPanelRevision, 150);
+    },
+
+    tieneComplementosTHExtensos: function(descriptor) {
+        if (!descriptor || (descriptor.tipoFormato || 'CORTA') !== 'EXTENSA') return false;
+        var relaciones = descriptor.relacionesLaborales || {};
+        var riesgos = descriptor.riesgosFisicos || {};
+        var tieneRelaciones = (relaciones.internas && relaciones.internas.length > 0) || (relaciones.externas && relaciones.externas.length > 0);
+        var tieneRequerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0;
+        var tieneRiesgos = (riesgos.esfuerzo && riesgos.esfuerzo.trim()) ||
+            (riesgos.condiciones && riesgos.condiciones.trim()) ||
+            (riesgos.riesgos && riesgos.riesgos.length > 0);
+        return !!(tieneRelaciones || tieneRequerimientos || tieneRiesgos);
     },
 
     renderPanelRevision: function(id, descriptor) {

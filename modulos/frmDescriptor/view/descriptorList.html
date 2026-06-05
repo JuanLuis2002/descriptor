@@ -462,11 +462,28 @@ window.initDescriptorList = function() {
         }
     }
     
+    function tieneComplementosTHExtensos(descriptor) {
+        if (!descriptor || (descriptor.tipoFormato || 'CORTA') !== 'EXTENSA') return false;
+        var relaciones = descriptor.relacionesLaborales || {};
+        var riesgos = descriptor.riesgosFisicos || {};
+        var tieneRelaciones = (relaciones.internas && relaciones.internas.length > 0) || (relaciones.externas && relaciones.externas.length > 0);
+        var tieneRequerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0;
+        var tieneRiesgos = (riesgos.esfuerzo && riesgos.esfuerzo.trim()) ||
+            (riesgos.condiciones && riesgos.condiciones.trim()) ||
+            (riesgos.riesgos && riesgos.riesgos.length > 0);
+        return !!(tieneRelaciones || tieneRequerimientos || tieneRiesgos);
+    }
+    
     function verDescriptor(id) {
         if (typeof DescriptorController !== 'undefined') {
+            var descriptor = typeof DescriptorService !== 'undefined' ? DescriptorService.getById(id) : null;
             $('.nav-link').removeClass('active');
             $('.nav-link[data-modulo="misDescriptores"]').addClass('active');
-            DescriptorController.init(currentUser, id, { readOnly: true });
+            DescriptorController.init(currentUser, id, {
+                readOnly: true,
+                thReview: tieneComplementosTHExtensos(descriptor),
+                canEditThComplements: false
+            });
         } else {
             Swal.fire('Error', 'No se puede abrir el detalle del descriptor', 'error');
         }
