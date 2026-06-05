@@ -79,6 +79,7 @@
         .funciones-table .form-control { font-size: 0.82rem; padding: 5px 8px; min-height: 32px; }
         .funciones-table textarea.form-control { min-height: 36px; resize: vertical; }
         .funciones-table .btn { padding: 3px 7px; }
+        .actividad-count-badge { min-width: 20px; margin-left: 6px; font-size: 0.68rem; vertical-align: middle; }
         .funciones-add-btn { font-size: 0.82rem; }
         .bitacora-card { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; }
         .bitacora-item { padding: 12px 14px; border-bottom: 1px solid #e9ecef; background: #fff; }
@@ -386,7 +387,7 @@
         return '<tr class="dynamic-row funcion-clave-row">' +
             '<td class="funcion-codigo"><input type="hidden" name="funcionCodigo[]" value="' + (codigo || '') + '"><span class="funcion-codigo-text">' + (codigo || '') + '</span></td>' +
             '<td><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre de la función" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
-            '<td class="text-center actividad-funcion-action"><button type="button" class="btn btn-sm btn-outline-primary" onclick="if (typeof abrirActividadesFuncionGlobal === \'function\') abrirActividadesFuncionGlobal($(this).closest(\'tr\').index());"><i class="fas fa-list-check me-1"></i> Actividades</button></td>' +
+            '<td class="text-center actividad-funcion-action"><button type="button" class="btn btn-sm btn-outline-primary actividad-btn" onclick="if (typeof abrirActividadesFuncionGlobal === \'function\') abrirActividadesFuncionGlobal($(this).closest(\'tr\').index());"><i class="fas fa-list-check me-1"></i> Actividades <span class="badge rounded-pill bg-primary actividad-count-badge">0</span></button></td>' +
             '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesClaveGlobal === \'function\') renumerarFuncionesClaveGlobal();"><i class="fas fa-trash"></i></button></td>' +
             '</tr>';
     }
@@ -596,6 +597,15 @@
         $('.actividad-funcion-action').toggle(esExtensa);
         $('.actividades-help-text').toggle(esExtensa);
         if (!esExtensa && actividadFuncionActiva !== null) volverFuncionesClave();
+        actualizarContadoresActividades();
+    }
+    
+    function actualizarContadoresActividades() {
+        var actividadesGuardadas = window._savedActividades || [];
+        $('#funcionesClavesTableBody tr').each(function(index) {
+            var total = actividadesGuardadas[index] && actividadesGuardadas[index].actividades ? actividadesGuardadas[index].actividades.length : 0;
+            $(this).find('.actividad-count-badge').text(total);
+        });
     }
     
     function guardarActividadesActuales() {
@@ -626,6 +636,7 @@
             actividadesGuardadas.push({ funcionNombre: funcionesClavesList[f].nombre, actividades: actividades });
         }
         window._savedActividades = actividadesGuardadas;
+        actualizarContadoresActividades();
     }
     
     function restaurarActividades(funcionId) {
@@ -645,6 +656,7 @@
     function limpiarActividadesGuardadas() {
         window._savedActividades = null;
         actividadFuncionActiva = null;
+        actualizarContadoresActividades();
     }
     
     function actualizarActividades() {
@@ -726,6 +738,7 @@
             $(this).find('.actividad-codigo-text').text(index + 1);
         });
         $('#actividades-empty-' + funcionId).toggle($filas.length === 0);
+        guardarActividadesActuales();
     }
     window.renumerarActividadesGlobal = renumerarActividades;
     
@@ -1095,6 +1108,9 @@
     $('#addExperiencia').off('click').click(function() { addExperienciaRow(); });
     $('#addCompetenciaTecnica').off('click').click(function() { addCompetenciaTecnicaRow(); });
     $('#addCompetenciaConductual').off('click').click(function() { addCompetenciaConductualRow(); });
+    $(document).off('input', '.actividad-input').on('input', '.actividad-input', function() {
+        guardarActividadesActuales();
+    });
     
     updateStepDisplay();
 })();
