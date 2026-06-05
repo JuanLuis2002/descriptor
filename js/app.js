@@ -1959,6 +1959,7 @@ function generarHTMLVersionExtensa(d) {
         .generalidades td:nth-child(4) { width: 21%; }
         .bar-title { background: #595959; color: #fff; font-weight: 700; padding: 4px 8px; margin-top: 10px; font-size: 9.5pt; }
         .section-label { font-weight: 700; padding: 3px 5px; line-height: 1.05; }
+        .section-label.center { text-align: center; }
         .indent { padding-left: 33px; }
         .objective-box { border: 0.8px solid #000; min-height: 24px; padding: 4px 6px; margin-bottom: 4px; }
         .compacta th, .compacta td { padding: 2px 5px; height: 16px; }
