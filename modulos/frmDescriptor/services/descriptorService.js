@@ -10,6 +10,7 @@ var DescriptorService = {
         descriptor.id = descriptors.length + 1;
         descriptor.codigo = 'DES-' + (descriptors.length + 1).toString().padStart(4, '0');
         descriptor.version = this.getSiguienteVersionByPuesto(descriptor.puesto);
+        descriptor.tipoFormato = descriptor.tipoFormato || 'CORTA';
         descriptor.estado = 'BORRADOR';
         descriptor.fechaCreacion = new Date().toISOString();
         

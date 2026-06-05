@@ -586,6 +586,10 @@ function generarVersionCorta(id) {
         Swal.fire('Error', 'No se encontró el descriptor', 'error');
         return;
     }
+    if ((descriptor.tipoFormato || 'CORTA') !== 'CORTA') {
+        Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión extensa. Genere el reporte de versión extensa.', 'info');
+        return;
+    }
     
     // Generar el HTML para el PDF
     var pdfHtml = generarHTMLVersionCorta(descriptor);
@@ -1037,6 +1041,10 @@ function generarVersionExtensa(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) {
         Swal.fire('Error', 'No se encontró el descriptor', 'error');
+        return;
+    }
+    if ((descriptor.tipoFormato || 'CORTA') !== 'EXTENSA') {
+        Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión corta. Genere el reporte de versión corta.', 'info');
         return;
     }
     
@@ -1908,6 +1916,7 @@ function generarHTMLVersionExtensa(d) {
         return '<table class="firmas flow-block"><tr>' +
             '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + titularNombre + '</div></td>' +
             '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
+            '<td>' + getFirmaHtml(firmaJTH) + '<div class="linea-firma"></div><div>Jefe de Talento Humano</div><div class="nombre-firma"><strong>Nombre:</strong> Lic. Carlos Gómez</div></td>' +
             '</tr></table>';
     }
 
@@ -1963,7 +1972,7 @@ function generarHTMLVersionExtensa(d) {
         .conductual-label { width: 32%; text-align: center; font-weight: 700; }
         .conductual-tabla td { min-height: 34px; height: 34px; }
         .firmas { width: 100%; margin-top: 46px; border-collapse: collapse; }
-        .firmas td { width: 50%; text-align: center; vertical-align: bottom; padding: 0 36px; }
+        .firmas td { width: 33.33%; text-align: center; vertical-align: bottom; padding: 0 24px; }
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }

@@ -56,10 +56,12 @@ var JTHController = {
             var accionFirma = tieneFirma
                 ? '<li><button class="dropdown-item" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-signature me-2 text-success"></i>Ver Firma</button></li>'
                 : '<li><button class="dropdown-item" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-signature me-2 text-warning"></i>' + btnText + '</button></li>';
-            var reportes = d.estado === 'ACTIVO'
-                ? '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>' +
-                  '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
-                : '';
+            var reportes = '';
+            if (d.estado === 'ACTIVO') {
+                reportes = (d.tipoFormato || 'CORTA') === 'EXTENSA'
+                    ? '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
+                    : '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>';
+            }
             
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +

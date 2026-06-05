@@ -52,10 +52,12 @@ var THController = {
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var estadoTexto = this.getEstadoTexto(d.estado);
             var estadoClass = this.getEstadoBadgeClass(d.estado);
-            var reportes = d.estado === 'ACTIVO'
-                ? '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>' +
-                  '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
-                : '';
+            var reportes = '';
+            if (d.estado === 'ACTIVO') {
+                reportes = (d.tipoFormato || 'CORTA') === 'EXTENSA'
+                    ? '<li><button class="dropdown-item" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>'
+                    : '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>';
+            }
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
                 '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' +
@@ -182,6 +184,8 @@ var THController = {
         var descriptor = THService.getById(id);
         if (!descriptor) return;
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
+        var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
+        var tipoFormatoTexto = esExtensa ? 'Versión extensa' : 'Versión corta';
         
         // Funciones Claves
         var funcionesHtml = '';
@@ -284,19 +288,35 @@ var THController = {
             riesgosHtml = '<p class="text-muted text-center">No hay riesgos registrados</p>';
         }
         
-        var reportesHtml = descriptor.estado === 'ACTIVO'
-            ? '<div class="btn-group w-100 mb-3" role="group">' +
-                '<button type="button" class="btn btn-sm btn-success" onclick="generarVersionCorta(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button>' +
-                '<button type="button" class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button>' +
-              '</div>'
-            : '';
+        var reportesHtml = '';
+        if (descriptor.estado === 'ACTIVO') {
+            reportesHtml = esExtensa
+                ? '<div class="btn-group w-100 mb-3" role="group"><button type="button" class="btn btn-sm btn-secondary" onclick="generarVersionExtensa(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Extensa</button></div>'
+                : '<div class="btn-group w-100 mb-3" role="group"><button type="button" class="btn btn-sm btn-success" onclick="generarVersionCorta(' + id + ')"><i class="fas fa-file-pdf"></i> Versión Corta</button></div>';
+        }
         var avisoSoloLectura = !puedeGestionar
             ? '<div class="alert alert-warning"><i class="fas fa-clock"></i> Este descriptor no está pendiente de revisión técnica. Si fue observado por TH, deberá esperar a que el Jefe Inmediato lo corrija y lo reenvíe para poder aprobar, observar o complementar nuevamente.</div>'
             : '';
-        var botonEditarRelacionesInternas = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Internas</button>' : '';
-        var botonEditarRelacionesExternas = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Externas</button>' : '';
-        var botonEditarRequerimientos = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i> Editar Requerimientos</button>' : '';
-        var botonEditarRiesgos = puedeGestionar ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i> Editar Riesgos</button>' : '';
+        var puedeCompletarTH = puedeGestionar && esExtensa;
+        var botonEditarRelacionesInternas = puedeCompletarTH ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Internas</button>' : '';
+        var botonEditarRelacionesExternas = puedeCompletarTH ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i> Editar Relaciones Externas</button>' : '';
+        var botonEditarRequerimientos = puedeCompletarTH ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i> Editar Requerimientos</button>' : '';
+        var botonEditarRiesgos = puedeCompletarTH ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i> Editar Riesgos</button>' : '';
+        var complementosTHHtml = esExtensa
+            ? '<h6 class="border-bottom pb-2 mt-3 text-primary">V. RELACIONES LABORALES <small>(Editable por TH)</small></h6>' +
+              '<div class="mb-3"><label class="fw-bold">Relaciones Internas</label>' +
+              '<div id="modalRelacionesInternas">' + relacionesInternasHtml + '</div>' +
+              botonEditarRelacionesInternas + '</div>' +
+              '<div class="mb-3"><label class="fw-bold">Relaciones Externas</label>' +
+              '<div id="modalRelacionesExternas">' + relacionesExternasHtml + '</div>' +
+              botonEditarRelacionesExternas + '</div>' +
+              '<h6 class="border-bottom pb-2 mt-3 text-primary">VI. REQUERIMIENTOS ORGANIZACIONALES <small>(Editable por TH)</small></h6>' +
+              '<div><div id="modalRequerimientos">' + requerimientosHtml + '</div>' +
+              botonEditarRequerimientos + '</div>' +
+              '<h6 class="border-bottom pb-2 mt-3 text-primary">VII. RIESGOS FISICOS DEL PUESTO <small>(Editable por TH)</small></h6>' +
+              '<div><div id="modalRiesgos">' + riesgosHtml + '</div>' +
+              botonEditarRiesgos + '</div>'
+            : '<div class="alert alert-secondary mt-3"><i class="fas fa-info-circle"></i> Este descriptor es de versión corta, por lo que no requiere complementos técnicos de TH.</div>';
         var modalHtml = '<style>' +
             '.descriptor-detail-modal{max-height:60vh;overflow-y:auto;padding-right:6px;text-align:left;}' +
             '.descriptor-detail-modal h6{font-weight:700;margin-top:18px;}' +
@@ -310,7 +330,7 @@ var THController = {
             'body.dark-mode .descriptor-detail-table td,body.dark-mode .descriptor-detail-table th{background:#1f2937!important;color:#e5e7eb!important;}' +
             '</style>' +
             '<div class="descriptor-detail-modal">' +
-            '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
+            '<div class="alert alert-info mb-3"><i class="fas fa-info-circle"></i> <strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Formato:</strong> ' + tipoFormatoTexto + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Creador:</strong> ' + (descriptor.creador || '-') + '<br><strong>Fecha:</strong> ' + (descriptor.fechaEmision || '-') + '</div>' +
             avisoSoloLectura +
             reportesHtml +
             
@@ -326,22 +346,7 @@ var THController = {
             '<h6 class="border-bottom pb-2 mt-3">Indicadores de Desempeño (KPIs)</h6>' +
             kpisHtml +
             
-            '<h6 class="border-bottom pb-2 mt-3 text-primary">V. RELACIONES LABORALES <small>(Editable por TH)</small></h6>' +
-            '<div class="mb-3"><label class="fw-bold">Relaciones Internas</label>' +
-            '<div id="modalRelacionesInternas">' + relacionesInternasHtml + '</div>' +
-            botonEditarRelacionesInternas + '</div>' +
-            
-            '<div class="mb-3"><label class="fw-bold">Relaciones Externas</label>' +
-            '<div id="modalRelacionesExternas">' + relacionesExternasHtml + '</div>' +
-            botonEditarRelacionesExternas + '</div>' +
-            
-            '<h6 class="border-bottom pb-2 mt-3 text-primary">VI. REQUERIMIENTOS ORGANIZACIONALES <small>(Editable por TH)</small></h6>' +
-            '<div><div id="modalRequerimientos">' + requerimientosHtml + '</div>' +
-            botonEditarRequerimientos + '</div>' +
-            
-            '<h6 class="border-bottom pb-2 mt-3 text-primary">VII. RIESGOS FISICOS DEL PUESTO <small>(Editable por TH)</small></h6>' +
-            '<div><div id="modalRiesgos">' + riesgosHtml + '</div>' +
-            botonEditarRiesgos + '</div>' +
+            complementosTHHtml +
             
             '<h6 class="border-bottom pb-2 mt-3">Responsabilidades a Cargo</h6>' +
             '<p><strong>De equipo:</strong> ' + (descriptor.responsabilidades?.equipo || '-') + '</p>' +
@@ -427,8 +432,18 @@ var THController = {
         });
     },
     
+    validarComplementoExtenso: function(descriptor) {
+        if (!descriptor) return false;
+        if ((descriptor.tipoFormato || 'CORTA') !== 'EXTENSA') {
+            Swal.fire('No aplica', 'Los complementos de TH solo se llenan para descriptores de versión extensa.', 'info');
+            return false;
+        }
+        return true;
+    },
+    
     editarRelacionesInternas: function(id) {
         var descriptor = THService.getById(id);
+        if (!this.validarComplementoExtenso(descriptor)) return;
         var relaciones = descriptor.relacionesLaborales?.internas || [];
         var html = '<div class="text-start" id="relacionesInternasEditor">';
         
@@ -480,6 +495,7 @@ var THController = {
     
     editarRelacionesExternas: function(id) {
         var descriptor = THService.getById(id);
+        if (!this.validarComplementoExtenso(descriptor)) return;
         var relaciones = descriptor.relacionesLaborales?.externas || [];
         var html = '<div class="text-start" id="relacionesExternasEditor">';
         
@@ -531,6 +547,7 @@ var THController = {
     
     editarRequerimientos: function(id) {
         var descriptor = THService.getById(id);
+        if (!this.validarComplementoExtenso(descriptor)) return;
         var requerimientosActuales = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0 
             ? descriptor.requerimientosOrganizacionales 
             : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
@@ -576,6 +593,7 @@ var THController = {
     
     editarRiesgos: function(id) {
         var descriptor = THService.getById(id);
+        if (!this.validarComplementoExtenso(descriptor)) return;
         var riesgos = descriptor.riesgosFisicos || {};
         var riesgosArray = riesgos.riesgos || [];
         var html = '<div class="text-start">' +

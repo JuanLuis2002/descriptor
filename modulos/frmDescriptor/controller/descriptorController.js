@@ -61,6 +61,7 @@ var DescriptorController = {
         window._savedActividades = null;
         
         // Datos básicos
+        $('select[name="tipoFormato"]').val(descriptor.tipoFormato || 'CORTA').trigger('change');
         $('select[name="puesto"]').val(descriptor.puesto);
         $('#areaUsuario').val(descriptor.area);
         $('input[name="reportaA"]').val(descriptor.reportaA);

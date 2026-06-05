@@ -82,6 +82,7 @@
         <div class="form-section" data-section="1">
             <h5 class="mb-4"><i class="fas fa-building me-2 text-primary"></i>Generalidades</h5>
             <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Tipo de formato *</label><select class="form-select" name="tipoFormato" id="tipoFormato" required><option value="CORTA">Versión corta</option><option value="EXTENSA">Versión extensa</option></select><small class="text-muted">Define los campos que se llenarán y el reporte que se generará.</small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Coordinador">Coordinador</option><option value="Jefe de Subgerencia">Jefe de Subgerencia</option><option value="Gerente">Gerente</option></select></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Área</label><input type="text" class="form-control" name="area" id="areaUsuario" readonly></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Reporta a</label><input type="text" class="form-control" name="reportaA" required></div>
@@ -201,6 +202,10 @@
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 1;
     var totalSteps = 11;
+    var pasosPorFormato = {
+        CORTA: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11],
+        EXTENSA: [1, 2, 3, 4, 7, 8, 9, 10, 11]
+    };
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
         { codigo: 'SEMANAL', descripcion: 'Semanal', activo: true },
@@ -219,6 +224,45 @@
             options += '<option value="' + item.descripcion + '"' + selected + '>' + item.descripcion + '</option>';
         }
         return options;
+    }
+    
+    function getTipoFormato() {
+        return $('#tipoFormato').val() || 'CORTA';
+    }
+    
+    function getPasosActivos() {
+        return pasosPorFormato[getTipoFormato()] || pasosPorFormato.CORTA;
+    }
+    
+    function isPasoActivo(step) {
+        return getPasosActivos().indexOf(step) !== -1;
+    }
+    
+    function getNextStep(step) {
+        var pasos = getPasosActivos();
+        for (var i = 0; i < pasos.length; i++) {
+            if (pasos[i] > step) return pasos[i];
+        }
+        return step;
+    }
+    
+    function getPrevStep(step) {
+        var pasos = getPasosActivos();
+        for (var i = pasos.length - 1; i >= 0; i--) {
+            if (pasos[i] < step) return pasos[i];
+        }
+        return step;
+    }
+    
+    function getLastStep() {
+        var pasos = getPasosActivos();
+        return pasos[pasos.length - 1];
+    }
+    
+    function normalizarPasoActual() {
+        if (isPasoActivo(currentStep)) return;
+        var pasos = getPasosActivos();
+        currentStep = pasos[0] || 1;
     }
     
     function addFuncionClaveRow() {
@@ -342,36 +386,44 @@
     window.agregarActividadConTexto = agregarActividadConTexto;
     
     function updateStepDisplay() {
+        normalizarPasoActual();
         $('.form-section').removeClass('active-section');
         $('.form-section[data-section="' + currentStep + '"]').addClass('active-section');
-        $('.step').removeClass('active completed');
+        $('.step').removeClass('active completed').hide();
+        var pasosActivos = getPasosActivos();
+        for (var s = 0; s < pasosActivos.length; s++) {
+            $('.step[data-step="' + pasosActivos[s] + '"]').show().find('.step-circle').text(s + 1);
+        }
         for(var i = 1; i <= totalSteps; i++) {
+            if (!isPasoActivo(i)) continue;
             if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
             else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
         }
-        $('#prevBtn').toggle(currentStep > 1);
-        $('#nextBtn').toggle(currentStep < totalSteps);
+        $('#prevBtn').toggle(currentStep !== pasosActivos[0]);
+        $('#nextBtn').toggle(currentStep !== getLastStep());
         $('#saveBtn').show();
         
-        if (currentStep !== 4 && funcionesClavesList.length > 0) guardarActividadesActuales();
-        if (currentStep === 4) actualizarActividades();
-        if (currentStep === totalSteps) updateResumen();
+        if (getTipoFormato() === 'EXTENSA' && currentStep !== 4 && funcionesClavesList.length > 0) guardarActividadesActuales();
+        if (getTipoFormato() === 'EXTENSA' && currentStep === 4) actualizarActividades();
+        if (currentStep === getLastStep()) updateResumen();
     }
     
-    function nextStep() { if (currentStep < totalSteps) { currentStep++; updateStepDisplay(); } }
-    function prevStep() { if (currentStep > 1) { currentStep--; updateStepDisplay(); } }
+    function nextStep() { currentStep = getNextStep(currentStep); updateStepDisplay(); }
+    function prevStep() { currentStep = getPrevStep(currentStep); updateStepDisplay(); }
     
     function updateResumen() {
         var puestoVal = $('select[name="puesto"]').val() || '-';
         var funcionesCount = $('#funcionesClavesContainer .dynamic-row').length;
         var kpisCount = $('#kpisContainer .dynamic-row').length;
+        var tipoTexto = getTipoFormato() === 'EXTENSA' ? 'Versión extensa' : 'Versión corta';
         
         $('#resumenContent').html(
             '<h6>Resumen</h6>' +
             '<table class="table table-sm">' +
+            '<tr><td><strong>Formato:</strong></td><td>' + tipoTexto + '</td></tr>' +
             '<tr><td><strong>Puesto:</strong></td><td>' + puestoVal + '</td></tr>' +
             '<tr><td><strong>Funciones Claves:</strong></td><td>' + funcionesCount + '</td></tr>' +
-            '<tr><td><strong>KPIs:</strong></td><td>' + kpisCount + '</td></tr>' +
+            (getTipoFormato() === 'CORTA' ? '<tr><td><strong>KPIs:</strong></td><td>' + kpisCount + '</td></tr>' : '<tr><td><strong>Actividades:</strong></td><td>Incluidas por función clave</td></tr>') +
             '</table>' +
             '<div class="alert alert-info mt-3">Revise antes de guardar</div>'
         );
@@ -400,7 +452,8 @@
     }
     
     function saveDescriptor() {
-        if (currentStep !== 4) {
+        var tipoFormato = getTipoFormato();
+        if (tipoFormato === 'EXTENSA' && currentStep !== 4) {
             actualizarActividades();
         }
         
@@ -413,13 +466,15 @@
         });
         
         var actividadesPorFuncion = [];
-        for(var f = 0; f < funcionesClavesList.length; f++) {
-            var actividades = [];
-            $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
-                var val = $(this).val();
-                if(val && val.trim() !== '') actividades.push(val.trim());
-            });
-            actividadesPorFuncion.push({ funcionNombre: funcionesClavesList[f].nombre, actividades: actividades });
+        if (tipoFormato === 'EXTENSA') {
+            for(var f = 0; f < funcionesClavesList.length; f++) {
+                var actividades = [];
+                $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
+                    var val = $(this).val();
+                    if(val && val.trim() !== '') actividades.push(val.trim());
+                });
+                actividadesPorFuncion.push({ funcionNombre: funcionesClavesList[f].nombre, actividades: actividades });
+            }
         }
         
         var funcionesSecundarias = [];
@@ -471,14 +526,15 @@
         
         var formData = {
             puesto: $('select[name="puesto"]').val(),
+            tipoFormato: tipoFormato,
             area: $('input[name="area"]').val(),
             reportaA: $('input[name="reportaA"]').val(),
             fechaEmision: $('input[name="fechaEmision"]').val(),
             objetivo: $('textarea[name="objetivo"]').val(),
             funcionesClaves: funcionesClaves,
-            actividadesPorFuncion: actividadesPorFuncion,
-            funcionesSecundarias: funcionesSecundarias,
-            kpis: kpis,
+            actividadesPorFuncion: tipoFormato === 'EXTENSA' ? actividadesPorFuncion : [],
+            funcionesSecundarias: tipoFormato === 'CORTA' ? funcionesSecundarias : [],
+            kpis: tipoFormato === 'CORTA' ? kpis : [],
             perfil: {
                 edadMin: $('input[name="edadMin"]').val(),
                 edadMax: $('input[name="edadMax"]').val(),
@@ -509,6 +565,11 @@
             creador: currentUser.nombre,
             estado: 'BORRADOR'
         };
+        if (tipoFormato === 'CORTA') {
+            formData.relacionesLaborales = { internas: [], externas: [] };
+            formData.requerimientosOrganizacionales = [];
+            formData.riesgosFisicos = { esfuerzo: '', condiciones: '', riesgos: [] };
+        }
         
         if (window._isEditing && window._editingId) {
             var existingDescriptor = DescriptorService.getById(window._editingId);
@@ -588,10 +649,14 @@
     $('#saveBtn').off('click').click(saveDescriptor);
     $('.step').off('click').click(function() {
         var step = parseInt($(this).data('step'));
-        if (!isNaN(step) && step >= 1 && step <= totalSteps) {
+        if (!isNaN(step) && step >= 1 && step <= totalSteps && isPasoActivo(step)) {
             currentStep = step;
             updateStepDisplay();
         }
+    });
+    $('#tipoFormato').off('change').on('change', function() {
+        normalizarPasoActual();
+        updateStepDisplay();
     });
     $('#addFuncionClave').off('click').click(function() { addFuncionClaveRow(); });
     $('#addFuncionSecundaria').off('click').click(function() { addFuncionSecundariaRow(); });
