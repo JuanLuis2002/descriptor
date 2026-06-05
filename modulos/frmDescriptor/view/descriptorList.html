@@ -454,9 +454,10 @@ window.initDescriptorList = function() {
     function editarDescriptor(id) {
         console.log('Editando descriptor ID:', id);
         if (typeof DescriptorController !== 'undefined') {
+            var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : null;
             $('.nav-link').removeClass('active');
             $('.nav-link[data-modulo="nuevoDescriptor"]').addClass('active');
-            DescriptorController.init(currentUser, id);
+            DescriptorController.init(currentUser, id, { navigationToken: token });
         } else {
             Swal.fire('Error', 'No se puede editar el descriptor', 'error');
         }
@@ -476,13 +477,15 @@ window.initDescriptorList = function() {
     
     function verDescriptor(id) {
         if (typeof DescriptorController !== 'undefined') {
+            var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : null;
             var descriptor = typeof DescriptorService !== 'undefined' ? DescriptorService.getById(id) : null;
             $('.nav-link').removeClass('active');
             $('.nav-link[data-modulo="misDescriptores"]').addClass('active');
             DescriptorController.init(currentUser, id, {
                 readOnly: true,
                 thReview: tieneComplementosTHExtensos(descriptor),
-                canEditThComplements: false
+                canEditThComplements: false,
+                navigationToken: token
             });
         } else {
             Swal.fire('Error', 'No se puede abrir el detalle del descriptor', 'error');

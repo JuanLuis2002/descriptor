@@ -4,12 +4,14 @@ var DescriptorController = {
     descriptorIdToEdit: null,
     readOnlyMode: false,
     canEditThComplements: false,
+    navigationToken: null,
     
     init: function(user, idToEdit, options) {
         this.currentUser = user;
         this.descriptorIdToEdit = idToEdit || null;
         this.readOnlyMode = !!(options && options.readOnly);
         this.canEditThComplements = !!(options && options.canEditThComplements);
+        this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
         window._thReviewMode = !!(options && options.thReview);
         window._canEditThComplements = this.canEditThComplements;
         window._readOnlyDescriptor = this.readOnlyMode;
@@ -31,6 +33,7 @@ var DescriptorController = {
     
     loadForm: function() {
         var self = this;
+        var token = this.navigationToken;
         
         $('#contentContainer').empty();
         
@@ -39,15 +42,24 @@ var DescriptorController = {
         }
         
         $.get('modulos/frmDescriptor/view/descriptorForm.html', function(html) {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) {
+                return;
+            }
             $('#contentContainer').html(html);
             console.log('Formulario cargado correctamente');
             
             if (self.descriptorIdToEdit) {
                 setTimeout(function() {
+                    if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) {
+                        return;
+                    }
                     self.cargarDatosParaEdicion(self.descriptorIdToEdit);
                 }, 400);
             }
         }).fail(function() {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) {
+                return;
+            }
             $('#contentContainer').html(`
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i> 

@@ -1,6 +1,20 @@
 // App principal - Controlador de módulos
 let currentUser = null;
 let isMobile = window.innerWidth <= 768;
+let navigationToken = 0;
+
+function beginNavigation() {
+    navigationToken += 1;
+    window._currentNavigationToken = navigationToken;
+    return navigationToken;
+}
+
+function isCurrentNavigationToken(token) {
+    return token === window._currentNavigationToken;
+}
+
+window.beginNavigation = beginNavigation;
+window.isCurrentNavigationToken = isCurrentNavigationToken;
 
 // Inicializar
 $(document).ready(function() {
@@ -191,6 +205,7 @@ function cargarModulo(modulo) {
 
 // Cargar Dashboard
 function loadDashboard() {
+    beginNavigation();
     $('#pageTitle').text('Dashboard Principal');
     $('#contentContainer').html(`
         <div class="fade-in">
@@ -229,11 +244,12 @@ function loadDashboard() {
 
 // Cargar formulario de nuevo descriptor
 function cargarNuevoDescriptor() {
+    const token = beginNavigation();
     $('#pageTitle').text('Nuevo Descriptor de Puesto');
     
     // Los scripts YA están cargados, solo llamamos al controlador
     if (typeof DescriptorController !== 'undefined' && DescriptorController.init) {
-        DescriptorController.init(currentUser);
+        DescriptorController.init(currentUser, null, { navigationToken: token });
     } else {
         $('#contentContainer').html(`
             <div class="alert alert-danger">
@@ -246,10 +262,11 @@ function cargarNuevoDescriptor() {
 
 // Cargar mis descriptores
 function cargarMisDescriptores() {
+    const token = beginNavigation();
     $('#pageTitle').text('Mis Descriptores');
     
     if (typeof DescriptorListController !== 'undefined' && DescriptorListController.init) {
-        DescriptorListController.init(currentUser);
+        DescriptorListController.init(currentUser, { navigationToken: token });
     } else {
         $('#contentContainer').html(`
             <div class="alert alert-danger">
@@ -304,6 +321,7 @@ function closeMobileSidebar() {
 
 // Función para editar descriptor (llamada desde la lista)
 function editarDescriptor(id) {
+    const token = beginNavigation();
     console.log('Editando descriptor ID:', id);
     $('#pageTitle').text('Editar Descriptor');
     // Cambiar la pestaña activa a Nuevo Descriptor
@@ -311,7 +329,7 @@ function editarDescriptor(id) {
     $('.nav-link[data-modulo="nuevoDescriptor"]').addClass('active');
     // Inicializar el controlador en modo edición
     if (typeof DescriptorController !== 'undefined') {
-        DescriptorController.init(currentUser, id);
+        DescriptorController.init(currentUser, id, { navigationToken: token });
     } else {
         Swal.fire('Error', 'No se puede editar el descriptor', 'error');
     }
@@ -564,6 +582,7 @@ window.desactivarDescriptor = desactivarDescriptor;
 
 // Exportar globales
 window.cargarNuevoDescriptor = cargarNuevoDescriptor;
+window.cargarMisDescriptores = cargarMisDescriptores;
 window.verDescriptor = verDescriptor;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
