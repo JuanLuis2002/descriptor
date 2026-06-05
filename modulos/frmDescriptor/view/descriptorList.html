@@ -649,10 +649,21 @@ window.initDescriptorList = function() {
     function desactivarDescriptor(id) {
         Swal.fire({
             title: 'Desactivar Descriptor',
-            html: '<textarea id="motivo" class="swal2-textarea" placeholder="Motivo de desactivación..." rows="3"></textarea>',
+            html: '<div class="deactivate-modal"><label for="motivo" class="deactivate-label">Motivo de desactivación</label><textarea id="motivo" class="swal2-textarea deactivate-textarea" placeholder="Explique brevemente el motivo..." rows="4"></textarea></div>',
+            customClass: {
+                popup: 'deactivate-popup',
+                title: 'deactivate-title',
+                htmlContainer: 'deactivate-html',
+                actions: 'deactivate-actions',
+                confirmButton: 'deactivate-confirm',
+                cancelButton: 'deactivate-cancel'
+            },
             showCancelButton: true,
             confirmButtonText: 'Desactivar',
+            cancelButtonText: 'Cancelar',
             confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            buttonsStyling: false,
             preConfirm: function() {
                 var motivo = document.getElementById('motivo').value;
                 if (!motivo || motivo.trim() === '') {

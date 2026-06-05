@@ -963,6 +963,133 @@
             color: #dbeafe !important;
         }
 
+        .deactivate-popup {
+            width: min(520px, calc(100vw - 28px)) !important;
+            border-radius: 8px !important;
+            padding: 26px 24px 24px !important;
+        }
+
+        .deactivate-title {
+            padding: 0 !important;
+            font-size: clamp(1.5rem, 5vw, 2rem) !important;
+            line-height: 1.2 !important;
+            color: #4b5563 !important;
+        }
+
+        .deactivate-html {
+            margin: 22px auto 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 340px !important;
+            overflow: visible !important;
+        }
+
+        .deactivate-modal {
+            text-align: left;
+            width: 100%;
+        }
+
+        .deactivate-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4b5563;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .deactivate-textarea {
+            width: 100% !important;
+            min-height: 136px !important;
+            margin: 0 !important;
+            resize: vertical;
+            border-radius: 6px !important;
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+            padding: 12px 14px !important;
+            box-shadow: none !important;
+        }
+
+        .deactivate-actions {
+            display: flex !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            margin-top: 24px !important;
+            width: 100%;
+        }
+
+        .deactivate-confirm,
+        .deactivate-cancel {
+            border: 0;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: 700;
+            min-width: 112px;
+            padding: 12px 18px;
+        }
+
+        .deactivate-confirm {
+            background: #dc3545;
+        }
+
+        .deactivate-confirm:hover {
+            background: #bb2d3b;
+        }
+
+        .deactivate-cancel {
+            background: #6c757d;
+        }
+
+        .deactivate-cancel:hover {
+            background: #5c636a;
+        }
+
+        body.dark-mode .deactivate-popup {
+            background: #1f2937 !important;
+            border: 1px solid #374151;
+        }
+
+        body.dark-mode .deactivate-title,
+        body.dark-mode .deactivate-label {
+            color: #f9fafb !important;
+        }
+
+        body.dark-mode .deactivate-textarea {
+            background: #111827 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+
+        body.dark-mode .deactivate-textarea::placeholder {
+            color: #9ca3af !important;
+        }
+
+        @media (max-width: 576px) {
+            .deactivate-popup {
+                padding: 24px 18px 22px !important;
+            }
+
+            .deactivate-html {
+                max-width: 100% !important;
+                margin-top: 18px !important;
+            }
+
+            .deactivate-textarea {
+                min-height: 130px !important;
+            }
+
+            .deactivate-actions {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .deactivate-confirm,
+            .deactivate-cancel {
+                width: 100%;
+                margin: 0 !important;
+            }
+        }
+
         body.dark-mode .dark-mode-icon::before {
             content: "\f185";
         }
