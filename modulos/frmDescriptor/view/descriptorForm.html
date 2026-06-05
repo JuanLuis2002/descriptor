@@ -63,6 +63,7 @@
         .funciones-table td { vertical-align: middle; padding: 6px 8px; }
         .funciones-table .funcion-codigo { width: 72px; text-align: center; font-weight: 700; color: #0d6efd; }
         .funciones-table .form-control { font-size: 0.82rem; padding: 5px 8px; min-height: 32px; }
+        .funciones-table textarea.form-control { min-height: 36px; resize: vertical; }
         .funciones-table .btn { padding: 3px 7px; }
         .funciones-add-btn { font-size: 0.82rem; }
         .bitacora-card { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; }
@@ -336,8 +337,30 @@
     window.renumerarFuncionesClaveGlobal = renumerarFuncionesClave;
     
     function addFuncionSecundariaRow() {
-        $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
+        ensureFuncionesSecundariasTable();
+        $('#funcionesSecundariasTableBody').append(buildFuncionSecundariaRow(''));
+        renumerarFuncionesSecundarias();
     }
+    
+    function ensureFuncionesSecundariasTable() {
+        if ($('#funcionesSecundariasTableBody').length > 0) return;
+        $('#funcionesSecundariasContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Descripción de la función secundaria</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesSecundariasTableBody"></tbody></table></div>');
+    }
+    
+    function buildFuncionSecundariaRow(texto) {
+        return '<tr class="dynamic-row funcion-secundaria-row">' +
+            '<td class="funcion-codigo"><span class="funcion-sec-codigo-text"></span></td>' +
+            '<td><textarea class="form-control" name="funcionSecundaria[]" rows="1" placeholder="Describa la función secundaria">' + (texto || '') + '</textarea></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesSecundariasGlobal === \'function\') renumerarFuncionesSecundariasGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function renumerarFuncionesSecundarias() {
+        $('#funcionesSecundariasTableBody tr').each(function(index) {
+            $(this).find('.funcion-sec-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarFuncionesSecundariasGlobal = renumerarFuncionesSecundarias;
     
     function addKPIRow() {
         $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions() + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');

@@ -255,11 +255,34 @@ function renumerarFuncionesClaveTable() {
 }
 
 function addFuncionSecundariaRow() {
-    $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
+    ensureFuncionesSecundariasTable();
+    $('#funcionesSecundariasTableBody').append(buildFuncionSecundariaTableRow(''));
+    renumerarFuncionesSecundariasTable();
 }
 
 function addFuncionSecundariaRowWithData(texto) {
-    $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria">' + (texto || '') + '</textarea></div>');
+    ensureFuncionesSecundariasTable();
+    $('#funcionesSecundariasTableBody').append(buildFuncionSecundariaTableRow(texto));
+    renumerarFuncionesSecundariasTable();
+}
+
+function ensureFuncionesSecundariasTable() {
+    if ($('#funcionesSecundariasTableBody').length > 0) return;
+    $('#funcionesSecundariasContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Descripción de la función secundaria</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesSecundariasTableBody"></tbody></table></div>');
+}
+
+function buildFuncionSecundariaTableRow(texto) {
+    return '<tr class="dynamic-row funcion-secundaria-row">' +
+        '<td class="funcion-codigo"><span class="funcion-sec-codigo-text"></span></td>' +
+        '<td><textarea class="form-control" name="funcionSecundaria[]" rows="1" placeholder="Describa la función secundaria">' + (texto || '') + '</textarea></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesSecundariasGlobal === \'function\') renumerarFuncionesSecundariasGlobal(); else renumerarFuncionesSecundariasTable();"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+}
+
+function renumerarFuncionesSecundariasTable() {
+    $('#funcionesSecundariasTableBody tr').each(function(index) {
+        $(this).find('.funcion-sec-codigo-text').text(index + 1);
+    });
 }
 
 var catalogoFrecuenciasKPI = [
