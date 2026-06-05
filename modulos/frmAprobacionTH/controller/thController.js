@@ -381,6 +381,7 @@ var THController = {
                                 accion: 'APROBACIÓN POR TH GENERALISTA',
                                 usuario: THController.currentUser.nombre,
                                 rol: THController.currentUser.rolNombre,
+                                estadoNuevo: 'APROBADO_TH',
                                 estado: 'FIRMA_JTH'
                             });
                             Swal.fire('Aprobado', 'Descriptor enviado para firmas. Los firmantes podrán firmar en cualquier orden.', 'success').then(function() {

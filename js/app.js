@@ -446,6 +446,7 @@ function firmarDescriptorJI(id) {
                 accion: 'FIRMA DEL JEFE INMEDIATO',
                 usuario: currentUser.nombre,
                 rol: currentUser.rolNombre,
+                estadoNuevo: 'FIRMADO_JI',
                 estado: descriptorActualizado.estado
             });
             var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';

@@ -168,7 +168,7 @@ var DescriptorService = {
             usuario: evento.usuario,
             rol: evento.rol,
             estadoAnterior: evento.estadoAnterior || descriptor.estado,
-            estadoNuevo: evento.estado || descriptor.estado,
+            estadoNuevo: evento.estadoNuevo || evento.estado || descriptor.estado,
             observacion: evento.observacion || null,
             descripcion: evento.descripcion || ''
         });

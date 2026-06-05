@@ -23,14 +23,7 @@ var JTHController = {
     },
     
     cargarPendientes: function() {
-        // Buscar descriptores con estado FIRMA_JTH
-        var todos = DescriptorService.getAll();
-        var pendientes = [];
-        for (var i = 0; i < todos.length; i++) {
-            if (todos[i].estado === 'FIRMA_JTH') {
-                pendientes.push(todos[i]);
-            }
-        }
+        var pendientes = JTHService.getPendientesFirma();
         var firmados = JTHService.getFirmados();
         var unificados = {};
         for (var p = 0; p < pendientes.length; p++) unificados[pendientes[p].id] = pendientes[p];
@@ -56,7 +49,7 @@ var JTHController = {
         for (var i = 0; i < pageItems.length; i++) {
             var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
-            var tieneFirma = JTHService.getFirma(d.id);
+            var tieneFirma = JTHService.getFirma(d.id) || d.firmaJTH;
             var badgeClass = tieneFirma ? 'bg-success' : 'bg-warning';
             var badgeText = tieneFirma ? 'Firmado' : 'Pendiente';
             var btnText = tieneFirma ? 'Ver Firma' : 'Firmar Documento';
@@ -256,6 +249,7 @@ var JTHController = {
                     accion: 'FIRMA DEL JEFE DE TALENTO HUMANO',
                     usuario: JTHController.currentUser.nombre,
                     rol: JTHController.currentUser.rolNombre,
+                    estadoNuevo: 'FIRMADO_JTH',
                     estado: estadoFirma
                 });
                 var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';

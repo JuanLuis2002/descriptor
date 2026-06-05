@@ -337,6 +337,7 @@ var AprobacionController = {
                                     accion: 'APROBACIÓN POR JEFE SUPERIOR',
                                     usuario: AprobacionController.currentUser.nombre,
                                     rol: AprobacionController.currentUser.rolNombre,
+                                    estadoNuevo: 'APROBADO_POR_JF',
                                     estado: 'ENVIADO_TH'
                                 });
                                 Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
@@ -355,6 +356,7 @@ var AprobacionController = {
                                     accion: 'APROBACIÓN POR JEFE SUPERIOR',
                                     usuario: AprobacionController.currentUser.nombre,
                                     rol: AprobacionController.currentUser.rolNombre,
+                                    estadoNuevo: 'APROBADO_POR_JF',
                                     estado: 'ENVIADO_TH'
                                 });
                                 Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {

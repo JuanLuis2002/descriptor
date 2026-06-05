@@ -243,6 +243,7 @@ var CTController = {
                     accion: 'FIRMA DEL COLABORADOR/TITULAR',
                     usuario: CTController.currentUser.nombre,
                     rol: CTController.currentUser.rolNombre,
+                    estadoNuevo: 'FIRMADO_CT',
                     estado: estadoFirma
                 });
                 var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';

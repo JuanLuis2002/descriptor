@@ -64,9 +64,9 @@
     <div class="row text-center">
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statBorradores">0</div><div class="stat-label">Borradores</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosJF">0</div><div class="stat-label">Enviados a JF</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosJF">0</div><div class="stat-label">Observados por JF</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosJF">0</div><div class="stat-label">Aprobados por JF</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosJF">0</div><div class="stat-label">Enviados a JIS</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosJF">0</div><div class="stat-label">Observados por JIS</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosJF">0</div><div class="stat-label">Aprobados por JIS</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
@@ -82,9 +82,9 @@
         <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter">
             <option value="">Todos</option>
             <option value="BORRADOR">Borrador</option>
-            <option value="ENVIADO_JF">Enviado a JF</option>
-            <option value="OBSERVADO_JF">Observado por JF</option>
-            <option value="APROBADO_POR_JF">Aprobado por JF</option>
+            <option value="ENVIADO_JF">Enviado a JIS</option>
+            <option value="OBSERVADO_JF">Observado por JIS</option>
+            <option value="APROBADO_POR_JF">Aprobado por JIS</option>
             <option value="ENVIADO_TH">Enviado a TH</option>
             <option value="OBSERVADO_TH">Observado por TH</option>
             <option value="APROBADO_TH">Aprobado por TH</option>
@@ -164,9 +164,9 @@ window.initDescriptorList = function() {
     function getEstadoTexto(estado) {
         var estados = {
             'BORRADOR': 'Borrador',
-            'ENVIADO_JF': 'Enviado a JF',
-            'OBSERVADO_JF': 'Observado por JF',
-            'APROBADO_POR_JF': 'Aprobado por JF',
+            'ENVIADO_JF': 'Enviado a JIS',
+            'OBSERVADO_JF': 'Observado por JIS',
+            'APROBADO_POR_JF': 'Aprobado por JIS',
             'ENVIADO_TH': 'Enviado a TH',
             'OBSERVADO_TH': 'Observado por TH',
             'APROBADO_TH': 'Aprobado por TH',
@@ -214,7 +214,7 @@ window.initDescriptorList = function() {
             html += '<li><button class="dropdown-item btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-primary"></i>Enviar a JF</button></li>';
         }
         if (d.estado === 'OBSERVADO_JF') {
-            html += '<li><button class="dropdown-item btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-warning"></i>Reenviar a JF</button></li>';
+            html += '<li><button class="dropdown-item btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-warning"></i>Reenviar a JIS</button></li>';
         }
         if (d.estado === 'OBSERVADO_TH') {
             html += '<li><button class="dropdown-item btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Reenviar a TH</button></li>';
@@ -457,18 +457,18 @@ window.initDescriptorList = function() {
     }
     
     function enviarDescriptor(id) {
-        Swal.fire({ title: '¿Enviar a Jefe Superior?', text: 'Una vez enviado, el Jefe Superior podrá revisar y aprobar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#0d6efd' })
+        Swal.fire({ title: '¿Enviar a Jefe Inmediato Superior?', text: 'Una vez enviado, el JIS podrá revisar y aprobar el descriptor.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, enviar', confirmButtonColor: '#0d6efd' })
             .then(function(result) {
                 if (result.isConfirmed) {
                     var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
                     DescriptorService.update(id, { estado: 'ENVIADO_JF' });
                     DescriptorService.registrarEvento(id, {
-                        accion: 'ENVÍO A JEFE SUPERIOR',
+                        accion: 'ENVÍO A JEFE INMEDIATO SUPERIOR',
                         usuario: currentUserGlobal.nombre,
                         rol: currentUserGlobal.rolNombre,
                         estado: 'ENVIADO_JF'
                     });
-                    Swal.fire('Enviado', 'Descriptor enviado al Jefe Superior', 'success');
+                    Swal.fire('Enviado', 'Descriptor enviado al Jefe Inmediato Superior', 'success');
                     cargarDescriptores();
                 }
             });
@@ -476,8 +476,8 @@ window.initDescriptorList = function() {
     
     function reenviarDescriptorAJF(id) {
         Swal.fire({ 
-            title: '¿Reenviar a Jefe Superior?', 
-            text: 'Una vez reenviado, el Jefe Superior podrá revisar las correcciones.', 
+            title: '¿Reenviar a Jefe Inmediato Superior?', 
+            text: 'Una vez reenviado, el JIS podrá revisar las correcciones.', 
             icon: 'question', 
             showCancelButton: true, 
             confirmButtonText: 'Sí, reenviar', 
@@ -487,12 +487,12 @@ window.initDescriptorList = function() {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
                 DescriptorService.update(id, { estado: 'ENVIADO_JF' });
                 DescriptorService.registrarEvento(id, {
-                    accion: 'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)',
+                    accion: 'REENVÍO A JEFE INMEDIATO SUPERIOR (DESPUÉS DE CORRECCIÓN)',
                     usuario: currentUserGlobal.nombre,
                     rol: currentUserGlobal.rolNombre,
                     estado: 'ENVIADO_JF'
                 });
-                Swal.fire('Reenviado', 'Descriptor reenviado al Jefe Superior', 'success');
+                Swal.fire('Reenviado', 'Descriptor reenviado al Jefe Inmediato Superior', 'success');
                 cargarDescriptores();
             }
         });
@@ -620,6 +620,7 @@ window.initDescriptorList = function() {
                     accion: 'FIRMA DEL JEFE INMEDIATO',
                     usuario: currentUserGlobal.nombre,
                     rol: currentUserGlobal.rolNombre,
+                    estadoNuevo: 'FIRMADO_JI',
                     estado: descriptorActualizado.estado
                 });
                 var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
