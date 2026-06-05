@@ -222,11 +222,36 @@ var DescriptorController = {
 
 // Funciones auxiliares para agregar filas con datos
 function addFuncionClaveRow() {
-    $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
+    ensureFuncionesClavesTable();
+    $('#funcionesClavesTableBody').append(buildFuncionClaveTableRow('', ''));
+    renumerarFuncionesClaveTable();
 }
 
 function addFuncionClaveRowWithData(codigo, nombre) {
-    $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código" value="' + (codigo || '') + '"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre" value="' + (nombre || '') + '"></div></div></div>');
+    ensureFuncionesClavesTable();
+    $('#funcionesClavesTableBody').append(buildFuncionClaveTableRow(codigo, nombre));
+    renumerarFuncionesClaveTable();
+}
+
+function ensureFuncionesClavesTable() {
+    if ($('#funcionesClavesTableBody').length > 0) return;
+    $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
+}
+
+function buildFuncionClaveTableRow(codigo, nombre) {
+    return '<tr class="dynamic-row funcion-clave-row">' +
+        '<td class="funcion-codigo"><input type="hidden" name="funcionCodigo[]" value="' + (codigo || '') + '"><span class="funcion-codigo-text">' + (codigo || '') + '</span></td>' +
+        '<td><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre de la función" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesClaveGlobal === \'function\') renumerarFuncionesClaveGlobal(); else renumerarFuncionesClaveTable();"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+}
+
+function renumerarFuncionesClaveTable() {
+    $('#funcionesClavesTableBody tr').each(function(index) {
+        var codigo = String(index + 1);
+        $(this).find('input[name="funcionCodigo[]"]').val(codigo);
+        $(this).find('.funcion-codigo-text').text(codigo);
+    });
 }
 
 function addFuncionSecundariaRow() {

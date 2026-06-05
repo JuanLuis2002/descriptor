@@ -58,6 +58,13 @@
         .form-label { font-weight: 600; font-size: 0.85rem; }
         .actividad-item { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6; }
         .funcion-actividad-card { margin-bottom: 20px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+        .funciones-table { font-size: 0.82rem; }
+        .funciones-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
+        .funciones-table td { vertical-align: middle; padding: 6px 8px; }
+        .funciones-table .funcion-codigo { width: 72px; text-align: center; font-weight: 700; color: #0d6efd; }
+        .funciones-table .form-control { font-size: 0.82rem; padding: 5px 8px; min-height: 32px; }
+        .funciones-table .btn { padding: 3px 7px; }
+        .funciones-add-btn { font-size: 0.82rem; }
         .bitacora-card { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; }
         .bitacora-item { padding: 12px 14px; border-bottom: 1px solid #e9ecef; background: #fff; }
         .bitacora-item:last-child { border-bottom: none; }
@@ -136,7 +143,7 @@
         <div class="form-section" data-section="3">
             <h5 class="mb-4"><i class="fas fa-tasks me-2 text-primary"></i>Funciones Claves</h5>
             <div id="funcionesClavesContainer"></div>
-            <button type="button" class="btn btn-sm btn-outline-primary" id="addFuncionClave"><i class="fas fa-plus"></i> Agregar Función Clave</button>
+            <button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" id="addFuncionClave"><i class="fas fa-plus"></i> Agregar Función Clave</button>
             <small class="text-muted d-block mt-2">Cada función clave tendrá sus propias actividades en la siguiente sección</small>
         </div>
 
@@ -301,8 +308,32 @@
     }
     
     function addFuncionClaveRow() {
-        $('#funcionesClavesContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-3"><input type="text" class="form-control" name="funcionCodigo[]" placeholder="Código"></div><div class="col-md-9"><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre"></div></div></div>');
+        ensureFuncionesTable();
+        $('#funcionesClavesTableBody').append(buildFuncionClaveRow('', ''));
+        renumerarFuncionesClave();
     }
+    
+    function ensureFuncionesTable() {
+        if ($('#funcionesClavesTableBody').length > 0) return;
+        $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
+    }
+    
+    function buildFuncionClaveRow(codigo, nombre) {
+        return '<tr class="dynamic-row funcion-clave-row">' +
+            '<td class="funcion-codigo"><input type="hidden" name="funcionCodigo[]" value="' + (codigo || '') + '"><span class="funcion-codigo-text">' + (codigo || '') + '</span></td>' +
+            '<td><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre de la función" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesClaveGlobal === \'function\') renumerarFuncionesClaveGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function renumerarFuncionesClave() {
+        $('#funcionesClavesTableBody tr').each(function(index) {
+            var codigo = String(index + 1);
+            $(this).find('input[name="funcionCodigo[]"]').val(codigo);
+            $(this).find('.funcion-codigo-text').text(codigo);
+        });
+    }
+    window.renumerarFuncionesClaveGlobal = renumerarFuncionesClave;
     
     function addFuncionSecundariaRow() {
         $('#funcionesSecundariasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><textarea class="form-control" name="funcionSecundaria[]" rows="2" placeholder="Describa la función secundaria"></textarea></div>');
@@ -376,8 +407,8 @@
         
         funcionesClavesList = [];
         var funcionIndex = 0;
-        $('#funcionesClavesContainer .dynamic-row').each(function() {
-            var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || 'FC' + (funcionIndex+1);
+        $('#funcionesClavesContainer .funcion-clave-row').each(function() {
+            var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || String(funcionIndex+1);
             var nombre = $(this).find('input[name="funcionNombre[]"]').val() || 'Función ' + (funcionIndex+1);
             funcionesClavesList.push({ id: funcionIndex, codigo: codigo, nombre: nombre });
             funcionIndex++;
@@ -512,7 +543,7 @@
     
     function updateResumen() {
         var puestoVal = $('select[name="puesto"]').val() || '-';
-        var funcionesCount = $('#funcionesClavesContainer .dynamic-row').length;
+        var funcionesCount = $('#funcionesClavesContainer .funcion-clave-row').length;
         var kpisCount = $('#kpisContainer .dynamic-row').length;
         var tipoTexto = getTipoFormato() === 'EXTENSA' ? 'Versión extensa' : 'Versión corta';
         
@@ -557,7 +588,8 @@
         }
         
         var funcionesClaves = [];
-        $('#funcionesClavesContainer .dynamic-row').each(function() {
+        renumerarFuncionesClave();
+        $('#funcionesClavesContainer .funcion-clave-row').each(function() {
             funcionesClaves.push({ 
                 codigo: $(this).find('input[name="funcionCodigo[]"]').val(), 
                 nombre: $(this).find('input[name="funcionNombre[]"]').val() 
