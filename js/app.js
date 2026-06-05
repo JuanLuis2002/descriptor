@@ -1268,13 +1268,29 @@ function generarHTMLVersionExtensa(d) {
     // ========== AUDITORIA (opcional) ==========
     var auditoriaHtml = '';
     if (d.auditoria && d.auditoria.eventos && d.auditoria.eventos.length > 0) {
+        var estadoTextoAuditoria = {
+            'BORRADOR': 'Borrador',
+            'ENVIADO_JF': 'Enviado a JIS',
+            'OBSERVADO_JF': 'Observado por JIS',
+            'APROBADO_POR_JF': 'Aprobado por JIS',
+            'ENVIADO_TH': 'Enviado a TH',
+            'OBSERVADO_TH': 'Observado por TH',
+            'APROBADO_TH': 'Aprobado por TH',
+            'FIRMA_JTH': 'Pendiente de firmas',
+            'FIRMADO_JTH': 'Firmado por JTH',
+            'FIRMADO_CT': 'Firmado por Colaborador',
+            'FIRMADO_JI': 'Firmado por Jefe Inmediato',
+            'ACTIVO': 'Activo',
+            'INACTIVO': 'Inactivo'
+        };
         var eventos = d.auditoria.eventos;
         eventos.sort(function(a,b) { return new Date(a.fecha) - new Date(b.fecha); });
         auditoriaHtml = '<table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;">' +
             '<tr bgcolor="#F0F0F0"><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Estado</th></tr>';
         for (var i = 0; i < eventos.length; i++) {
             var fecha = new Date(eventos[i].fecha).toLocaleString();
-            auditoriaHtml += '<tr><td>' + fecha + '</td><td>' + (eventos[i].accion || '') + '</td><td>' + (eventos[i].usuario || '') + '</td><td>' + (eventos[i].estadoNuevo || eventos[i].estado || '') + '</td></tr>';
+            var estadoEvento = eventos[i].estadoNuevo || eventos[i].estado || '';
+            auditoriaHtml += '<tr><td>' + fecha + '</td><td>' + (eventos[i].accion || '') + '</td><td>' + (eventos[i].usuario || '') + '</td><td>' + (estadoTextoAuditoria[estadoEvento] || estadoEvento) + '</td></tr>';
         }
         auditoriaHtml += '</table>';
     }

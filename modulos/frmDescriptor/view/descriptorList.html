@@ -199,6 +199,16 @@ window.initDescriptorList = function() {
         return classes[estado] || 'borrador';
     }
     
+    function getAccionAuditoriaTexto(accion) {
+        var acciones = {
+            'ENVÍO A JEFE SUPERIOR': 'ENVÍO A JEFE INMEDIATO SUPERIOR',
+            'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)': 'REENVÍO A JEFE INMEDIATO SUPERIOR (DESPUÉS DE CORRECCIÓN)',
+            'APROBACIÓN POR JEFE SUPERIOR': 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
+            'OBSERVACIÓN POR JEFE SUPERIOR': 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR'
+        };
+        return acciones[accion] || accion || 'Evento';
+    }
+    
     function buildAccionesDropdown(d) {
         var html = '<div class="dropdown descriptor-actions">' +
             '<button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
@@ -387,12 +397,12 @@ window.initDescriptorList = function() {
                 var fechaFormateada = new Date(ev.fecha).toLocaleString();
                 var estadoBadge = '';
                 if (ev.estadoNuevo) {
-                    estadoBadge = ' <span class="badge ' + getEstadoBadgeClass(ev.estadoNuevo) + '">' + ev.estadoNuevo + '</span>';
+                    estadoBadge = ' <span class="badge ' + getEstadoBadgeClass(ev.estadoNuevo) + '">' + getEstadoTexto(ev.estadoNuevo) + '</span>';
                 }
                 
                 html += '<div class="auditoria-item">' +
                     '<div class="auditoria-fecha"><i class="far fa-calendar-alt me-1"></i> ' + fechaFormateada + '</div>' +
-                    '<div class="auditoria-accion">' + (ev.accion || 'Evento') + estadoBadge + '</div>' +
+                    '<div class="auditoria-accion">' + getAccionAuditoriaTexto(ev.accion) + estadoBadge + '</div>' +
                     '<div class="auditoria-usuario"><i class="fas fa-user me-1"></i> ' + (ev.usuario || 'Sistema') + ' - ' + (ev.rol || '') + '</div>';
                 
                 if (ev.observacion) {

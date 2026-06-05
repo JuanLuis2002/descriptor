@@ -109,9 +109,9 @@ var AprobacionController = {
     getEstadoTexto: function(estado) {
         var estados = {
             'ENVIADO_JF': 'Pendiente de aprobación',
-            'APROBADO_POR_JF': 'Aprobado por Jefe Superior',
+            'APROBADO_POR_JF': 'Aprobado por JIS',
             'ENVIADO_TH': 'Enviado a TH',
-            'OBSERVADO_JF': 'Observado por Jefe Superior',
+            'OBSERVADO_JF': 'Observado por JIS',
             'OBSERVADO_TH': 'Observado por TH',
             'FIRMA_JTH': 'Pendiente de firmas',
             'FIRMADO_JTH': 'Firmado por JTH',
@@ -141,6 +141,16 @@ var AprobacionController = {
     cargarGestionados: function() {
         $('#gestionadosContainer').empty();
     },
+    
+    getAccionAuditoriaTexto: function(accion) {
+        var acciones = {
+            'ENVÍO A JEFE SUPERIOR': 'ENVÍO A JEFE INMEDIATO SUPERIOR',
+            'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)': 'REENVÍO A JEFE INMEDIATO SUPERIOR (DESPUÉS DE CORRECCIÓN)',
+            'APROBACIÓN POR JEFE SUPERIOR': 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
+            'OBSERVACIÓN POR JEFE SUPERIOR': 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR'
+        };
+        return acciones[accion] || accion || 'Evento';
+    },
 
     verAuditoriaCompleta: function(id) {
         var descriptor = AprobacionService.getDetalle(id);
@@ -153,7 +163,7 @@ var AprobacionController = {
         } else {
             eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
             for (var i = 0; i < eventos.length; i++) {
-                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small>';
+                html += '<div class="border-bottom py-2"><strong>' + this.getAccionAuditoriaTexto(eventos[i].accion) + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small>';
                 if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
                 html += '</div>';
             }
@@ -173,7 +183,7 @@ var AprobacionController = {
         } else {
             eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
             for (var i = 0; i < eventos.length; i++) {
-                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
+                html += '<div class="border-bottom py-2"><strong>' + this.getAccionAuditoriaTexto(eventos[i].accion) + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
                 if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
                 html += '</div>';
             }
@@ -334,13 +344,13 @@ var AprobacionController = {
                             if (result.isConfirmed) {
                                 AprobacionService.aprobar(id);
                                 DescriptorService.registrarEvento(id, {
-                                    accion: 'APROBACIÓN POR JEFE SUPERIOR',
+                                    accion: 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
                                     usuario: AprobacionController.currentUser.nombre,
                                     rol: AprobacionController.currentUser.rolNombre,
                                     estadoNuevo: 'APROBADO_POR_JF',
                                     estado: 'ENVIADO_TH'
                                 });
-                                Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
+                                Swal.fire('Aprobado', 'La aprobación del Jefe Inmediato Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
                                     AprobacionController.cargarPendientes();
                                     AprobacionController.cargarGestionados();
                                 });
@@ -353,13 +363,13 @@ var AprobacionController = {
                             if (result.isConfirmed) {
                                 AprobacionService.aprobar(id);
                                 DescriptorService.registrarEvento(id, {
-                                    accion: 'APROBACIÓN POR JEFE SUPERIOR',
+                                    accion: 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
                                     usuario: AprobacionController.currentUser.nombre,
                                     rol: AprobacionController.currentUser.rolNombre,
                                     estadoNuevo: 'APROBADO_POR_JF',
                                     estado: 'ENVIADO_TH'
                                 });
-                                Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
+                                Swal.fire('Aprobado', 'La aprobación del Jefe Inmediato Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
                                     AprobacionController.cargarPendientes();
                                     AprobacionController.cargarGestionados();
                                 });
@@ -405,7 +415,7 @@ var AprobacionController = {
                         if (result.isConfirmed && result.value) {
                             AprobacionService.observar(id, result.value);
                             DescriptorService.registrarEvento(id, {
-                                accion: 'OBSERVACIÓN POR JEFE SUPERIOR',
+                                accion: 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR',
                                 usuario: AprobacionController.currentUser.nombre,
                                 rol: AprobacionController.currentUser.rolNombre,
                                 estado: 'OBSERVADO_JF',

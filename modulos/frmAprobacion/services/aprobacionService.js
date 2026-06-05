@@ -13,7 +13,9 @@ var AprobacionService = {
             return eventos.some(function(ev) {
                 return ev.usuario === usuario && (
                     ev.accion === 'APROBACIÓN POR JEFE SUPERIOR' ||
+                    ev.accion === 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR' ||
                     ev.accion === 'OBSERVACIÓN POR JEFE SUPERIOR' ||
+                    ev.accion === 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR' ||
                     ev.accion === 'ENVÍO A TALENTO HUMANO'
                 );
             });
