@@ -3,22 +3,27 @@ var CTController = {
     currentUser: null,
     currentPage: 1,
     pageSize: 5,
+    navigationToken: null,
     
-    init: function(user) {
+    init: function(user, options) {
         this.currentUser = user;
+        this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
         console.log('CTController iniciado para:', user.nombre);
         this.loadView();
     },
     
     loadView: function() {
         var self = this;
+        var token = this.navigationToken;
         $('#pageTitle').text('Aprobación Colaborador / Titular');
         $('#contentContainer').empty();
         $.get('modulos/frmFirmaCT/view/ctView.html', function(html) {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             $('#contentContainer').html(html);
             self.cargarPendientes();
             self.cargarFirmados();
         }).fail(function() {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de firmas CT</div>');
         });
     },
@@ -155,15 +160,19 @@ var CTController = {
         }
 
         $('#pageTitle').text('Detalle del Descriptor');
+        var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
+        this.navigationToken = token;
         DescriptorController.init(this.currentUser, id, {
             readOnly: true,
             thReview: (descriptor.tipoFormato || 'CORTA') === 'EXTENSA',
-            canEditThComplements: false
+            canEditThComplements: false,
+            navigationToken: token
         });
 
         var self = this;
         var intentos = 0;
         function insertarPanelFirmas() {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             intentos++;
             if ($('#descriptorForm').length === 0 && intentos < 20) {
                 setTimeout(insertarPanelFirmas, 150);

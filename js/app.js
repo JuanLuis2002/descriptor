@@ -337,18 +337,21 @@ function editarDescriptor(id) {
 
 // Cargar pendientes de aprobación (Jefe Superior)
 function cargarPendientesAprobar() {
+    const token = beginNavigation();
     $('#pageTitle').text('Pendientes de Aprobación');
     
     if (typeof AprobacionController !== 'undefined' && AprobacionController.init) {
-        AprobacionController.init(currentUser);
+        AprobacionController.init(currentUser, { navigationToken: token });
     } else {
         // Cargar scripts del módulo
         $.getScript('modulos/frmAprobacion/services/aprobacionService.js')
             .done(function() {
+                if (!isCurrentNavigationToken(token)) return;
                 $.getScript('modulos/frmAprobacion/controller/aprobacionController.js')
                     .done(function() {
+                        if (!isCurrentNavigationToken(token)) return;
                         if (typeof AprobacionController !== 'undefined') {
-                            AprobacionController.init(currentUser);
+                            AprobacionController.init(currentUser, { navigationToken: token });
                         }
                     });
             });
@@ -357,18 +360,21 @@ function cargarPendientesAprobar() {
 
 // Cargar revisión TH (TH Generalista)
 function cargarRevisionTH() {
+    const token = beginNavigation();
     $('#pageTitle').text('Revisión Técnica - TH');
     
     if (typeof THController !== 'undefined' && THController.init) {
-        THController.init(currentUser);
+        THController.init(currentUser, { navigationToken: token });
     } else {
         // Cargar scripts del módulo
         $.getScript('modulos/frmAprobacionTH/services/thService.js')
             .done(function() {
+                if (!isCurrentNavigationToken(token)) return;
                 $.getScript('modulos/frmAprobacionTH/controller/thController.js')
                     .done(function() {
+                        if (!isCurrentNavigationToken(token)) return;
                         if (typeof THController !== 'undefined') {
-                            THController.init(currentUser);
+                            THController.init(currentUser, { navigationToken: token });
                         }
                     });
             });
@@ -377,17 +383,20 @@ function cargarRevisionTH() {
 
 // Cargar firmas Jefe de TH
 function cargarFirmasJTH() {
+    const token = beginNavigation();
     $('#pageTitle').text('Aprobaciones - Jefe de Talento Humano');
     
     if (typeof JTHController !== 'undefined' && JTHController.init) {
-        JTHController.init(currentUser);
+        JTHController.init(currentUser, { navigationToken: token });
     } else {
         $.getScript('modulos/frmFirmaJTH/services/jthService.js')
             .done(function() {
+                if (!isCurrentNavigationToken(token)) return;
                 $.getScript('modulos/frmFirmaJTH/controller/jthController.js')
                     .done(function() {
+                        if (!isCurrentNavigationToken(token)) return;
                         if (typeof JTHController !== 'undefined') {
-                            JTHController.init(currentUser);
+                            JTHController.init(currentUser, { navigationToken: token });
                         }
                     });
             });
@@ -396,17 +405,20 @@ function cargarFirmasJTH() {
 
 // Cargar firmas Colaborador
 function cargarFirmasCT() {
+    const token = beginNavigation();
     $('#pageTitle').text('Aprobaciones - Colaborador');
     
     if (typeof CTController !== 'undefined' && CTController.init) {
-        CTController.init(currentUser);
+        CTController.init(currentUser, { navigationToken: token });
     } else {
         $.getScript('modulos/frmFirmaCT/services/ctService.js')
             .done(function() {
+                if (!isCurrentNavigationToken(token)) return;
                 $.getScript('modulos/frmFirmaCT/controller/ctController.js')
                     .done(function() {
+                        if (!isCurrentNavigationToken(token)) return;
                         if (typeof CTController !== 'undefined') {
-                            CTController.init(currentUser);
+                            CTController.init(currentUser, { navigationToken: token });
                         }
                     });
             });

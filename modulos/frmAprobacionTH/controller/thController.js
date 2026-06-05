@@ -3,24 +3,29 @@ var THController = {
     currentUser: null,
     currentPage: 1,
     pageSize: 5,
+    navigationToken: null,
     
-    init: function(user) {
+    init: function(user, options) {
         this.currentUser = user;
+        this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
         console.log('THController iniciado para:', user.nombre);
         this.loadView();
     },
     
     loadView: function() {
         var self = this;
+        var token = this.navigationToken;
         $('#pageTitle').text('Revisión Técnica TH');
         window._thReviewMode = false;
         $('#contentContainer').empty();
         $.get('modulos/frmAprobacionTH/view/thView.html', function(html) {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             $('#contentContainer').html(html);
             console.log('Vista de TH cargada correctamente');
             self.cargarPendientes();
             self.cargarGestionados();
         }).fail(function() {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             $('#contentContainer').html('<div class="alert alert-danger">Error al cargar la vista de TH.</div>');
         });
     },
@@ -223,15 +228,19 @@ var THController = {
         }
 
         $('#pageTitle').text('Revisión Técnica TH');
+        var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
+        this.navigationToken = token;
         DescriptorController.init(this.currentUser, id, {
             readOnly: true,
             thReview: true,
-            canEditThComplements: descriptor.estado === 'ENVIADO_TH'
+            canEditThComplements: descriptor.estado === 'ENVIADO_TH',
+            navigationToken: token
         });
 
         var self = this;
         var intentos = 0;
         function insertarPanelRevision() {
+            if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             intentos++;
             if ($('#descriptorForm').length === 0 && intentos < 20) {
                 setTimeout(insertarPanelRevision, 150);
