@@ -59,8 +59,8 @@ var THController = {
                     : '<li><button class="dropdown-item" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-2 text-success"></i>Versión Corta</button></li>';
             }
             html += '<tr>' +
-                '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
-                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' +
+                '<td><div class="dropdown workflow-actions"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-display="static"><i class="fas fa-ellipsis-v"></i></button>' +
+                '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 5000;">' +
                 '<li><button class="dropdown-item" onclick="THController.verDetalle(' + d.id + ')"><i class="fas fa-eye me-2 text-info"></i>Ver / revisar</button></li>' +
                 '<li><button class="dropdown-item" onclick="THController.verAuditoriaCompleta(' + d.id + ')"><i class="fas fa-list me-2 text-primary"></i>Auditoría completa</button></li>' +
                 '<li><button class="dropdown-item" onclick="THController.verHistorialGestion(' + d.id + ')"><i class="fas fa-user-clock me-2 text-secondary"></i>Mis acciones</button></li>' +
@@ -80,6 +80,34 @@ var THController = {
         if (typeof actualizarContador === 'function') {
             actualizarContador();
         }
+        this.initDropdowns();
+    },
+
+    initDropdowns: function() {
+        $('.workflow-actions .dropdown-menu').css({ width: '220px', minWidth: '220px', maxWidth: '220px', zIndex: 5000 });
+        $('.workflow-actions .dropdown-toggle').off('shown.bs.dropdown.workflowMenu').on('shown.bs.dropdown.workflowMenu', function() {
+            var buttonRect = this.getBoundingClientRect();
+            var menu = $(this).siblings('.dropdown-menu')[0];
+            if (!menu) return;
+            menu.style.position = 'fixed';
+            menu.style.width = '220px';
+            menu.style.minWidth = '220px';
+            menu.style.maxWidth = '220px';
+            menu.style.top = (buttonRect.bottom + 4) + 'px';
+            menu.style.left = Math.max(8, Math.min(buttonRect.left, window.innerWidth - 228)) + 'px';
+            menu.style.zIndex = '5000';
+        });
+        $('.workflow-actions .dropdown-toggle').off('hidden.bs.dropdown.workflowMenu').on('hidden.bs.dropdown.workflowMenu', function() {
+            var menu = $(this).siblings('.dropdown-menu')[0];
+            if (!menu) return;
+            menu.style.position = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.maxWidth = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.zIndex = '';
+        });
     },
 
     renderPagination: function(total, start, end, totalPages) {
