@@ -739,8 +739,7 @@ function generarHTMLVersionCorta(d) {
         for (var i = 0; i < d.funcionesClaves.length; i++) {
             var nombre = d.funcionesClaves[i].nombre || '';
             if (!nombre) continue;
-            var codigo = d.funcionesClaves[i].codigo ? '[' + d.funcionesClaves[i].codigo + '] ' : '';
-            funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '. ' + codigo + nombre + '</td></tr>';
+            funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i+1) + '. ' + nombre + '</td></tr>';
         }
     }
     if (!funcionesClavesRows) {
@@ -1131,21 +1130,15 @@ function generarHTMLVersionExtensa(d) {
             var nombre = d.funcionesClaves[i].nombre || '';
             funcionesClavesCompleto += '<strong>' + (i+1) + '. ' + codigo + ' - ' + nombre + '</strong><br>';
             
-            // Buscar actividades para esta función
-            if (d.actividadesPorFuncion && d.actividadesPorFuncion.length > 0) {
-                for (var j = 0; j < d.actividadesPorFuncion.length; j++) {
-                    if (d.actividadesPorFuncion[j].funcionNombre === nombre || 
-                        d.actividadesPorFuncion[j].funcionNombre === codigo + ' - ' + nombre) {
-                        var actividades = d.actividadesPorFuncion[j].actividades || [];
-                        if (actividades.length > 0) {
-                            funcionesClavesCompleto += '<ul style="margin-left:25px;">';
-                            for (var k = 0; k < actividades.length; k++) {
-                                funcionesClavesCompleto += '<li>' + actividades[k] + '</li>';
-                            }
-                            funcionesClavesCompleto += '</ul>';
-                        }
-                        break;
+            // Buscar actividades por posición para evitar mezclar funciones con el mismo nombre.
+            if (d.actividadesPorFuncion && d.actividadesPorFuncion[i]) {
+                var actividades = d.actividadesPorFuncion[i].actividades || [];
+                if (actividades.length > 0) {
+                    funcionesClavesCompleto += '<ul style="margin-left:25px;">';
+                    for (var k = 0; k < actividades.length; k++) {
+                        funcionesClavesCompleto += '<li>' + actividades[k] + '</li>';
                     }
+                    funcionesClavesCompleto += '</ul>';
                 }
             }
             funcionesClavesCompleto += '<br>';
@@ -1507,8 +1500,7 @@ function generarHTMLVersionCorta(d) {
     var funcionesClavesRows = '';
     var funcionesClaves = filtrarObjetos(d.funcionesClaves, ['codigo', 'nombre']);
     for (var i = 0; i < funcionesClaves.length; i++) {
-        var codigo = hasText(funcionesClaves[i].codigo) ? '[' + text(funcionesClaves[i].codigo) + '] ' : '';
-        funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i + 1) + '. ' + codigo + text(funcionesClaves[i].nombre) + '</td></tr>';
+        funcionesClavesRows += '<tr><td style="padding:2px 6px;border:none;">' + (i + 1) + '. ' + text(funcionesClaves[i].nombre) + '</td></tr>';
     }
     if (!funcionesClavesRows) funcionesClavesRows = '<tr><td style="padding:2px 6px;border:none;" class="empty-cell">Sin información registrada</td></tr>';
 
@@ -1785,16 +1777,9 @@ function generarHTMLVersionExtensa(d) {
         titularNombre = 'Ing. Juan Pérez';
     }
 
-    function getActividades(funcion) {
-        var nombre = String(funcion.nombre || '').trim().toLowerCase();
-        var codigoNombre = String((funcion.codigo ? funcion.codigo + ' - ' : '') + funcion.nombre).trim().toLowerCase();
-        for (var i = 0; i < actividadesPorFuncion.length; i++) {
-            var itemNombre = String(actividadesPorFuncion[i].funcionNombre || '').trim().toLowerCase();
-            if (itemNombre === nombre || itemNombre === codigoNombre) {
-                return filtrarTextos(actividadesPorFuncion[i].actividades);
-            }
-        }
-        return [];
+    function getActividades(index) {
+        var item = actividadesPorFuncion[index] || null;
+        return item ? filtrarTextos(item.actividades) : [];
     }
 
     function headerPagina() {
@@ -1821,8 +1806,8 @@ function generarHTMLVersionExtensa(d) {
         return '<div class="flow-block"><div class="section-label indent">II. &nbsp; FUNCIONES CLAVES CON RESPONSABILIDAD</div><table class="tabla compacta"><tr><th class="code-col">Código</th><th>Nombre</th></tr>' + rows + '</table></div>';
     }
 
-    function renderActividadBlock(funcion) {
-        var actividades = getActividades(funcion);
+    function renderActividadBlock(funcion, index) {
+        var actividades = getActividades(index);
         if (actividades.length === 0) return '';
         var rows = '<tr><th class="funcion-col">Función Clave</th><th>' + text(funcion.nombre) + '</th></tr>';
         for (var i = 0; i < actividades.length; i++) {
@@ -1834,7 +1819,7 @@ function generarHTMLVersionExtensa(d) {
     function renderActividades(start, end) {
         var html = '';
         for (var i = start; i < end && i < funciones.length; i++) {
-            html += renderActividadBlock(funciones[i]);
+            html += renderActividadBlock(funciones[i], i);
         }
         return html;
     }
