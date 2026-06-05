@@ -339,19 +339,68 @@ function renumerarKPITable() {
 }
 
 function addEducacionRow() {
-    $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+    ensureEducacionTable();
+    $('#educacionTableBody').append(buildEducacionTableRow('', '', '1'));
+    renumerarEducacionTable();
 }
 
 function addEducacionRowWithData(requisito, especificaciones, requerido) {
-    $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito" value="' + (requisito || '') + '"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones" value="' + (especificaciones || '') + '"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+    ensureEducacionTable();
+    $('#educacionTableBody').append(buildEducacionTableRow(requisito, especificaciones, requerido));
+    renumerarEducacionTable();
 }
 
 function addExperienciaRow() {
-    $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito"></textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+    ensureExperienciaTable();
+    $('#experienciaTableBody').append(buildExperienciaTableRow('', '1'));
+    renumerarExperienciaTable();
 }
 
 function addExperienciaRowWithData(requisito, requerido) {
-    $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito">' + (requisito || '') + '</textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></div></div></div>');
+    ensureExperienciaTable();
+    $('#experienciaTableBody').append(buildExperienciaTableRow(requisito, requerido));
+    renumerarExperienciaTable();
+}
+
+function ensureEducacionTable() {
+    if ($('#educacionTableBody').length > 0) return;
+    $('#educacionContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Requisito</th><th>Especificaciones</th><th style="width:150px;">Tipo</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="educacionTableBody"></tbody></table></div>');
+}
+
+function buildEducacionTableRow(requisito, especificaciones, requerido) {
+    return '<tr class="dynamic-row educacion-row">' +
+        '<td class="funcion-codigo"><span class="educacion-codigo-text"></span></td>' +
+        '<td><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito" value="' + (requisito || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones" value="' + (especificaciones || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td><select class="form-select" name="eduRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarEducacionGlobal === \'function\') renumerarEducacionGlobal(); else renumerarEducacionTable();"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+}
+
+function renumerarEducacionTable() {
+    $('#educacionTableBody tr').each(function(index) {
+        $(this).find('.educacion-codigo-text').text(index + 1);
+    });
+}
+
+function ensureExperienciaTable() {
+    if ($('#experienciaTableBody').length > 0) return;
+    $('#experienciaContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Requisito</th><th style="width:150px;">Tipo</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="experienciaTableBody"></tbody></table></div>');
+}
+
+function buildExperienciaTableRow(requisito, requerido) {
+    return '<tr class="dynamic-row experiencia-row">' +
+        '<td class="funcion-codigo"><span class="experiencia-codigo-text"></span></td>' +
+        '<td><textarea class="form-control" name="expRequisito[]" rows="1" placeholder="Requisito">' + (requisito || '') + '</textarea></td>' +
+        '<td><select class="form-select" name="expRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarExperienciaGlobal === \'function\') renumerarExperienciaGlobal(); else renumerarExperienciaTable();"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+}
+
+function renumerarExperienciaTable() {
+    $('#experienciaTableBody tr').each(function(index) {
+        $(this).find('.experiencia-codigo-text').text(index + 1);
+    });
 }
 
 function addCompetenciaTecnicaRow() {

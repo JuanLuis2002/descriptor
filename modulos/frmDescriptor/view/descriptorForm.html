@@ -128,10 +128,12 @@
             <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Func. Sec.</div></div>
             <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
             <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
-            <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Competencias</div></div>
-            <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Responsab.</div></div>
-            <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Entrenam.</div></div>
-            <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Resumen</div></div>
+            <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Educación</div></div>
+            <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Experiencia</div></div>
+            <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Competencias</div></div>
+            <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Responsab.</div></div>
+            <div class="step" data-step="12"><div class="step-circle">12</div><div class="step-label">Entrenam.</div></div>
+            <div class="step" data-step="13"><div class="step-circle">13</div><div class="step-label">Resumen</div></div>
         </div>
 
         <!-- SECCIÓN 2: OBJETIVO -->
@@ -168,10 +170,9 @@
             <button type="button" class="btn btn-sm btn-outline-primary" id="addKPI"><i class="fas fa-plus"></i> Agregar KPI</button>
         </div>
 
-        <!-- SECCIÓN 7: PERFIL, EDUCACIÓN Y EXPERIENCIA -->
+        <!-- SECCIÓN 7: PERFIL -->
         <div class="form-section" data-section="7">
-            <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil, Educación y Experiencia</h5>
-            <h6 class="border-bottom pb-2 mb-3">Perfil del Puesto</h6>
+            <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil del Puesto</h5>
             <div class="row">
                 <div class="col-md-3 mb-3"><label class="form-label">Edad Mínima</label><input type="number" class="form-control" name="edadMin" value="18"></div>
                 <div class="col-md-3 mb-3"><label class="form-label">Edad Máxima</label><input type="number" class="form-control" name="edadMax" value="65"></div>
@@ -181,23 +182,31 @@
                 <div class="col-md-4 mb-3"><label class="form-label">Modalidad</label><select class="form-select" name="modalidadTrabajo"><option value="PRESENCIAL">Presencial</option><option value="HIBRIDO">Híbrido</option><option value="REMOTO">Remoto</option></select></div>
                 <div class="col-md-4 mb-3"><label class="form-label">Licencia</label><select class="form-select" name="poseerLicencia"><option value="0">No</option><option value="1">Sí</option></select></div>
             </div>
-            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-graduation-cap me-2 text-primary"></i>Educación</h6>
+        </div>
+
+        <!-- SECCIÓN 8: EDUCACIÓN -->
+        <div class="form-section" data-section="8">
+            <h5 class="mb-4"><i class="fas fa-graduation-cap me-2 text-primary"></i>Educación</h5>
             <div id="educacionContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addEducacion"><i class="fas fa-plus"></i> Agregar</button>
-            <h6 class="border-bottom pb-2 mt-4 mb-3"><i class="fas fa-briefcase me-2 text-primary"></i>Experiencia</h6>
+        </div>
+
+        <!-- SECCIÓN 9: EXPERIENCIA -->
+        <div class="form-section" data-section="9">
+            <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Experiencia</h5>
             <div id="experienciaContainer"></div>
             <button type="button" class="btn btn-sm btn-outline-primary" id="addExperiencia"><i class="fas fa-plus"></i> Agregar</button>
         </div>
 
-        <!-- SECCIÓN 8: COMPETENCIAS -->
-        <div class="form-section" data-section="8">
+        <!-- SECCIÓN 10: COMPETENCIAS -->
+        <div class="form-section" data-section="10">
             <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>Competencias</h5>
             <div class="mb-4"><div class="d-flex justify-content-between mb-2"><h6>Técnicas</h6><button type="button" class="btn btn-sm btn-outline-primary" id="addCompetenciaTecnica"><i class="fas fa-plus"></i></button></div><div id="competenciasTecnicasContainer"></div></div>
             <div><div class="d-flex justify-content-between mb-2"><h6>Conductuales</h6><button type="button" class="btn btn-sm btn-outline-primary" id="addCompetenciaConductual"><i class="fas fa-plus"></i></button></div><div id="competenciasConductualesContainer"></div></div>
         </div>
 
-        <!-- SECCIÓN 9: RESPONSABILIDADES -->
-        <div class="form-section" data-section="9">
+        <!-- SECCIÓN 11: RESPONSABILIDADES -->
+        <div class="form-section" data-section="11">
             <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
             <div class="mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
             <div class="mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
@@ -207,8 +216,8 @@
             <div class="mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
         </div>
 
-        <!-- SECCIÓN 10: ENTRENAMIENTO -->
-        <div class="form-section" data-section="10">
+        <!-- SECCIÓN 12: ENTRENAMIENTO -->
+        <div class="form-section" data-section="12">
             <h5 class="mb-4"><i class="fas fa-chalkboard-user me-2 text-primary"></i>Entrenamiento</h5>
             <div class="row">
                 <div class="col-md-6 mb-3"><label class="form-label">Personal a cargo</label><input type="number" class="form-control" name="personalCargo" value="0"></div>
@@ -218,8 +227,8 @@
             </div>
         </div>
 
-        <!-- SECCIÓN 11: RESUMEN -->
-        <div class="form-section" data-section="11">
+        <!-- SECCIÓN 13: RESUMEN -->
+        <div class="form-section" data-section="13">
             <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-primary"></i>Resumen</h5>
             <div id="resumenContent" class="p-3 bg-light rounded"></div>
         </div>
@@ -244,10 +253,10 @@
     var funcionesClavesList = [];
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 2;
-    var totalSteps = 11;
+    var totalSteps = 13;
     var pasosPorFormato = {
-        CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11],
-        EXTENSA: [2, 3, 4, 7, 8, 9, 10, 11]
+        CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+        EXTENSA: [2, 3, 4, 7, 8, 9, 10, 11, 12, 13]
     };
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
@@ -391,12 +400,59 @@
     window.renumerarKPIsGlobal = renumerarKPIs;
     
     function addEducacionRow() {
-        $('#educacionContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito"></div><div class="col-md-5"><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones"></div><div class="col-md-2"><select class="form-select" name="eduRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+        ensureEducacionTable();
+        $('#educacionTableBody').append(buildEducacionRow('', '', '1'));
+        renumerarEducacion();
     }
     
     function addExperienciaRow() {
-        $('#experienciaContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-9"><textarea class="form-control" name="expRequisito[]" rows="2" placeholder="Requisito"></textarea></div><div class="col-md-3"><select class="form-select" name="expRequerido[]"><option value="1">Requerido</option><option value="0">Deseable</option></select></div></div></div>');
+        ensureExperienciaTable();
+        $('#experienciaTableBody').append(buildExperienciaRow('', '1'));
+        renumerarExperiencia();
     }
+    
+    function ensureEducacionTable() {
+        if ($('#educacionTableBody').length > 0) return;
+        $('#educacionContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Requisito</th><th>Especificaciones</th><th style="width:150px;">Tipo</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="educacionTableBody"></tbody></table></div>');
+    }
+    
+    function buildEducacionRow(requisito, especificaciones, requerido) {
+        return '<tr class="dynamic-row educacion-row">' +
+            '<td class="funcion-codigo"><span class="educacion-codigo-text"></span></td>' +
+            '<td><input type="text" class="form-control" name="eduRequisito[]" placeholder="Requisito" value="' + (requisito || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td><input type="text" class="form-control" name="eduEspecificaciones[]" placeholder="Especificaciones" value="' + (especificaciones || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td><select class="form-select" name="eduRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarEducacionGlobal === \'function\') renumerarEducacionGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function renumerarEducacion() {
+        $('#educacionTableBody tr').each(function(index) {
+            $(this).find('.educacion-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarEducacionGlobal = renumerarEducacion;
+    
+    function ensureExperienciaTable() {
+        if ($('#experienciaTableBody').length > 0) return;
+        $('#experienciaContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Requisito</th><th style="width:150px;">Tipo</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="experienciaTableBody"></tbody></table></div>');
+    }
+    
+    function buildExperienciaRow(requisito, requerido) {
+        return '<tr class="dynamic-row experiencia-row">' +
+            '<td class="funcion-codigo"><span class="experiencia-codigo-text"></span></td>' +
+            '<td><textarea class="form-control" name="expRequisito[]" rows="1" placeholder="Requisito">' + (requisito || '') + '</textarea></td>' +
+            '<td><select class="form-select" name="expRequerido[]"><option value="1" ' + (requerido == 1 ? 'selected' : '') + '>Requerido</option><option value="0" ' + (requerido == 0 ? 'selected' : '') + '>Deseable</option></select></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarExperienciaGlobal === \'function\') renumerarExperienciaGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function renumerarExperiencia() {
+        $('#experienciaTableBody tr').each(function(index) {
+            $(this).find('.experiencia-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarExperienciaGlobal = renumerarExperiencia;
     
     function addCompetenciaTecnicaRow() {
         $('#competenciasTecnicasContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="compTecNombre[]" placeholder="Competencia técnica"></div><div class="col-md-4"><select class="form-select" name="compTecNivel[]"><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select></div><div class="col-md-3"><select class="form-select" name="compTecAplicabilidad[]"><option value="SI">Requerida</option><option value="NO">No aplica</option><option value="DESEABLE">Deseable</option></select></div></div></div>');
@@ -668,7 +724,7 @@
         });
         
         var educacion = [];
-        $('#educacionContainer .dynamic-row').each(function() {
+        $('#educacionContainer .educacion-row').each(function() {
             educacion.push({ 
                 requisito: $(this).find('input[name="eduRequisito[]"]').val(), 
                 especificaciones: $(this).find('input[name="eduEspecificaciones[]"]').val(), 
@@ -677,7 +733,7 @@
         });
         
         var experiencia = [];
-        $('#experienciaContainer .dynamic-row').each(function() {
+        $('#experienciaContainer .experiencia-row').each(function() {
             experiencia.push({ 
                 requisito: $(this).find('textarea[name="expRequisito[]"]').val(), 
                 requerido: $(this).find('select[name="expRequerido[]"]').val() 
