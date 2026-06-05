@@ -110,9 +110,9 @@ function loadMenu() {
     } else if (currentUser.rol === 'TH_GENERALISTA') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="revisionTH">Revisión Técnica</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Firmas Pendientes</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Aprobaciones Pendientes</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Firma</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Aprobación</a>';
     }
 
     nav.append(`
@@ -359,7 +359,7 @@ function cargarRevisionTH() {
 
 // Cargar firmas Jefe de TH
 function cargarFirmasJTH() {
-    $('#pageTitle').text('Firmas - Jefe de Talento Humano');
+    $('#pageTitle').text('Aprobaciones - Jefe de Talento Humano');
     
     if (typeof JTHController !== 'undefined' && JTHController.init) {
         JTHController.init(currentUser);
@@ -378,7 +378,7 @@ function cargarFirmasJTH() {
 
 // Cargar firmas Colaborador
 function cargarFirmasCT() {
-    $('#pageTitle').text('Firmas - Colaborador');
+    $('#pageTitle').text('Aprobaciones - Colaborador');
     
     if (typeof CTController !== 'undefined' && CTController.init) {
         CTController.init(currentUser);
@@ -395,75 +395,45 @@ function cargarFirmasCT() {
     }
 }
 
-// Función para firmar descriptor (Jefe Inmediato)
+// Función para aprobar descriptor (Jefe Inmediato)
 function firmarDescriptorJI(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) return;
     
-    var modalHtml = '<div class="text-center signature-modal"><p class="mb-2">Firme en el recuadro con el mouse o dedo:</p><div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3 signature-actions"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
-    
     Swal.fire({
-        title: 'Firma Digital - Jefe Inmediato',
-        html: modalHtml,
-        width: '500px',
+        title: '¿Aprobar descriptor?',
+        html: '<div class="text-start"><p>Se registrará la aprobación simple del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+        confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
         cancelButtonText: 'Cancelar',
-        didOpen: function() {
-            var canvas = document.getElementById('firmaCanvas');
-            var signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgb(255,255,255)',
-                penColor: 'rgb(0,0,0)'
-            });
-            function resizeSignatureCanvas() {
-                var ratio = Math.max(window.devicePixelRatio || 1, 1);
-                var box = canvas.parentElement;
-                canvas.width = box.offsetWidth * ratio;
-                canvas.height = box.offsetHeight * ratio;
-                canvas.getContext('2d').scale(ratio, ratio);
-                signaturePad.clear();
-            }
-            resizeSignatureCanvas();
-            $(window).off('resize.signatureJIApp').on('resize.signatureJIApp', resizeSignatureCanvas);
-            $('#limpiarFirma').click(function() { signaturePad.clear(); });
-            $('#descargarFirma').click(function() {
-                if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
-                var link = document.createElement('a');
-                link.download = 'firma_ji_' + id + '.png';
-                link.href = signaturePad.toDataURL('image/png');
-                link.click();
-            });
-            window.currentSignaturePad = signaturePad;
-        },
-        willClose: function() {
-            $(window).off('resize.signatureJIApp');
-        },
-        preConfirm: function() {
-            if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
-                Swal.showValidationMessage('Debe dibujar una firma');
-                return false;
-            }
-            return window.currentSignaturePad.toDataURL('image/png');
-        }
+        confirmButtonColor: '#198754'
     }).then(function(result) {
-        if (result.isConfirmed && result.value) {
+        if (result.isConfirmed) {
+            var aprobacion = {
+                aprobado: true,
+                nombre: currentUser.nombre,
+                rol: currentUser.rolNombre,
+                fecha: new Date().toISOString(),
+                tipo: 'APROBACION_SIMPLE'
+            };
             var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
-            firmasGuardadas['ji_' + id] = result.value;
+            firmasGuardadas['ji_' + id] = aprobacion;
             localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
             var descriptorActualizado = DescriptorService.getById(id);
-            descriptorActualizado.firmaJI = result.value;
+            descriptorActualizado.firmaJI = aprobacion;
             descriptorActualizado.fechaFirmaJI = new Date().toISOString();
             descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
             DescriptorService.update(id, descriptorActualizado);
             DescriptorService.registrarEvento(id, {
-                accion: 'FIRMA DEL JEFE INMEDIATO',
+                accion: 'APROBACIÓN SIMPLE DEL JEFE INMEDIATO',
                 usuario: currentUser.nombre,
                 rol: currentUser.rolNombre,
                 estadoNuevo: 'FIRMADO_JI',
                 estado: descriptorActualizado.estado
             });
-            var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
-            Swal.fire('Firmado', mensaje, 'success');
+            var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor aprobado y activado correctamente' : 'Descriptor aprobado exitosamente. Aún quedan aprobaciones pendientes.';
+            Swal.fire('Aprobado', mensaje, 'success');
             cargarMisDescriptores();
         }
     });
@@ -536,7 +506,7 @@ function notificarFirmantes(id) {
         descriptorCodigo: descriptor.codigo,
         descriptorPuesto: descriptor.puesto,
         fecha: new Date().toISOString(),
-        mensaje: 'Se requiere su firma digital para el descriptor ' + descriptor.codigo,
+        mensaje: 'Se requiere su aprobación para el descriptor ' + descriptor.codigo,
         leido: false,
         usuarioDestino: jthUser.nombre,
         rolDestino: jthUser.rol
@@ -548,7 +518,7 @@ function notificarFirmantes(id) {
         descriptorCodigo: descriptor.codigo,
         descriptorPuesto: descriptor.puesto,
         fecha: new Date().toISOString(),
-        mensaje: 'Se requiere su firma digital como titular del puesto para el descriptor ' + descriptor.codigo,
+        mensaje: 'Se requiere su aprobación como titular del puesto para el descriptor ' + descriptor.codigo,
         leido: false,
         usuarioDestino: colaborador.nombre,
         rolDestino: colaborador.rol
@@ -560,7 +530,7 @@ function notificarFirmantes(id) {
         descriptorCodigo: descriptor.codigo,
         descriptorPuesto: descriptor.puesto,
         fecha: new Date().toISOString(),
-        mensaje: 'Se requiere su firma digital como jefe inmediato para el descriptor ' + descriptor.codigo,
+        mensaje: 'Se requiere su aprobación como jefe inmediato para el descriptor ' + descriptor.codigo,
         leido: false,
         usuarioDestino: jefeInmediato.nombre,
         rolDestino: jefeInmediato.rol
@@ -568,7 +538,7 @@ function notificarFirmantes(id) {
     
     localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
     
-    Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular.', icon: 'success' });
+    Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular para registrar su aprobación.', icon: 'success' });
 }
 
 // Exportar globales
@@ -725,8 +695,7 @@ function generarHTMLVersionCorta(d) {
         return '<tr><td colspan="' + colspan + '" class="empty-cell">Sin información registrada</td></tr>';
     }
 
-    function getFirmaHtml(firmaDataUrl) {
-        if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;vertical-align:middle;margin-left:8px;">';
+    function getFirmaHtml() {
         return '';
     }
 
@@ -1020,19 +989,19 @@ function generarHTMLVersionCorta(d) {
   <tr>
     <td class="firma-lbl">Nombre del Empleado:</td>
     <td class="firma-val">Ing. Juan Pérez</td>
-    <td class="firma-lbl2">Fecha y Firma:</td>
+    <td class="firma-lbl2">Fecha de aprobación:</td>
     <td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td>
   </tr>
   <tr>
     <td class="firma-lbl">Nombre de Jefatura:</td>
     <td class="firma-val">${d.creador || '_________________'}</td>
-    <td class="firma-lbl2">Fecha y Firma:</td>
+    <td class="firma-lbl2">Fecha de aprobación:</td>
     <td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td>
   </tr>
   <tr>
     <td class="firma-lbl">Jefe de Talento Humano:</td>
     <td class="firma-val">Lic. Carlos Gómez</td>
-    <td class="firma-lbl2">Fecha y Firma:</td>
+    <td class="firma-lbl2">Fecha de aprobación:</td>
     <td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td>
   </tr>
 </table>
@@ -1112,11 +1081,8 @@ function generarHTMLVersionExtensa(d) {
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
     var firmaCT = firmasGuardadas['ct_' + d.id] || d.firmaCT || null;
     
-    function getFirmaHtml(firmaDataUrl) {
-        if (firmaDataUrl) {
-            return '<img src="' + firmaDataUrl + '" style="width: 100px; height: 35px;">';
-        }
-        return '_________________';
+    function getFirmaHtml() {
+        return '';
     }
     
     var fechaActual = new Date().toLocaleDateString('es-ES');
@@ -1411,7 +1377,7 @@ function generarHTMLVersionExtensa(d) {
             <tr>
                 <td style="width:33%;text-align:center;"><strong>${d.titular || '_________________'}</strong><br>Nombre del Empleado<br>${getFirmaHtml(firmaCT)}<br>Fecha: ${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString() : '_________'}</td>
                 <td style="width:33%;text-align:center;"><strong>${d.creador || '_________________'}</strong><br>Nombre de Jefatura<br>${getFirmaHtml(firmaJI)}<br>Fecha: ${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString() : '_________'}</td>
-                <td style="width:34%;text-align:center;"><strong>_________________</strong><br>Jefe de Talento Humano<br>${getFirmaHtml(firmaJTH)}<br>Fecha: ${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString() : '_________'}</td>
+                <td style="width:34%;text-align:center;"><strong>Lic. Carlos Gómez</strong><br>Jefe de Talento Humano<br>${getFirmaHtml(firmaJTH)}<br>Fecha: ${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString() : '_________'}</td>
             </tr>
         </table>
         
@@ -1489,8 +1455,7 @@ function generarHTMLVersionCorta(d) {
         return '<tr><td colspan="' + colspan + '" class="empty-cell">Sin información registrada</td></tr>';
     }
 
-    function getFirmaHtml(firmaDataUrl) {
-        if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" style="width:100px;height:35px;vertical-align:middle;margin-left:8px;">';
+    function getFirmaHtml() {
         return '';
     }
 
@@ -1583,15 +1548,17 @@ function generarHTMLVersionCorta(d) {
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
-            if (eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' && hasText(eventosAuditoria[i].usuario)) {
+            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
                 titularNombre = text(eventosAuditoria[i].usuario);
                 break;
             }
         }
     }
     if (!titularNombre && firmaCT) {
-        titularNombre = 'Ing. Juan Pérez';
+        titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
+    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? text(firmaJI.nombre) : text(d.creador);
+    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? firmaJI.nombre : (d.creador || '_________________');
     var sexoDisplay = enumText(perfil.sexo);
     var edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ' - ' + text(perfil.edadMax) + ' años' : '');
     var induccionText = (hasText(entrenamiento.duracion) ? 'Duración: ' + text(entrenamiento.duracion) : '') +
@@ -1668,9 +1635,9 @@ function generarHTMLVersionCorta(d) {
 <table class="t mt10"><tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
-  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
-  <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${d.creador || '_________________'}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
-  <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
+  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
+  <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${jefeInmediatoNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
+  <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
 </table>
 <div class="footer">Departamento de Talento Humano | 2025</div>
 </div>
@@ -1734,8 +1701,7 @@ function generarHTMLVersionExtensa(d) {
         return resultado;
     }
 
-    function getFirmaHtml(firmaDataUrl) {
-        if (firmaDataUrl) return '<img src="' + firmaDataUrl + '" class="firma-img">';
+    function getFirmaHtml() {
         return '';
     }
 
@@ -1767,14 +1733,14 @@ function generarHTMLVersionExtensa(d) {
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
-            if (eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' && hasText(eventosAuditoria[i].usuario)) {
+            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
                 titularNombre = text(eventosAuditoria[i].usuario);
                 break;
             }
         }
     }
     if (!titularNombre && firmaCT) {
-        titularNombre = 'Ing. Juan Pérez';
+        titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
 
     function getActividades(index) {
@@ -1920,7 +1886,7 @@ function generarHTMLVersionExtensa(d) {
     function renderFirmas() {
         return '<table class="firmas flow-block"><tr>' +
             '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + titularNombre + '</div></td>' +
-            '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
+            '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + jefeInmediatoNombre + '</div></td>' +
             '</tr></table>';
     }
 

@@ -12,7 +12,7 @@ var CTController = {
     
     loadView: function() {
         var self = this;
-        $('#pageTitle').text('Firma Colaborador / Titular');
+        $('#pageTitle').text('Aprobación Colaborador / Titular');
         $('#contentContainer').empty();
         $.get('modulos/frmFirmaCT/view/ctView.html', function(html) {
             $('#contentContainer').html(html);
@@ -51,14 +51,14 @@ var CTController = {
             var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
             var tieneFirma = CTService.getFirma(d.id) || d.firmaCT;
-            var estadoBadge = tieneFirma ? '<span class="badge bg-success">Firmado</span>' : '<span class="badge bg-warning text-dark">Pendiente</span>';
+            var estadoBadge = tieneFirma ? '<span class="badge bg-success">Aprobado</span>' : '<span class="badge bg-warning text-dark">Pendiente</span>';
             var esExtensa = (d.tipoFormato || 'CORTA') === 'EXTENSA';
             var formatoBadge = esExtensa
                 ? '<span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="fas fa-file-lines me-1"></i>Extensa</span>'
                 : '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle"><i class="fas fa-file-alt me-1"></i>Corta</span>';
             var accionFirma = tieneFirma
-                ? '<li><button class="dropdown-item" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-signature me-2 text-success"></i>Ver Firma</button></li>'
-                : '<li><button class="dropdown-item" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-signature me-2 text-warning"></i>Firmar Documento</button></li>';
+                ? '<li><button class="dropdown-item" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-check-circle me-2 text-success"></i>Ver aprobación</button></li>'
+                : '<li><button class="dropdown-item" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-check me-2 text-warning"></i>Aprobar documento</button></li>';
             
             html += '<tr>' +
                 '<td><div class="dropdown workflow-actions"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-display="static"><i class="fas fa-ellipsis-v"></i></button>' +
@@ -186,7 +186,7 @@ var CTController = {
         function firmaItem(nombre, firmada, fecha) {
             return '<div class="firma-status-item">' +
                 '<div><i class="fas ' + (firmada ? 'fa-check-circle text-success' : 'fa-clock text-warning') + ' me-1"></i><strong>' + nombre + '</strong></div>' +
-                '<span class="badge ' + (firmada ? 'bg-success' : 'bg-warning text-dark') + '">' + (firmada ? 'Firmado' : 'Pendiente') + '</span>' +
+                '<span class="badge ' + (firmada ? 'bg-success' : 'bg-warning text-dark') + '">' + (firmada ? 'Aprobado' : 'Pendiente') + '</span>' +
                 (firmada && fecha ? '<small class="text-muted d-block mt-1">' + new Date(fecha).toLocaleString() + '</small>' : '') +
                 '</div>';
         }
@@ -200,13 +200,13 @@ var CTController = {
             '<div id="ctFirmaStatusPanel" class="alert alert-primary border-primary-subtle mb-3">' +
             '<div class="d-flex flex-wrap align-items-start justify-content-between gap-3">' +
             '<div>' +
-            '<h6 class="mb-1"><i class="fas fa-signature me-1"></i> Estado de firmas del descriptor</h6>' +
+            '<h6 class="mb-1"><i class="fas fa-check-circle me-1"></i> Estado de aprobaciones del descriptor</h6>' +
             '<div class="small">Descriptor <strong>' + (descriptor.codigo || 'DES-' + id) + '</strong> | Puesto: <strong>' + (descriptor.puesto || '-') + '</strong> | Estado: <strong>' + (descriptor.estado || '-') + '</strong></div>' +
             '</div>' +
             '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
             '<button type="button" class="btn btn-outline-secondary" onclick="CTController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
-            (firmaCT ? '<button type="button" class="btn btn-outline-success" onclick="CTController.verFirma(' + id + ')"><i class="fas fa-signature me-1"></i> Ver firma</button>' : '') +
-            (puedeFirmar ? '<button type="button" class="btn btn-success" onclick="CTController.firmar(' + id + ')"><i class="fas fa-pen-nib me-1"></i> Firmar documento</button>' : '') +
+            (firmaCT ? '<button type="button" class="btn btn-outline-success" onclick="CTController.verFirma(' + id + ')"><i class="fas fa-check-circle me-1"></i> Ver aprobación</button>' : '') +
+            (puedeFirmar ? '<button type="button" class="btn btn-success" onclick="CTController.firmar(' + id + ')"><i class="fas fa-check me-1"></i> Aprobar documento</button>' : '') +
             '</div>' +
             '</div>' +
             '<div class="firma-status-grid">' +
@@ -262,123 +262,62 @@ var CTController = {
         
         var firma = CTService.getFirma(id) || descriptor.firmaCT;
         if (!firma) {
-            Swal.fire('Sin firma', 'No se encontró una firma digital para este descriptor.', 'info');
+            Swal.fire('Sin aprobación', 'No se encontró una aprobación registrada para este descriptor.', 'info');
             return;
         }
-        
-        var modalHtml = '<div class="text-center signature-modal">' +
-            '<div class="alert alert-info text-start"><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '<br><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '<br><strong>Fecha de firma:</strong> ' + (descriptor.fechaFirmaCT ? new Date(descriptor.fechaFirmaCT).toLocaleString() : '-') + '</div>' +
-            '<div class="border rounded mx-auto p-3 bg-white signature-preview-box" style="max-width: 430px;"><img src="' + firma + '" alt="Firma CT" style="max-width:100%; max-height:220px;"></div>' +
-            '<button id="descargarFirmaCT" class="btn btn-info btn-sm mt-3"><i class="fas fa-download"></i> Descargar Firma</button>' +
+
+        var nombre = firma.nombre || descriptor.titular || 'Colaborador';
+        var fecha = firma.fecha || descriptor.fechaFirmaCT;
+        var modalHtml = '<div class="text-start">' +
+            '<div class="alert alert-success"><i class="fas fa-check-circle me-1"></i> Aprobación registrada correctamente.</div>' +
+            '<p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p>' +
+            '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
+            '<p><strong>Aprobado por:</strong> ' + nombre + '</p>' +
+            '<p><strong>Fecha:</strong> ' + (fecha ? new Date(fecha).toLocaleString() : '-') + '</p>' +
             '</div>';
         
         Swal.fire({
-            title: 'Firma Digital - ' + (descriptor.titular || 'Colaborador'),
+            title: 'Aprobación - ' + (descriptor.titular || 'Colaborador'),
             html: modalHtml,
             width: '520px',
             confirmButtonText: 'Cerrar',
-            confirmButtonColor: '#0d6efd',
-            didOpen: function() {
-                $('#descargarFirmaCT').click(function() {
-                    var link = document.createElement('a');
-                    link.download = 'firma_ct_' + id + '.png';
-                    link.href = firma;
-                    link.click();
-                });
-            }
+            confirmButtonColor: '#0d6efd'
         });
     },
     
     firmar: function(id) {
         var descriptor = CTService.getById(id);
         if (!descriptor) return;
-        
-        var firmaExistente = CTService.getFirma(id);
-        
-        var modalHtml = '<div class="text-center signature-modal">' +
-            '<p class="mb-2">Firme en el recuadro con el mouse o dedo:</p>' +
-            '<div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;">' +
-            '<canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas>' +
-            '</div>' +
-            '<div class="mt-3 signature-actions">' +
-            '<button id="limpiarFirma" class="btn btn-secondary btn-sm mx-1"><i class="fas fa-eraser"></i> Limpiar</button>' +
-            '<button id="descargarFirma" class="btn btn-info btn-sm mx-1"><i class="fas fa-download"></i> Descargar</button>' +
-            '</div>' +
-            '</div>';
-        
+
         Swal.fire({
-            title: 'Firma Digital - ' + (descriptor.titular || 'Colaborador'),
-            html: modalHtml,
-            width: '500px',
+            title: '¿Aprobar descriptor?',
+            html: '<div class="text-start"><p>Se registrará la aprobación simple del colaborador/titular.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+            confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
             cancelButtonText: 'Cancelar',
-            didOpen: function() {
-                var canvas = document.getElementById('firmaCanvas');
-                var signaturePad = new SignaturePad(canvas, {
-                    backgroundColor: 'rgb(255,255,255)',
-                    penColor: 'rgb(0,0,0)'
-                });
-                function resizeSignatureCanvas() {
-                    var ratio = Math.max(window.devicePixelRatio || 1, 1);
-                    var box = canvas.parentElement;
-                    canvas.width = box.offsetWidth * ratio;
-                    canvas.height = box.offsetHeight * ratio;
-                    canvas.getContext('2d').scale(ratio, ratio);
-                    signaturePad.clear();
-                    if (firmaExistente) {
-                        signaturePad.fromDataURL(firmaExistente);
-                    }
-                }
-                resizeSignatureCanvas();
-                $(window).off('resize.signatureCT').on('resize.signatureCT', resizeSignatureCanvas);
-                
-                if (firmaExistente) {
-                    signaturePad.fromDataURL(firmaExistente);
-                }
-                
-                $('#limpiarFirma').click(function() {
-                    signaturePad.clear();
-                });
-                
-                $('#descargarFirma').click(function() {
-                    if (signaturePad.isEmpty()) {
-                        Swal.fire('Advertencia', 'No hay firma para descargar', 'warning');
-                        return;
-                    }
-                    var dataURL = signaturePad.toDataURL('image/png');
-                    var link = document.createElement('a');
-                    link.download = 'firma_ct_' + id + '.png';
-                    link.href = dataURL;
-                    link.click();
-                });
-                
-                window.currentSignaturePad = signaturePad;
-            },
-            willClose: function() {
-                $(window).off('resize.signatureCT');
-            },
-            preConfirm: function() {
-                if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
-                    Swal.showValidationMessage('Debe dibujar una firma');
-                    return false;
-                }
-                return window.currentSignaturePad.toDataURL('image/png');
-            }
+            confirmButtonColor: '#198754'
         }).then(function(result) {
-            if (result.isConfirmed && result.value) {
-                CTService.guardarFirma(id, result.value);
+            if (result.isConfirmed) {
+                var aprobacion = {
+                    aprobado: true,
+                    nombre: CTController.currentUser.nombre,
+                    rol: CTController.currentUser.rolNombre,
+                    fecha: new Date().toISOString(),
+                    tipo: 'APROBACION_SIMPLE'
+                };
+                CTService.guardarFirma(id, aprobacion);
                 var descriptorActualizado = CTService.getById(id);
                 var estadoFirma = descriptorActualizado ? descriptorActualizado.estado : 'FIRMA_JTH';
                 DescriptorService.registrarEvento(id, {
-                    accion: 'FIRMA DEL COLABORADOR/TITULAR',
+                    accion: 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR',
                     usuario: CTController.currentUser.nombre,
                     rol: CTController.currentUser.rolNombre,
                     estadoNuevo: 'FIRMADO_CT',
                     estado: estadoFirma
                 });
-                var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
-                Swal.fire('Firmado', mensaje, 'success').then(function() {
+                var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor aprobado y activado correctamente' : 'Descriptor aprobado exitosamente. Aún quedan aprobaciones pendientes.';
+                Swal.fire('Aprobado', mensaje, 'success').then(function() {
                     if ($('#ctFirmaStatusPanel').length > 0) {
                         CTController.renderPanelFirmas(id, descriptorActualizado);
                     } else {

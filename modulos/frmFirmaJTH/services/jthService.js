@@ -27,16 +27,16 @@ var JTHService = {
         return DescriptorService.getById(id);
     },
     
-    guardarFirma: function(id, firmaDataUrl) {
+    guardarFirma: function(id, aprobacion) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.firmaJTH = firmaDataUrl;
+            descriptor.firmaJTH = aprobacion;
             descriptor.fechaFirmaJTH = new Date().toISOString();
             descriptor.estado = DescriptorService.getEstadoDespuesDeFirma(descriptor);
             DescriptorService.update(id, descriptor);
             
             var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
-            firmasGuardadas['jth_' + id] = firmaDataUrl;
+            firmasGuardadas['jth_' + id] = aprobacion;
             localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
             return true;
         }

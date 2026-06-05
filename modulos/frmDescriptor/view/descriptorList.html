@@ -221,7 +221,7 @@ window.initDescriptorList = function() {
         if (estaEnFirmas) {
             html += '<li><button class="dropdown-item btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell me-2 text-primary"></i>Notificar firmantes</button></li>';
             if (!d.firmaJI) {
-                html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature me-2 text-primary"></i>Firmar documento</button></li>';
+                html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-check me-2 text-primary"></i>Aprobar documento</button></li>';
             }
         }
         if (d.estado === 'ACTIVO') {
@@ -430,16 +430,16 @@ window.initDescriptorList = function() {
             }
         }
         
-        html += '<hr><h6 class="border-bottom pb-2">Resumen de Firmas</h6>';
+        html += '<hr><h6 class="border-bottom pb-2">Resumen de Aprobaciones</h6>';
         
         var firmas = [
-            { nombre: 'Jefe de Talento Humano', estado: descriptor.firmaJTH ? 'Firmado' : 'Pendiente' },
-            { nombre: 'Colaborador/Titular', estado: descriptor.firmaCT ? 'Firmado' : 'Pendiente' },
-            { nombre: 'Jefe Inmediato', estado: descriptor.firmaJI ? 'Firmado' : 'Pendiente' }
+            { nombre: 'Jefe de Talento Humano', estado: descriptor.firmaJTH ? 'Aprobado' : 'Pendiente' },
+            { nombre: 'Colaborador/Titular', estado: descriptor.firmaCT ? 'Aprobado' : 'Pendiente' },
+            { nombre: 'Jefe Inmediato', estado: descriptor.firmaJI ? 'Aprobado' : 'Pendiente' }
         ];
         
         for (var f = 0; f < firmas.length; f++) {
-            var icono = firmas[f].estado === 'Firmado' ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-clock text-warning"></i>';
+            var icono = firmas[f].estado === 'Aprobado' ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-clock text-warning"></i>';
             html += '<div class="d-flex justify-content-between align-items-center mb-2">' +
                 '<span>' + icono + ' <strong>' + firmas[f].nombre + '</strong></span>' +
                 '<span class="text-muted small">' + firmas[f].estado + '</span>' +
@@ -595,7 +595,7 @@ window.initDescriptorList = function() {
         
         Swal.fire({ 
             title: 'Notificaciones Enviadas', 
-            text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular (' + titulo + ') para que realicen su firma digital.\n\nEl descriptor ahora está en estado "Pendiente de firmas".', 
+            text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular (' + titulo + ') para que registren su aprobación.\n\nEl descriptor ahora está en estado "Pendiente de aprobaciones".',
             icon: 'success' 
         });
         
@@ -606,71 +606,41 @@ window.initDescriptorList = function() {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
         
-        var modalHtml = '<div class="text-center signature-modal"><p class="mb-2">Firme en el recuadro con el mouse o dedo:</p><div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3 signature-actions"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
-        
         Swal.fire({
-            title: 'Firma Digital - Jefe Inmediato',
-            html: modalHtml,
-            width: '500px',
+            title: '¿Aprobar descriptor?',
+            html: '<div class="text-start"><p>Se registrará la aprobación simple del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-save"></i> Guardar Firma',
+            confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
             cancelButtonText: 'Cancelar',
-            didOpen: function() {
-                var canvas = document.getElementById('firmaCanvas');
-                var signaturePad = new SignaturePad(canvas, {
-                    backgroundColor: 'rgb(255,255,255)',
-                    penColor: 'rgb(0,0,0)'
-                });
-                function resizeSignatureCanvas() {
-                    var ratio = Math.max(window.devicePixelRatio || 1, 1);
-                    var box = canvas.parentElement;
-                    canvas.width = box.offsetWidth * ratio;
-                    canvas.height = box.offsetHeight * ratio;
-                    canvas.getContext('2d').scale(ratio, ratio);
-                    signaturePad.clear();
-                }
-                resizeSignatureCanvas();
-                $(window).off('resize.signatureJIList').on('resize.signatureJIList', resizeSignatureCanvas);
-                $('#limpiarFirma').click(function() { signaturePad.clear(); });
-                $('#descargarFirma').click(function() {
-                    if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
-                    var link = document.createElement('a');
-                    link.download = 'firma_ji_' + id + '.png';
-                    link.href = signaturePad.toDataURL('image/png');
-                    link.click();
-                });
-                window.currentSignaturePad = signaturePad;
-            },
-            willClose: function() {
-                $(window).off('resize.signatureJIList');
-            },
-            preConfirm: function() {
-                if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
-                    Swal.showValidationMessage('Debe dibujar una firma');
-                    return false;
-                }
-                return window.currentSignaturePad.toDataURL('image/png');
-            }
+            confirmButtonColor: '#198754'
         }).then(function(result) {
-            if (result.isConfirmed && result.value) {
+            if (result.isConfirmed) {
                 var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                var aprobacion = {
+                    aprobado: true,
+                    nombre: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    fecha: new Date().toISOString(),
+                    tipo: 'APROBACION_SIMPLE'
+                };
                 var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
-                firmasGuardadas['ji_' + id] = result.value;
+                firmasGuardadas['ji_' + id] = aprobacion;
                 localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
                 var descriptorActualizado = DescriptorService.getById(id);
-                descriptorActualizado.firmaJI = result.value;
+                descriptorActualizado.firmaJI = aprobacion;
                 descriptorActualizado.fechaFirmaJI = new Date().toISOString();
                 descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
                 DescriptorService.update(id, descriptorActualizado);
                 DescriptorService.registrarEvento(id, {
-                    accion: 'FIRMA DEL JEFE INMEDIATO',
+                    accion: 'APROBACIÓN SIMPLE DEL JEFE INMEDIATO',
                     usuario: currentUserGlobal.nombre,
                     rol: currentUserGlobal.rolNombre,
                     estadoNuevo: 'FIRMADO_JI',
                     estado: descriptorActualizado.estado
                 });
-                var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
-                Swal.fire('Firmado', mensaje, 'success');
+                var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor aprobado y activado correctamente' : 'Descriptor aprobado exitosamente. Aún quedan aprobaciones pendientes.';
+                Swal.fire('Aprobado', mensaje, 'success');
                 cargarDescriptores();
             }
         });
