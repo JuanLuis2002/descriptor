@@ -235,13 +235,14 @@ function addFuncionClaveRowWithData(codigo, nombre) {
 
 function ensureFuncionesClavesTable() {
     if ($('#funcionesClavesTableBody').length > 0) return;
-    $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
+    $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:150px;" class="text-center actividad-funcion-action">Actividades</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
 }
 
 function buildFuncionClaveTableRow(codigo, nombre) {
     return '<tr class="dynamic-row funcion-clave-row">' +
         '<td class="funcion-codigo"><input type="hidden" name="funcionCodigo[]" value="' + (codigo || '') + '"><span class="funcion-codigo-text">' + (codigo || '') + '</span></td>' +
         '<td><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre de la función" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td class="text-center actividad-funcion-action"><button type="button" class="btn btn-sm btn-outline-primary" onclick="if (typeof abrirActividadesFuncionGlobal === \'function\') abrirActividadesFuncionGlobal($(this).closest(\'tr\').index());"><i class="fas fa-list-check me-1"></i> Actividades</button></td>' +
         '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesClaveGlobal === \'function\') renumerarFuncionesClaveGlobal(); else renumerarFuncionesClaveTable();"><i class="fas fa-trash"></i></button></td>' +
         '</tr>';
 }

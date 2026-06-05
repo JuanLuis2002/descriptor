@@ -140,7 +140,6 @@
         <div class="step-indicator">
             <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Objetivo</div></div>
             <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Funciones</div></div>
-            <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Actividades</div></div>
             <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Func. Sec.</div></div>
             <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
             <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
@@ -158,16 +157,13 @@
 
         <!-- SECCIÓN 3: FUNCIONES CLAVES -->
         <div class="form-section" data-section="3">
-            <h5 class="mb-4"><i class="fas fa-tasks me-2 text-primary"></i>Funciones Claves</h5>
-            <div id="funcionesClavesContainer"></div>
-            <button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" id="addFuncionClave"><i class="fas fa-plus"></i> Agregar Función Clave</button>
-            <small class="text-muted d-block mt-2">Cada función clave tendrá sus propias actividades en la siguiente sección</small>
-        </div>
-
-        <!-- SECCIÓN 4: ACTIVIDADES -->
-        <div class="form-section" data-section="4">
-            <h5 class="mb-4"><i class="fas fa-list-check me-2 text-primary"></i>Actividades por Función Clave</h5>
-            <div id="actividadesContainer"></div>
+            <div id="funcionesTablePanel">
+                <h5 class="mb-4"><i class="fas fa-tasks me-2 text-primary"></i>Funciones Claves</h5>
+                <div id="funcionesClavesContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" id="addFuncionClave"><i class="fas fa-plus"></i> Agregar Función Clave</button>
+                <small class="text-muted d-block mt-2 actividades-help-text">En versión extensa, cada función clave permite registrar sus actividades.</small>
+            </div>
+            <div id="actividadFuncionPanel" style="display:none;"></div>
         </div>
 
         <!-- SECCIÓN 5: FUNCIONES SECUNDARIAS -->
@@ -276,12 +272,13 @@
     window._descriptorFormLoaded = true;
     
     var funcionesClavesList = [];
+    var actividadFuncionActiva = null;
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 2;
     var totalSteps = 11;
     var pasosPorFormato = {
         CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11],
-        EXTENSA: [2, 3, 4, 7, 8, 9, 10, 11]
+        EXTENSA: [2, 3, 7, 8, 9, 10, 11]
     };
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
@@ -350,13 +347,14 @@
     
     function ensureFuncionesTable() {
         if ($('#funcionesClavesTableBody').length > 0) return;
-        $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
+        $('#funcionesClavesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Nombre de la función clave</th><th style="width:150px;" class="text-center actividad-funcion-action">Actividades</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="funcionesClavesTableBody"></tbody></table></div>');
     }
     
     function buildFuncionClaveRow(codigo, nombre) {
         return '<tr class="dynamic-row funcion-clave-row">' +
             '<td class="funcion-codigo"><input type="hidden" name="funcionCodigo[]" value="' + (codigo || '') + '"><span class="funcion-codigo-text">' + (codigo || '') + '</span></td>' +
             '<td><input type="text" class="form-control" name="funcionNombre[]" placeholder="Nombre de la función" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td class="text-center actividad-funcion-action"><button type="button" class="btn btn-sm btn-outline-primary" onclick="if (typeof abrirActividadesFuncionGlobal === \'function\') abrirActividadesFuncionGlobal($(this).closest(\'tr\').index());"><i class="fas fa-list-check me-1"></i> Actividades</button></td>' +
             '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarFuncionesClaveGlobal === \'function\') renumerarFuncionesClaveGlobal();"><i class="fas fa-trash"></i></button></td>' +
             '</tr>';
     }
@@ -367,6 +365,7 @@
             $(this).find('input[name="funcionCodigo[]"]').val(codigo);
             $(this).find('.funcion-codigo-text').text(codigo);
         });
+        sincronizarAccionesActividades();
     }
     window.renumerarFuncionesClaveGlobal = renumerarFuncionesClave;
     
@@ -548,23 +547,60 @@
     $('#areaUsuario').val(currentUser.area || '');
     $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
     
+    function sincronizarFuncionesClavesList() {
+        funcionesClavesList = [];
+        var funcionIndex = 0;
+        $('#funcionesClavesContainer .funcion-clave-row').each(function() {
+            var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || String(funcionIndex + 1);
+            var nombre = $(this).find('input[name="funcionNombre[]"]').val() || 'Función ' + (funcionIndex + 1);
+            funcionesClavesList.push({ id: funcionIndex, codigo: codigo, nombre: nombre });
+            funcionIndex++;
+        });
+        return funcionesClavesList;
+    }
+    
+    function sincronizarAccionesActividades() {
+        var esExtensa = getTipoFormato() === 'EXTENSA';
+        $('.actividad-funcion-action').toggle(esExtensa);
+        $('.actividades-help-text').toggle(esExtensa);
+        if (!esExtensa && actividadFuncionActiva !== null) volverFuncionesClave();
+    }
+    
     function guardarActividadesActuales() {
-        if (funcionesClavesList.length === 0) return;
+        sincronizarFuncionesClavesList();
+        if (funcionesClavesList.length === 0) {
+            window._savedActividades = [];
+            return;
+        }
+        var anteriores = window._savedActividades || [];
         var actividadesGuardadas = [];
         for(var f = 0; f < funcionesClavesList.length; f++) {
-            var actividades = [];
-            $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
-                var val = $(this).val();
-                if(val && val.trim() !== '') actividades.push(val.trim());
-            });
+            var anterior = anteriores[f] || null;
+            for (var a = 0; a < anteriores.length; a++) {
+                if (anteriores[a] && anteriores[a].funcionNombre === funcionesClavesList[f].nombre) {
+                    anterior = anteriores[a];
+                    break;
+                }
+            }
+            var actividades = anterior && anterior.actividades ? anterior.actividades.slice() : [];
+            var $contenedor = $('#actividades-funcion-' + funcionesClavesList[f].id);
+            if ($contenedor.length > 0) {
+                actividades = [];
+                $contenedor.find('.actividad-input').each(function() {
+                    var val = $(this).val();
+                    if(val && val.trim() !== '') actividades.push(val.trim());
+                });
+            }
             actividadesGuardadas.push({ funcionNombre: funcionesClavesList[f].nombre, actividades: actividades });
         }
         window._savedActividades = actividadesGuardadas;
     }
     
-    function restaurarActividades() {
+    function restaurarActividades(funcionId) {
         if (!window._savedActividades || window._savedActividades.length === 0) return;
-        for(var f = 0; f < window._savedActividades.length; f++) {
+        var inicio = typeof funcionId === 'number' ? funcionId : 0;
+        var fin = typeof funcionId === 'number' ? funcionId + 1 : window._savedActividades.length;
+        for(var f = inicio; f < fin; f++) {
             var saved = window._savedActividades[f];
             if (saved.actividades && saved.actividades.length > 0) {
                 for(var a = 0; a < saved.actividades.length; a++) {
@@ -576,40 +612,60 @@
     
     function limpiarActividadesGuardadas() {
         window._savedActividades = null;
+        actividadFuncionActiva = null;
     }
     
     function actualizarActividades() {
-        if (funcionesClavesList.length > 0) guardarActividadesActuales();
-        
-        funcionesClavesList = [];
-        var funcionIndex = 0;
-        $('#funcionesClavesContainer .funcion-clave-row').each(function() {
-            var codigo = $(this).find('input[name="funcionCodigo[]"]').val() || String(funcionIndex+1);
-            var nombre = $(this).find('input[name="funcionNombre[]"]').val() || 'Función ' + (funcionIndex+1);
-            funcionesClavesList.push({ id: funcionIndex, codigo: codigo, nombre: nombre });
-            funcionIndex++;
-        });
-        
-        if (funcionesClavesList.length === 0) {
-            $('#actividadesContainer').html('<div class="alert alert-warning">No hay funciones claves registradas. Regrese al paso anterior.</div>');
-            return;
-        }
-        
-        var html = '';
-        for(var f = 0; f < funcionesClavesList.length; f++) {
-            var funcion = funcionesClavesList[f];
-            html += '<div class="funcion-actividad-card mb-3" data-funcion-id="' + funcion.id + '">' +
-                '<div class="card-header bg-primary text-white"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
-                '<div class="card-body">' +
-                '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
-                '<button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
-                '</div></div>';
-        }
-        $('#actividadesContainer').html(html);
-        restaurarActividades();
+        guardarActividadesActuales();
+        if (actividadFuncionActiva !== null) abrirActividadesFuncion(actividadFuncionActiva);
     }
     
     window.actualizarActividadesGlobal = actualizarActividades;
+    
+    function abrirActividadesFuncion(funcionId) {
+        if (getTipoFormato() !== 'EXTENSA') return;
+        guardarActividadesActuales();
+        sincronizarFuncionesClavesList();
+        var funcion = funcionesClavesList[funcionId];
+        if (!funcion) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Función no disponible',
+                text: 'Primero registre la función clave antes de agregar actividades.',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+        actividadFuncionActiva = funcionId;
+        var html = '<div class="funcion-actividad-card">' +
+            '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">' +
+            '<div>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary mb-2" onclick="volverFuncionesClaveGlobal()"><i class="fas fa-arrow-left me-1"></i> Volver a funciones clave</button>' +
+            '<h5 class="mb-1"><i class="fas fa-list-check me-2 text-primary"></i>Actividades de la función ' + funcion.codigo + '</h5>' +
+            '<div class="text-muted small">' + funcion.nombre + '</div>' +
+            '</div>' +
+            '<button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
+            '</div>' +
+            '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
+            '<small class="text-muted">Estas actividades quedarán asociadas únicamente a esta función clave.</small>' +
+            '</div>';
+        $('#actividadFuncionPanel').html(html).show();
+        $('#funcionesTablePanel').hide();
+        restaurarActividades(funcion.id);
+    }
+    
+    window.abrirActividadesFuncionGlobal = abrirActividadesFuncion;
+    
+    function volverFuncionesClave() {
+        guardarActividadesActuales();
+        actividadFuncionActiva = null;
+        $('#actividadFuncionPanel').hide().empty();
+        $('#funcionesTablePanel').show();
+        sincronizarAccionesActividades();
+    }
+    
+    window.volverFuncionesClaveGlobal = volverFuncionesClave;
     
     window.agregarActividad = function(funcionId) {
         var container = $('#actividades-funcion-' + funcionId);
@@ -660,9 +716,8 @@
             else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
         }
         $('#saveBtn').show();
-        
-        if (getTipoFormato() === 'EXTENSA' && currentStep !== 4 && funcionesClavesList.length > 0) guardarActividadesActuales();
-        if (getTipoFormato() === 'EXTENSA' && currentStep === 4) actualizarActividades();
+        sincronizarAccionesActividades();
+        if (getTipoFormato() === 'EXTENSA') guardarActividadesActuales();
         if (currentStep === getLastStep()) updateResumen();
     }
     
@@ -776,9 +831,7 @@
     
     function saveDescriptor() {
         var tipoFormato = getTipoFormato();
-        if (tipoFormato === 'EXTENSA' && currentStep !== 4) {
-            actualizarActividades();
-        }
+        if (tipoFormato === 'EXTENSA') guardarActividadesActuales();
         
         var funcionesClaves = [];
         renumerarFuncionesClave();
@@ -791,12 +844,10 @@
         
         var actividadesPorFuncion = [];
         if (tipoFormato === 'EXTENSA') {
+            var actividadesGuardadas = window._savedActividades || [];
+            sincronizarFuncionesClavesList();
             for(var f = 0; f < funcionesClavesList.length; f++) {
-                var actividades = [];
-                $('#actividades-funcion-' + funcionesClavesList[f].id + ' .actividad-input').each(function() {
-                    var val = $(this).val();
-                    if(val && val.trim() !== '') actividades.push(val.trim());
-                });
+                var actividades = actividadesGuardadas[f] && actividadesGuardadas[f].actividades ? actividadesGuardadas[f].actividades.slice() : [];
                 actividadesPorFuncion.push({ funcionNombre: funcionesClavesList[f].nombre, actividades: actividades });
             }
         }
