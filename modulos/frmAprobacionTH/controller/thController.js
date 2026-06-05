@@ -46,7 +46,7 @@ var THController = {
         var end = Math.min(start + this.pageSize, lista.length);
 
         var html = '<div class="workflow-table-card"><div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr>' +
-            '<th>Opciones</th><th>Código</th><th>Puesto</th><th class="d-none d-md-table-cell">Área</th><th>Estado</th><th class="d-none d-lg-table-cell">Creador</th><th class="d-none d-lg-table-cell">Fecha</th></tr></thead><tbody>';
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th>Área</th><th>Estado</th><th>Creador</th><th>Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < pageItems.length; i++) {
             var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
@@ -68,10 +68,10 @@ var THController = {
                 '</ul></div></td>' +
                 '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
                 '<td class="workflow-table-title">' + (d.puesto || 'Sin título') + '</td>' +
-                '<td class="d-none d-md-table-cell">' + (d.area || 'N/A') + '</td>' +
+                '<td>' + (d.area || 'N/A') + '</td>' +
                 '<td><span class="badge ' + estadoClass + '">' + estadoTexto + '</span></td>' +
-                '<td class="d-none d-lg-table-cell">' + (d.creador || 'N/A') + '</td>' +
-                '<td class="d-none d-lg-table-cell">' + fecha + '</td>' +
+                '<td>' + (d.creador || 'N/A') + '</td>' +
+                '<td>' + fecha + '</td>' +
                 '</tr>';
         }
         html += '</tbody></table></div>' + this.renderPagination(lista.length, start, end, totalPages) + '</div>';
