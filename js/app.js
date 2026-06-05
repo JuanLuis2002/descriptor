@@ -437,14 +437,19 @@ function firmarDescriptorJI(id) {
             var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
             firmasGuardadas['ji_' + id] = result.value;
             localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
-            DescriptorService.update(id, { estado: 'ACTIVO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
+            var descriptorActualizado = DescriptorService.getById(id);
+            descriptorActualizado.firmaJI = result.value;
+            descriptorActualizado.fechaFirmaJI = new Date().toISOString();
+            descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
+            DescriptorService.update(id, descriptorActualizado);
             DescriptorService.registrarEvento(id, {
                 accion: 'FIRMA DEL JEFE INMEDIATO',
                 usuario: currentUser.nombre,
                 rol: currentUser.rolNombre,
-                estado: 'ACTIVO'
+                estado: descriptorActualizado.estado
             });
-            Swal.fire('Firmado', 'Descriptor firmado y activado correctamente', 'success');
+            var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
+            Swal.fire('Firmado', mensaje, 'success');
             cargarMisDescriptores();
         }
     });
@@ -506,6 +511,7 @@ function notificarFirmantes(id) {
     if (!descriptor) return;
     
     var jthUser = { nombre: 'Carlos Gómez', rol: 'JEFE_TH' };
+    var jefeInmediato = { nombre: descriptor.creador || 'Jefe Inmediato', rol: 'JEFE_INMEDIATO' };
     var colaborador = { nombre: descriptor.titular || 'Juan Pérez', rol: 'COLABORADOR' };
     
     var notificaciones = JSON.parse(localStorage.getItem('notificaciones') || '[]');
@@ -534,9 +540,21 @@ function notificarFirmantes(id) {
         rolDestino: colaborador.rol
     });
     
+    notificaciones.push({
+        id: Date.now() + 2,
+        descriptorId: id,
+        descriptorCodigo: descriptor.codigo,
+        descriptorPuesto: descriptor.puesto,
+        fecha: new Date().toISOString(),
+        mensaje: 'Se requiere su firma digital como jefe inmediato para el descriptor ' + descriptor.codigo,
+        leido: false,
+        usuarioDestino: jefeInmediato.nombre,
+        rolDestino: jefeInmediato.rol
+    });
+    
     localStorage.setItem('notificaciones', JSON.stringify(notificaciones));
     
-    Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular.', icon: 'success' });
+    Swal.fire({ title: 'Notificaciones Enviadas', text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular.', icon: 'success' });
 }
 
 // Exportar globales

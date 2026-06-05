@@ -70,7 +70,7 @@
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Pendientes Firma JTH</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Pendientes de firmas</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statInactivos">0</div><div class="stat-label">Inactivos</div></div>
     </div>
@@ -88,7 +88,7 @@
             <option value="ENVIADO_TH">Enviado a TH</option>
             <option value="OBSERVADO_TH">Observado por TH</option>
             <option value="APROBADO_TH">Aprobado por TH</option>
-            <option value="FIRMA_JTH">Pendiente Firma JTH</option>
+            <option value="FIRMA_JTH">Pendiente de firmas</option>
             <option value="FIRMADO_JTH">Firmado por JTH</option>
             <option value="FIRMADO_CT">Firmado por Colaborador</option>
             <option value="FIRMADO_JI">Firmado por Jefe Inmediato</option>
@@ -170,7 +170,7 @@ window.initDescriptorList = function() {
             'ENVIADO_TH': 'Enviado a TH',
             'OBSERVADO_TH': 'Observado por TH',
             'APROBADO_TH': 'Aprobado por TH',
-            'FIRMA_JTH': 'Pendiente Firma JTH',
+            'FIRMA_JTH': 'Pendiente de firmas',
             'FIRMADO_JTH': 'Firmado por JTH',
             'FIRMADO_CT': 'Firmado por Colaborador',
             'FIRMADO_JI': 'Firmado por Jefe Inmediato',
@@ -222,11 +222,12 @@ window.initDescriptorList = function() {
         if (d.estado === 'APROBADO_POR_JF') {
             html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
         }
-        if (d.estado === 'FIRMA_JTH') {
+        var estaEnFirmas = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(d.estado) !== -1;
+        if (estaEnFirmas) {
             html += '<li><button class="dropdown-item btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell me-2 text-primary"></i>Notificar firmantes</button></li>';
-        }
-        if (d.estado === 'FIRMADO_CT') {
-            html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature me-2 text-primary"></i>Firmar documento</button></li>';
+            if (!d.firmaJI) {
+                html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-signature me-2 text-primary"></i>Firmar documento</button></li>';
+            }
         }
         if (d.estado === 'ACTIVO') {
             html += '<li><hr class="dropdown-divider"></li>';
@@ -543,7 +544,7 @@ window.initDescriptorList = function() {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
         
-        // Cambiar estado a FIRMA_JTH para que aparezca en Jefe de TH
+        // Mantener el descriptor disponible para todos los firmantes.
         var titulo = descriptor.titular || 'Ing. Juan Pérez';
         
         DescriptorService.update(id, { 
@@ -561,7 +562,7 @@ window.initDescriptorList = function() {
         
         Swal.fire({ 
             title: 'Notificaciones Enviadas', 
-            text: 'Se ha notificado al Jefe de Talento Humano y al Colaborador/Titular (' + titulo + ') para que realicen su firma digital.\n\nEl descriptor ahora está en estado "Pendiente Firma JTH".', 
+            text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular (' + titulo + ') para que realicen su firma digital.\n\nEl descriptor ahora está en estado "Pendiente de firmas".', 
             icon: 'success' 
         });
         
@@ -610,14 +611,19 @@ window.initDescriptorList = function() {
                 var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
                 firmasGuardadas['ji_' + id] = result.value;
                 localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
-                DescriptorService.update(id, { estado: 'ACTIVO', firmaJI: result.value, fechaFirmaJI: new Date().toISOString() });
+                var descriptorActualizado = DescriptorService.getById(id);
+                descriptorActualizado.firmaJI = result.value;
+                descriptorActualizado.fechaFirmaJI = new Date().toISOString();
+                descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
+                DescriptorService.update(id, descriptorActualizado);
                 DescriptorService.registrarEvento(id, {
                     accion: 'FIRMA DEL JEFE INMEDIATO',
                     usuario: currentUserGlobal.nombre,
                     rol: currentUserGlobal.rolNombre,
-                    estado: 'ACTIVO'
+                    estado: descriptorActualizado.estado
                 });
-                Swal.fire('Firmado', 'Descriptor firmado y activado correctamente', 'success');
+                var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
+                Swal.fire('Firmado', mensaje, 'success');
                 cargarDescriptores();
             }
         });

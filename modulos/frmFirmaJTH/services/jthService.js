@@ -3,8 +3,9 @@ var JTHService = {
     getPendientesFirma: function() {
         var todos = DescriptorService.getAll();
         var resultado = [];
+        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
         for (var i = 0; i < todos.length; i++) {
-            if (todos[i].estado === 'FIRMA_JTH') {
+            if (estadosFirma.indexOf(todos[i].estado) !== -1 && !todos[i].firmaJTH && !this.getFirma(todos[i].id)) {
                 resultado.push(todos[i]);
             }
         }
@@ -31,7 +32,7 @@ var JTHService = {
         if (descriptor) {
             descriptor.firmaJTH = firmaDataUrl;
             descriptor.fechaFirmaJTH = new Date().toISOString();
-            descriptor.estado = 'FIRMADO_JTH';
+            descriptor.estado = DescriptorService.getEstadoDespuesDeFirma(descriptor);
             DescriptorService.update(id, descriptor);
             
             var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};

@@ -184,6 +184,24 @@ var DescriptorService = {
         }
     },
     
+    getFirmaGuardada: function(tipo, id) {
+        var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
+        return firmasGuardadas[tipo + '_' + id] || null;
+    },
+    
+    tieneTodasLasFirmas: function(descriptor) {
+        if (!descriptor) return false;
+        return !!(
+            (descriptor.firmaJTH || this.getFirmaGuardada('jth', descriptor.id)) &&
+            (descriptor.firmaCT || this.getFirmaGuardada('ct', descriptor.id)) &&
+            (descriptor.firmaJI || this.getFirmaGuardada('ji', descriptor.id))
+        );
+    },
+    
+    getEstadoDespuesDeFirma: function(descriptor) {
+        return this.tieneTodasLasFirmas(descriptor) ? 'ACTIVO' : 'FIRMA_JTH';
+    },
+    
     // Obtener auditoría completa
     getAuditoria: function(id) {
         var descriptor = this.getById(id);

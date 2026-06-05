@@ -35,13 +35,14 @@ var AprobacionService = {
         })[0];
     },
     
-    // Aprobar descriptor (pasa a estado pre-aprobado, pendiente de envío a TH)
+    // Aprobar descriptor y enviarlo directamente a revisión de TH
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'APROBADO_POR_JF';  // Estado intermedio
+            descriptor.estado = 'ENVIADO_TH';
             descriptor.comentariosAprobacion = comentarios;
             descriptor.fechaAprobacion = new Date().toISOString();
+            descriptor.fechaEnvioTH = new Date().toISOString();
             DescriptorService.update(id, descriptor);
             return true;
         }

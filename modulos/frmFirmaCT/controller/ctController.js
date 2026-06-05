@@ -237,13 +237,16 @@ var CTController = {
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
                 CTService.guardarFirma(id, result.value);
+                var descriptorActualizado = CTService.getById(id);
+                var estadoFirma = descriptorActualizado ? descriptorActualizado.estado : 'FIRMA_JTH';
                 DescriptorService.registrarEvento(id, {
                     accion: 'FIRMA DEL COLABORADOR/TITULAR',
                     usuario: CTController.currentUser.nombre,
                     rol: CTController.currentUser.rolNombre,
-                    estado: 'FIRMADO_CT'
+                    estado: estadoFirma
                 });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success').then(function() {
+                var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
+                Swal.fire('Firmado', mensaje, 'success').then(function() {
                     CTController.cargarPendientes();
                     CTController.cargarFirmados();
                 });

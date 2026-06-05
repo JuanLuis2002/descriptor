@@ -112,7 +112,7 @@ var THController = {
         var estados = {
             'ENVIADO_TH': 'Pendiente de revisión TH',
             'OBSERVADO_TH': 'Observado por TH',
-            'FIRMA_JTH': 'Pendiente firma JTH',
+            'FIRMA_JTH': 'Pendiente de firmas',
             'FIRMADO_JTH': 'Firmado por JTH',
             'FIRMADO_CT': 'Firmado por colaborador',
             'ACTIVO': 'Activo',
@@ -383,7 +383,7 @@ var THController = {
                                 rol: THController.currentUser.rolNombre,
                                 estado: 'FIRMA_JTH'
                             });
-                            Swal.fire('Aprobado', 'Descriptor enviado para firmas', 'success').then(function() {
+                            Swal.fire('Aprobado', 'Descriptor enviado para firmas. Los firmantes podrán firmar en cualquier orden.', 'success').then(function() {
                                 THController.cargarPendientes();
                                 THController.cargarGestionados();
                             });

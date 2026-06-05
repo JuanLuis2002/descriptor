@@ -250,13 +250,16 @@ var JTHController = {
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
                 JTHService.guardarFirma(id, result.value);
+                var descriptorActualizado = JTHService.getById(id);
+                var estadoFirma = descriptorActualizado ? descriptorActualizado.estado : 'FIRMA_JTH';
                 DescriptorService.registrarEvento(id, {
                     accion: 'FIRMA DEL JEFE DE TALENTO HUMANO',
                     usuario: JTHController.currentUser.nombre,
                     rol: JTHController.currentUser.rolNombre,
-                    estado: 'FIRMADO_JTH'
+                    estado: estadoFirma
                 });
-                Swal.fire('Firmado', 'Descriptor firmado exitosamente', 'success').then(function() {
+                var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
+                Swal.fire('Firmado', mensaje, 'success').then(function() {
                     JTHController.cargarPendientes();
                     JTHController.cargarFirmados();
                 });

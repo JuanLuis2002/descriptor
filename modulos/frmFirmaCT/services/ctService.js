@@ -3,14 +3,10 @@ var CTService = {
     getPendientesFirma: function(nombreTitular) {
         var todos = DescriptorService.getAll();
         var resultado = [];
+        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
         for (var i = 0; i < todos.length; i++) {
             var d = todos[i];
-            // El colaborador firma cuando está en estado FIRMADO_JTH y es el titular
-            /*
-            if (d.estado === 'FIRMADO_JTH' && d.titular === nombreTitular) {
-                resultado.push(d);
-            }*/
-            if (d.estado === 'FIRMADO_JTH') { //&& (d.titular || '').trim().toLowerCase() === (nombreTitular || '').trim().toLowerCase()
+            if (estadosFirma.indexOf(d.estado) !== -1 && !d.firmaCT && !this.getFirma(d.id)) {
                 resultado.push(d);
             }
         }
@@ -38,7 +34,7 @@ var CTService = {
         if (descriptor) {
             descriptor.firmaCT = firmaDataUrl;
             descriptor.fechaFirmaCT = new Date().toISOString();
-            descriptor.estado = 'FIRMADO_CT';
+            descriptor.estado = DescriptorService.getEstadoDespuesDeFirma(descriptor);
             DescriptorService.update(id, descriptor);
             
             var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};

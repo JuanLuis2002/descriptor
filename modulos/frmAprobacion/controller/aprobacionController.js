@@ -54,7 +54,7 @@ var AprobacionController = {
             var badgeClass = this.getEstadoBadgeClass(d.estado);
             var badgeText = this.getEstadoTexto(d.estado);
             var puedeGestionar = d.estado === 'ENVIADO_JF' || d.estado === 'APROBADO_POR_JF';
-            var buttonText = puedeGestionar ? (isAprobado ? 'Enviar a TH' : 'Revisar Descriptor') : 'Ver detalle';
+            var buttonText = puedeGestionar ? (isAprobado ? 'Continuar a TH' : 'Revisar Descriptor') : 'Ver detalle';
             html += '<tr>' +
                 '<td><div class="dropdown"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>' +
                 '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 2100;">' +
@@ -113,7 +113,7 @@ var AprobacionController = {
             'ENVIADO_TH': 'Enviado a TH',
             'OBSERVADO_JF': 'Observado por Jefe Superior',
             'OBSERVADO_TH': 'Observado por TH',
-            'FIRMA_JTH': 'Pendiente firma JTH',
+            'FIRMA_JTH': 'Pendiente de firmas',
             'FIRMADO_JTH': 'Firmado por JTH',
             'FIRMADO_CT': 'Firmado por colaborador',
             'ACTIVO': 'Activo',
@@ -308,7 +308,7 @@ var AprobacionController = {
             '<p><strong>Puestos responsables:</strong> ' + (descriptor.entrenamiento?.puestosResponsables || '-') + '</p>' +
             '</div>';
         
-        var confirmButtonText = !puedeGestionar ? 'Cerrar' : (isAprobado ? '<i class="fas fa-paper-plane"></i> Enviar a TH' : '<i class="fas fa-check"></i> Aprobar');
+        var confirmButtonText = !puedeGestionar ? 'Cerrar' : (isAprobado ? '<i class="fas fa-paper-plane"></i> Continuar a TH' : '<i class="fas fa-check"></i> Aprobar y continuar a TH');
         var denyButtonText = isAprobado ? '<i class="fas fa-undo"></i> Volver' : '<i class="fas fa-times"></i> Observar';
         var confirmButtonColor = isAprobado ? '#0d6efd' : '#198754';
         var denyButtonColor = isAprobado ? '#6c757d' : '#ffc107';
@@ -329,25 +329,7 @@ var AprobacionController = {
                     return true;
                 }
                 if (isAprobado) {
-                    return Swal.fire({ title: 'Enviar a Talento Humano', text: '¿Está seguro de enviar este descriptor a Talento Humano?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
-                        .then(function(result) {
-                            if (result.isConfirmed) {
-                                AprobacionService.enviarATH(id);
-                                DescriptorService.registrarEvento(id, {
-                                    accion: 'ENVÍO A TALENTO HUMANO',
-                                    usuario: AprobacionController.currentUser.nombre,
-                                    rol: AprobacionController.currentUser.rolNombre,
-                                    estado: 'ENVIADO_TH'
-                                });
-                                Swal.fire('Enviado', 'Descriptor enviado a Talento Humano', 'success').then(function() {
-                                    AprobacionController.cargarPendientes();
-                                    AprobacionController.cargarGestionados();
-                                });
-                            }
-                            return false;
-                        });
-                } else {
-                    return Swal.fire({ title: 'Aprobar Descriptor', text: '¿Está seguro de aprobar este descriptor?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
+                    return Swal.fire({ title: 'Continuar a Talento Humano', text: '¿Está seguro de continuar este descriptor a la revisión de Talento Humano?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
                         .then(function(result) {
                             if (result.isConfirmed) {
                                 AprobacionService.aprobar(id);
@@ -355,9 +337,27 @@ var AprobacionController = {
                                     accion: 'APROBACIÓN POR JEFE SUPERIOR',
                                     usuario: AprobacionController.currentUser.nombre,
                                     rol: AprobacionController.currentUser.rolNombre,
-                                    estado: 'APROBADO_POR_JF'
+                                    estado: 'ENVIADO_TH'
                                 });
-                                Swal.fire('Aprobado', 'Descriptor aprobado correctamente. Ahora puede enviarlo a Talento Humano.', 'success').then(function() {
+                                Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
+                                    AprobacionController.cargarPendientes();
+                                    AprobacionController.cargarGestionados();
+                                });
+                            }
+                            return false;
+                        });
+                } else {
+                    return Swal.fire({ title: 'Aprobar Descriptor', text: '¿Está seguro de aprobar este descriptor y continuar con la revisión de Talento Humano?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
+                        .then(function(result) {
+                            if (result.isConfirmed) {
+                                AprobacionService.aprobar(id);
+                                DescriptorService.registrarEvento(id, {
+                                    accion: 'APROBACIÓN POR JEFE SUPERIOR',
+                                    usuario: AprobacionController.currentUser.nombre,
+                                    rol: AprobacionController.currentUser.rolNombre,
+                                    estado: 'ENVIADO_TH'
+                                });
+                                Swal.fire('Aprobado', 'La aprobación del Jefe Superior fue registrada y el descriptor continuará con Talento Humano.', 'success').then(function() {
                                     AprobacionController.cargarPendientes();
                                     AprobacionController.cargarGestionados();
                                 });
