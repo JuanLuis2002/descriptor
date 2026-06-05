@@ -90,6 +90,7 @@
         .competencia-subtabs .nav-link { font-size: 0.86rem; font-weight: 700; border-radius: 999px; color: #495057; }
         .perfil-subtabs .nav-link.active,
         .competencia-subtabs .nav-link.active { background: #0d6efd; color: #fff; }
+        .responsabilidades-grid textarea.form-control { min-height: 74px; resize: vertical; }
         .perfil-subtab-pane { display: none; }
         .perfil-subtab-pane.active { display: block; }
         .competencia-subtab-pane { display: none; }
@@ -262,12 +263,14 @@
         <!-- SECCIÓN 9: RESPONSABILIDADES -->
         <div class="form-section" data-section="9">
             <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
-            <div class="mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
-            <div class="mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
-            <div class="mb-3"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
-            <div class="mb-3"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
-            <div class="mb-3"><label class="form-label">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea></div>
-            <div class="mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
+            <div class="row responsabilidades-grid">
+                <div class="col-md-6 mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
+                <div class="col-md-6 mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3"><label class="form-label">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea></div>
+            </div>
         </div>
 
         <!-- SECCIÓN 10: ENTRENAMIENTO -->
