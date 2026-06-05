@@ -306,11 +306,36 @@ function buildFrecuenciasKPIOptions(selectedValue) {
 }
 
 function addKPIRow() {
-    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions() + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta"></div></div></div>');
+    ensureKPITable();
+    $('#kpisTableBody').append(buildKPITableRow('', '', ''));
+    renumerarKPITable();
 }
 
 function addKPIRowWithData(indicador, frecuencia, meta) {
-    $('#kpisContainer').append('<div class="dynamic-row"><div class="remove-row" onclick="$(this).closest(\'.dynamic-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-5"><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador" value="' + (indicador || '') + '"></div><div class="col-md-4"><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions(frecuencia) + '</select></div><div class="col-md-3"><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta" value="' + (meta || '') + '"></div></div></div>');
+    ensureKPITable();
+    $('#kpisTableBody').append(buildKPITableRow(indicador, frecuencia, meta));
+    renumerarKPITable();
+}
+
+function ensureKPITable() {
+    if ($('#kpisTableBody').length > 0) return;
+    $('#kpisContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Indicador</th><th style="width:190px;">Frecuencia</th><th style="width:170px;">Meta</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="kpisTableBody"></tbody></table></div>');
+}
+
+function buildKPITableRow(indicador, frecuencia, meta) {
+    return '<tr class="dynamic-row kpi-row">' +
+        '<td class="funcion-codigo"><span class="kpi-codigo-text"></span></td>' +
+        '<td><input type="text" class="form-control" name="kpiIndicador[]" placeholder="Indicador" value="' + (indicador || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td><select class="form-select" name="kpiFrecuencia[]">' + buildFrecuenciasKPIOptions(frecuencia) + '</select></td>' +
+        '<td><input type="text" class="form-control" name="kpiMeta[]" placeholder="Meta" value="' + (meta || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarKPIsGlobal === \'function\') renumerarKPIsGlobal(); else renumerarKPITable();"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+}
+
+function renumerarKPITable() {
+    $('#kpisTableBody tr').each(function(index) {
+        $(this).find('.kpi-codigo-text').text(index + 1);
+    });
 }
 
 function addEducacionRow() {
