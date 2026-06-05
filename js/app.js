@@ -1744,6 +1744,13 @@ function generarHTMLVersionExtensa(d) {
     var relaciones = d.relacionesLaborales || {};
     var riesgos = d.riesgosFisicos || {};
     var requerimientos = filtrarTextos(d.requerimientosOrganizacionales);
+    if (requerimientos.length === 0) {
+        requerimientos = [
+            'Cumplir con los valores institucionales',
+            'Cumplir con los normativos institucionales',
+            'Cumplir con las competencias requeridas para el cargo'
+        ];
+    }
     var relacionesInternas = filtrarObjetos(relaciones.internas, ['puesto', 'razon']);
     var relacionesExternas = filtrarObjetos(relaciones.externas, ['entidad', 'razon']);
     var riesgosLista = filtrarTextos(riesgos.riesgos);
@@ -1916,7 +1923,6 @@ function generarHTMLVersionExtensa(d) {
         return '<table class="firmas flow-block"><tr>' +
             '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + titularNombre + '</div></td>' +
             '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + text(d.creador) + '</div></td>' +
-            '<td>' + getFirmaHtml(firmaJTH) + '<div class="linea-firma"></div><div>Jefe de Talento Humano</div><div class="nombre-firma"><strong>Nombre:</strong> Lic. Carlos Gómez</div></td>' +
             '</tr></table>';
     }
 
@@ -1972,7 +1978,7 @@ function generarHTMLVersionExtensa(d) {
         .conductual-label { width: 32%; text-align: center; font-weight: 700; }
         .conductual-tabla td { min-height: 34px; height: 34px; }
         .firmas { width: 100%; margin-top: 46px; border-collapse: collapse; }
-        .firmas td { width: 33.33%; text-align: center; vertical-align: bottom; padding: 0 24px; }
+        .firmas td { width: 50%; text-align: center; vertical-align: bottom; padding: 0 36px; }
         .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
         .nombre-firma { text-align: left; margin-top: 9px; }
         .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
