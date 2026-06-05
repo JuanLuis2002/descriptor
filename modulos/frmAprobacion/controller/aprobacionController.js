@@ -47,7 +47,7 @@ var AprobacionController = {
         var end = Math.min(start + this.pageSize, lista.length);
 
         var html = '<div class="workflow-table-card"><div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr>' +
-            '<th>Opciones</th><th>Código</th><th>Puesto</th><th>Área</th><th>Estado</th><th>Creador</th><th>Fecha</th></tr></thead><tbody>';
+            '<th>Opciones</th><th>Código</th><th>Puesto</th><th>Área</th><th>Versión</th><th>Formato</th><th>Estado</th><th>Creador</th><th>Fecha</th></tr></thead><tbody>';
         for (var i = 0; i < pageItems.length; i++) {
             var d = pageItems[i];
             var fecha = d.fechaEmision || (d.fechaCreacion ? d.fechaCreacion.split('T')[0] : '-');
@@ -56,6 +56,10 @@ var AprobacionController = {
             var badgeText = this.getEstadoTexto(d.estado);
             var puedeGestionar = d.estado === 'ENVIADO_JF' || d.estado === 'APROBADO_POR_JF';
             var buttonText = puedeGestionar ? (isAprobado ? 'Continuar a TH' : 'Revisar Descriptor') : 'Ver detalle';
+            var esExtensa = (d.tipoFormato || 'CORTA') === 'EXTENSA';
+            var formatoBadge = esExtensa
+                ? '<span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="fas fa-file-lines me-1"></i>Extensa</span>'
+                : '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle"><i class="fas fa-file-alt me-1"></i>Corta</span>';
             html += '<tr>' +
                 '<td><div class="dropdown workflow-actions"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-display="static"><i class="fas fa-ellipsis-v"></i></button>' +
                 '<ul class="dropdown-menu dropdown-menu-end" style="z-index: 5000;">' +
@@ -66,6 +70,8 @@ var AprobacionController = {
                 '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
                 '<td class="workflow-table-title">' + (d.puesto || 'Sin título') + '</td>' +
                 '<td>' + (d.area || 'N/A') + '</td>' +
+                '<td><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle"><i class="fas fa-code-branch me-1"></i>Versión ' + (d.version || 1) + '</span></td>' +
+                '<td>' + formatoBadge + '</td>' +
                 '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>' +
                 '<td>' + (d.creador || 'N/A') + '</td>' +
                 '<td>' + fecha + '</td>' +
