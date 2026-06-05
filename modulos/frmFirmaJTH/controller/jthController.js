@@ -381,8 +381,12 @@ var JTHController = {
                 });
                 var mensaje = estadoFirma === 'ACTIVO' ? 'Descriptor firmado y activado correctamente' : 'Descriptor firmado exitosamente. Aún quedan firmas pendientes.';
                 Swal.fire('Firmado', mensaje, 'success').then(function() {
-                    JTHController.cargarPendientes();
-                    JTHController.cargarFirmados();
+                    if ($('#jthFirmaStatusPanel').length > 0) {
+                        JTHController.renderPanelFirmas(id, descriptorActualizado);
+                    } else {
+                        JTHController.cargarPendientes();
+                        JTHController.cargarFirmados();
+                    }
                 });
             }
         });
