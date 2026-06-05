@@ -1884,10 +1884,17 @@ function generarHTMLVersionExtensa(d) {
     }
 
     function renderFirmas() {
-        return '<table class="firmas flow-block"><tr>' +
-            '<td>' + getFirmaHtml(firmaCT) + '<div class="linea-firma"></div><div>Titular del Puesto</div><div class="nombre-firma"><strong>Nombre:</strong> ' + titularNombre + '</div></td>' +
-            '<td>' + getFirmaHtml(firmaJI) + '<div class="linea-firma"></div><div>Jefe Inmediato</div><div class="nombre-firma"><strong>Nombre:</strong> ' + jefeInmediatoNombre + '</div></td>' +
-            '</tr></table>';
+        var jefeTHNombre = (firmaJTH && firmaJTH.nombre) ? text(firmaJTH.nombre) : 'Lic. Carlos Gómez';
+        var fechaCT = d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________';
+        var fechaJI = d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________';
+        var fechaJTH = d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________';
+
+        return '<table class="firmas flow-block">' +
+            '<tr><td colspan="4" class="firmas-title">APROBACIONES</td></tr>' +
+            '<tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">' + titularNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaCT + '</td></tr>' +
+            '<tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">' + jefeInmediatoNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJI + '</td></tr>' +
+            '<tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">' + jefeTHNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJTH + '</td></tr>' +
+            '</table>';
     }
 
     var actividadesHtml = renderActividades(0, funciones.length);
@@ -1941,11 +1948,13 @@ function generarHTMLVersionExtensa(d) {
         .conductual-tabla th { text-align: center; }
         .conductual-label { width: 32%; text-align: center; font-weight: 700; }
         .conductual-tabla td { min-height: 34px; height: 34px; }
-        .firmas { width: 100%; margin-top: 46px; border-collapse: collapse; }
-        .firmas td { width: 50%; text-align: center; vertical-align: bottom; padding: 0 36px; }
-        .linea-firma { border-top: 1px solid #000; height: 8px; margin-top: 14px; }
-        .nombre-firma { text-align: left; margin-top: 9px; }
-        .firma-img { max-width: 145px; max-height: 46px; object-fit: contain; display: inline-block; }
+        .firmas { width: 100%; margin-top: 16px; border-collapse: collapse; }
+        .firmas td { border: 0.8px solid #000; padding: 3px 6px; vertical-align: middle; }
+        .firmas-title { font-weight: 700; border: none !important; padding: 4px 0 !important; }
+        .firma-lbl { width: 22%; font-weight: 700; }
+        .firma-val { width: 28%; }
+        .firma-lbl2 { width: 22%; font-weight: 700; }
+        .firma-val2 { width: 28%; }
         .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         @media print {
             .page-number,
