@@ -56,8 +56,16 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
         .form-label { font-weight: 600; font-size: 0.85rem; }
-        .actividad-item { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6; }
-        .funcion-actividad-card { margin-bottom: 20px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+        .actividad-item { background: white; }
+        .funcion-actividad-card { margin-bottom: 18px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; background: #fff; }
+        .funcion-actividad-card .card-header { font-size: 0.86rem; padding: 8px 12px !important; }
+        .funcion-actividad-card .card-body { padding: 10px !important; background: #fff !important; }
+        .actividades-table { font-size: 0.82rem; }
+        .actividades-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
+        .actividades-table td { vertical-align: middle; padding: 6px 8px; }
+        .actividades-table .actividad-codigo { width: 72px; text-align: center; font-weight: 700; color: #0d6efd; }
+        .actividades-table .form-control { font-size: 0.82rem; padding: 5px 8px; min-height: 32px; }
+        .actividades-table .btn { padding: 3px 7px; }
         .funciones-table { font-size: 0.82rem; }
         .funciones-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
         .funciones-table td { vertical-align: middle; padding: 6px 8px; }
@@ -591,10 +599,10 @@
         for(var f = 0; f < funcionesClavesList.length; f++) {
             var funcion = funcionesClavesList[f];
             html += '<div class="funcion-actividad-card mb-3" data-funcion-id="' + funcion.id + '">' +
-                '<div class="card-header bg-primary text-white p-2"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
-                '<div class="card-body p-3 bg-light">' +
-                '<div id="actividades-funcion-' + funcion.id + '"></div>' +
-                '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
+                '<div class="card-header bg-primary text-white"><strong>' + funcion.codigo + '</strong> - ' + funcion.nombre + '</div>' +
+                '<div class="card-body">' +
+                '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
+                '<button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
                 '</div></div>';
         }
         $('#actividadesContainer').html(html);
@@ -606,14 +614,31 @@
     window.agregarActividad = function(funcionId) {
         var container = $('#actividades-funcion-' + funcionId);
         if (container.length === 0) return;
-        container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+        container.append(buildActividadRow(funcionId, ''));
+        renumerarActividades(funcionId);
     };
+    
+    function buildActividadRow(funcionId, texto) {
+        return '<tr class="actividad-item">' +
+            '<td class="actividad-codigo"><span class="actividad-codigo-text"></span></td>' +
+            '<td><input type="text" class="form-control actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="var fid=$(this).closest(\'tbody\').attr(\'id\').replace(\'actividades-funcion-\', \'\'); $(this).closest(\'tr\').remove(); if (typeof renumerarActividadesGlobal === \'function\') renumerarActividadesGlobal(fid);"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function renumerarActividades(funcionId) {
+        $('#actividades-funcion-' + funcionId + ' tr').each(function(index) {
+            $(this).find('.actividad-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarActividadesGlobal = renumerarActividades;
     
     function agregarActividadConTexto(funcionId, texto) {
         var container = $('#actividades-funcion-' + funcionId);
         if (container.length === 0) return;
         if (texto && texto.trim() !== '') {
-            container.append('<div class="actividad-item mb-2"><div class="row"><div class="col-11"><input type="text" class="form-control form-control-sm actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></div><div class="col-1"><button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest(\'.actividad-item\').remove()"><i class="fas fa-trash"></i></button></div></div></div>');
+            container.append(buildActividadRow(funcionId, texto));
+            renumerarActividades(funcionId);
         }
     }
     
