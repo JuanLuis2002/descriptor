@@ -911,10 +911,11 @@
         for (var s = 0; s < pasosActivos.length; s++) {
             $('.step[data-step="' + pasosActivos[s] + '"]').show().find('.step-circle').text(s + 1);
         }
-        for(var i = 1; i <= totalSteps; i++) {
-            if (!isPasoActivo(i)) continue;
-            if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
-            else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
+        var currentIndex = pasosActivos.indexOf(currentStep);
+        for(var i = 0; i < pasosActivos.length; i++) {
+            var stepValue = pasosActivos[i];
+            if (i < currentIndex) $('.step[data-step="' + stepValue + '"]').addClass('completed');
+            else if (i === currentIndex) $('.step[data-step="' + stepValue + '"]').addClass('active');
         }
         if (window._readOnlyDescriptor) {
             $('.descriptor-save-top').hide();
