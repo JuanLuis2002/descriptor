@@ -357,7 +357,7 @@
     var actividadFuncionActiva = null;
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     var currentStep = 2;
-    var totalSteps = 11;
+    var totalSteps = 14;
     var pasosPorFormato = {
         CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11],
         EXTENSA: [2, 3, 7, 8, 9, 10, 11]
@@ -916,7 +916,13 @@
             if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
             else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
         }
-        $('#saveBtn').show();
+        if (window._readOnlyDescriptor) {
+            $('.descriptor-save-top').hide();
+            $('#saveBtn').hide();
+        } else {
+            $('.descriptor-save-top').show();
+            $('#saveBtn').show();
+        }
         sincronizarAccionesActividades();
         if (getTipoFormato() === 'EXTENSA') guardarActividadesActuales();
         if (currentStep === getLastStep()) updateResumen();
@@ -1251,7 +1257,7 @@
     });
     $('.step').off('click').click(function() {
         var step = parseInt($(this).data('step'));
-        if (!isNaN(step) && step >= 1 && step <= totalSteps && isPasoActivo(step)) {
+        if (!isNaN(step) && isPasoActivo(step)) {
             currentStep = step;
             updateStepDisplay();
         }

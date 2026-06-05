@@ -257,6 +257,7 @@ var DescriptorController = {
     },
     
     aplicarModoSoloLectura: function() {
+        $('.descriptor-save-top').hide();
         $('#saveBtn').hide();
         $('#descriptorForm').find('input, select, textarea').prop('disabled', true);
         $('#descriptorForm').find(
