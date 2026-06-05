@@ -157,7 +157,11 @@ var JTHController = {
         }
 
         $('#pageTitle').text('Detalle del Descriptor');
-        DescriptorController.init(this.currentUser, id, { readOnly: true });
+        DescriptorController.init(this.currentUser, id, {
+            readOnly: true,
+            thReview: (descriptor.tipoFormato || 'CORTA') === 'EXTENSA',
+            canEditThComplements: false
+        });
 
         var self = this;
         var intentos = 0;

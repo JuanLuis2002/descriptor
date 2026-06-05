@@ -277,7 +277,7 @@ var DescriptorController = {
             $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').hide();
         }
         if ($('#readOnlyDescriptorAlert').length === 0) {
-            var mensajeSoloLectura = window._thReviewMode
+            var mensajeSoloLectura = window._thReviewMode && window._canEditThComplements
                 ? 'Modo revisión TH: el descriptor base es solo lectura; puede modificar únicamente los complementos técnicos habilitados.'
                 : 'Modo solo lectura: puede consultar el descriptor, pero no modificarlo.';
             $('.descriptor-save-top').after(
