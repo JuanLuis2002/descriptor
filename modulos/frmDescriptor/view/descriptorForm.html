@@ -621,12 +621,6 @@
         var actividadesGuardadas = [];
         for(var f = 0; f < funcionesClavesList.length; f++) {
             var anterior = anteriores[f] || null;
-            for (var a = 0; a < anteriores.length; a++) {
-                if (anteriores[a] && anteriores[a].funcionNombre === funcionesClavesList[f].nombre) {
-                    anterior = anteriores[a];
-                    break;
-                }
-            }
             var actividades = anterior && anterior.actividades ? anterior.actividades.slice() : [];
             var $contenedor = $('#actividades-funcion-' + funcionesClavesList[f].id);
             if ($contenedor.length > 0) {
