@@ -687,6 +687,69 @@
             border-color: #cbd5e1 !important;
         }
 
+        .signature-modal {
+            max-width: 100%;
+        }
+
+        .signature-modal .signature-pad-box {
+            width: min(400px, 100%) !important;
+            max-width: 100% !important;
+            height: 200px !important;
+            background: #fff !important;
+            touch-action: none;
+        }
+
+        .signature-modal canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .signature-modal .signature-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @media (max-width: 576px) {
+            .swal2-popup:has(.signature-modal) {
+                width: calc(100vw - 24px) !important;
+                max-width: calc(100vw - 24px) !important;
+                padding: 1rem !important;
+            }
+
+            .swal2-popup:has(.signature-modal) .swal2-title {
+                font-size: 1.35rem !important;
+                line-height: 1.2 !important;
+            }
+
+            .swal2-popup:has(.signature-modal) .swal2-html-container {
+                margin: 0.75rem 0 0 !important;
+                overflow-x: hidden !important;
+            }
+
+            .signature-modal .signature-pad-box {
+                height: 170px !important;
+            }
+
+            .signature-modal .btn {
+                flex: 1 1 auto;
+                min-width: 120px;
+            }
+
+            .swal2-popup:has(.signature-modal) .swal2-actions {
+                width: 100%;
+                gap: 8px;
+            }
+
+            .swal2-popup:has(.signature-modal) .swal2-actions .swal2-confirm,
+            .swal2-popup:has(.signature-modal) .swal2-actions .swal2-cancel {
+                flex: 1 1 140px;
+                margin: 0 !important;
+            }
+        }
+
         body.dark-mode #toggleSidebar,
         body.dark-mode #toggleSidebar i {
             color: #f9fafb !important;

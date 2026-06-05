@@ -400,7 +400,7 @@ function firmarDescriptorJI(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) return;
     
-    var modalHtml = '<div class="text-center signature-modal"><p class="mb-2">Firme en el recuadro con el mouse o dedo:</p><div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
+    var modalHtml = '<div class="text-center signature-modal"><p class="mb-2">Firme en el recuadro con el mouse o dedo:</p><div id="signature-pad" class="border rounded mx-auto signature-pad-box" style="width: 400px; height: 200px; background: white; border: 2px solid #ccc;"><canvas id="firmaCanvas" width="400" height="200" style="width:100%;height:100%;"></canvas></div><div class="mt-3 signature-actions"><button id="limpiarFirma" class="btn btn-secondary btn-sm"><i class="fas fa-eraser"></i> Limpiar</button><button id="descargarFirma" class="btn btn-info btn-sm"><i class="fas fa-download"></i> Descargar</button></div></div>';
     
     Swal.fire({
         title: 'Firma Digital - Jefe Inmediato',
@@ -415,6 +415,16 @@ function firmarDescriptorJI(id) {
                 backgroundColor: 'rgb(255,255,255)',
                 penColor: 'rgb(0,0,0)'
             });
+            function resizeSignatureCanvas() {
+                var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                var box = canvas.parentElement;
+                canvas.width = box.offsetWidth * ratio;
+                canvas.height = box.offsetHeight * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
+                signaturePad.clear();
+            }
+            resizeSignatureCanvas();
+            $(window).off('resize.signatureJIApp').on('resize.signatureJIApp', resizeSignatureCanvas);
             $('#limpiarFirma').click(function() { signaturePad.clear(); });
             $('#descargarFirma').click(function() {
                 if (signaturePad.isEmpty()) { Swal.fire('Advertencia', 'No hay firma', 'warning'); return; }
@@ -424,6 +434,9 @@ function firmarDescriptorJI(id) {
                 link.click();
             });
             window.currentSignaturePad = signaturePad;
+        },
+        willClose: function() {
+            $(window).off('resize.signatureJIApp');
         },
         preConfirm: function() {
             if (window.currentSignaturePad && window.currentSignaturePad.isEmpty()) {
