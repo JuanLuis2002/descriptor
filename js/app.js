@@ -1890,7 +1890,7 @@ function generarHTMLVersionExtensa(d) {
         var fechaJTH = d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________';
 
         return '<table class="firmas flow-block">' +
-            '<tr><td colspan="4" class="firmas-title">APROBACIONES</td></tr>' +
+            '<tr><td colspan="4" class="firmas-title">FIRMAS</td></tr>' +
             '<tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">' + titularNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaCT + '</td></tr>' +
             '<tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">' + jefeInmediatoNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJI + '</td></tr>' +
             '<tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">' + jefeTHNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJTH + '</td></tr>' +
