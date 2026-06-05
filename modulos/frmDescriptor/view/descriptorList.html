@@ -34,7 +34,7 @@
         .auditoria-usuario { color: #0d6efd; }
         .auditoria-estado { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-left: 8px; }
         .descriptor-actions .dropdown-toggle { min-width: 38px; }
-        .descriptor-actions .dropdown-menu { min-width: 210px; z-index: 5000; }
+        .descriptor-actions .dropdown-menu { width: 220px; min-width: 220px; max-width: 220px; z-index: 5000; }
         .descriptores-table-card { overflow: visible !important; }
         .descriptores-table-card .table-responsive { overflow-x: auto !important; overflow-y: visible !important; }
         .descriptores-table-card .table { min-width: 980px !important; }
@@ -353,14 +353,20 @@ window.initDescriptorList = function() {
             var menu = $(this).siblings('.dropdown-menu')[0];
             if (!menu) return;
             menu.style.position = 'fixed';
+            menu.style.width = '220px';
+            menu.style.minWidth = '220px';
+            menu.style.maxWidth = '220px';
             menu.style.top = (buttonRect.bottom + 4) + 'px';
-            menu.style.left = Math.min(buttonRect.left, window.innerWidth - menu.offsetWidth - 8) + 'px';
+            menu.style.left = Math.max(8, Math.min(buttonRect.left, window.innerWidth - 228)) + 'px';
             menu.style.zIndex = '5000';
         });
         $('.descriptor-actions .dropdown-toggle').off('hidden.bs.dropdown.descriptorMenu').on('hidden.bs.dropdown.descriptorMenu', function() {
             var menu = $(this).siblings('.dropdown-menu')[0];
             if (!menu) return;
             menu.style.position = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.maxWidth = '';
             menu.style.top = '';
             menu.style.left = '';
             menu.style.zIndex = '';
