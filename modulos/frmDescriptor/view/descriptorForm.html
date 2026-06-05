@@ -71,8 +71,10 @@
         .bitacora-item:last-child { border-bottom: none; }
         .bitacora-title { font-weight: 700; color: #495057; }
         .bitacora-meta { font-size: 0.78rem; color: #6c757d; }
-        .perfil-subtabs .nav-link { font-size: 0.86rem; font-weight: 700; border-radius: 999px; color: #495057; }
-        .perfil-subtabs .nav-link.active { background: #0d6efd; color: #fff; }
+        .perfil-subtabs .nav-link,
+        .competencia-subtabs .nav-link { font-size: 0.86rem; font-weight: 700; border-radius: 999px; color: #495057; }
+        .perfil-subtabs .nav-link.active,
+        .competencia-subtabs .nav-link.active { background: #0d6efd; color: #fff; }
         .perfil-subtab-pane { display: none; }
         .perfil-subtab-pane.active { display: block; }
         .competencia-subtab-pane { display: none; }
@@ -177,7 +179,7 @@
         <!-- SECCIÓN 7: PERFIL -->
         <div class="form-section" data-section="7">
             <h5 class="mb-4"><i class="fas fa-user me-2 text-primary"></i>Perfil del Puesto</h5>
-            <ul class="nav nav-pills mb-3 perfil-subtabs">
+            <ul class="nav nav-pills mb-3 competencia-subtabs">
                 <li class="nav-item"><button type="button" class="nav-link active" data-perfil-subtab="perfilDatos"><i class="fas fa-id-card me-1"></i>Perfil</button></li>
                 <li class="nav-item"><button type="button" class="nav-link" data-perfil-subtab="educacionDatos"><i class="fas fa-graduation-cap me-1"></i>Educación</button></li>
                 <li class="nav-item"><button type="button" class="nav-link" data-perfil-subtab="experienciaDatos"><i class="fas fa-briefcase me-1"></i>Experiencia</button></li>
@@ -952,9 +954,9 @@
         $('.perfil-subtab-pane').removeClass('active');
         $('#' + tabName).addClass('active');
     });
-    $('[data-competencia-subtab]').off('click').on('click', function() {
+    $('.competencia-subtabs .nav-link').off('click').on('click', function() {
         var tabName = $(this).data('competencia-subtab');
-        $('[data-competencia-subtab]').removeClass('active');
+        $('.competencia-subtabs .nav-link').removeClass('active');
         $(this).addClass('active');
         $('.competencia-subtab-pane').removeClass('active');
         $('#' + tabName).addClass('active');
