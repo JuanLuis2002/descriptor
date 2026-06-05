@@ -463,25 +463,13 @@ window.initDescriptorList = function() {
     }
     
     function verDescriptor(id) {
-        if (typeof DescriptorService === 'undefined') return;
-        var descriptor = DescriptorService.getById(id);
-        if (!descriptor) return;
-        
-        var html = '<div class="text-start">' +
-            '<h6 class="border-bottom pb-2">Información General</h6>' +
-            '<p><strong>Código:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p>' +
-            '<p><strong>Formato:</strong> ' + ((descriptor.tipoFormato || 'CORTA') === 'EXTENSA' ? 'Versión extensa' : 'Versión corta') + '</p>' +
-            '<p><strong>Versión:</strong> <span class="badge bg-primary">Versión ' + (descriptor.version || 1) + '</span></p>' +
-            '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
-            '<p><strong>Área:</strong> ' + (descriptor.area || '-') + '</p>' +
-            '<p><strong>Reporta a:</strong> ' + (descriptor.reportaA || '-') + '</p>' +
-            '<p><strong>Estado:</strong> ' + getEstadoTexto(descriptor.estado) + '</p>' +
-            '<hr>' +
-            '<h6 class="border-bottom pb-2">Objetivo</h6>' +
-            '<p>' + (descriptor.objetivo || '-') + '</p>' +
-            '</div>';
-        
-        Swal.fire({ title: 'Descriptor: ' + descriptor.puesto, html: html, width: '600px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
+        if (typeof DescriptorController !== 'undefined') {
+            $('.nav-link').removeClass('active');
+            $('.nav-link[data-modulo="misDescriptores"]').addClass('active');
+            DescriptorController.init(currentUser, id, { readOnly: true });
+        } else {
+            Swal.fire('Error', 'No se puede abrir el detalle del descriptor', 'error');
+        }
     }
     
     function enviarDescriptor(id) {

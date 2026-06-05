@@ -2,14 +2,17 @@
 var DescriptorController = {
     currentUser: null,
     descriptorIdToEdit: null,
+    readOnlyMode: false,
     
-    init: function(user, idToEdit) {
+    init: function(user, idToEdit, options) {
         this.currentUser = user;
         this.descriptorIdToEdit = idToEdit || null;
+        this.readOnlyMode = !!(options && options.readOnly);
+        window._readOnlyDescriptor = this.readOnlyMode;
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
         }
-        console.log('DescriptorController iniciado para:', user.nombre, 'Editando ID:', idToEdit);
+        console.log('DescriptorController iniciado para:', user.nombre, 'Editando ID:', idToEdit, 'Solo lectura:', this.readOnlyMode);
         this.loadForm();
     },
     
@@ -17,6 +20,7 @@ var DescriptorController = {
         window._isEditing = false;
         window._editingId = null;
         window._savedActividades = null;
+        window._readOnlyDescriptor = false;
     },
     
     loadForm: function() {
@@ -49,6 +53,7 @@ var DescriptorController = {
     },
     
     cargarDatosParaEdicion: function(id) {
+        var self = this;
         if (typeof DescriptorService === 'undefined') return;
         
         var descriptor = DescriptorService.getById(id);
@@ -56,8 +61,8 @@ var DescriptorController = {
         
         console.log('Cargando datos del descriptor:', descriptor.codigo);
         
-        $('#pageTitle').text('Editar Descriptor');
-        $('#saveBtn').text('Actualizar Descriptor');
+        $('#pageTitle').text(this.readOnlyMode ? 'Detalle del Descriptor' : 'Editar Descriptor');
+        $('#saveBtn').text(this.readOnlyMode ? 'Solo lectura' : 'Actualizar Descriptor');
         window._savedActividades = null;
         
         // Datos básicos
@@ -200,7 +205,7 @@ var DescriptorController = {
             $('input[name="puestosResponsables"]').val(descriptor.entrenamiento.puestosResponsables);
         }
         
-        window._isEditing = true;
+        window._isEditing = !this.readOnlyMode;
         window._editingId = id;
         
         // Guardar las actividades para cargarlas después de que se actualicen las funciones
@@ -216,7 +221,27 @@ var DescriptorController = {
             } else if (typeof actualizarActividades === 'function') {
                 actualizarActividades();
             }
+            if (self.readOnlyMode) {
+                self.aplicarModoSoloLectura();
+            }
         }, 600);
+    },
+    
+    aplicarModoSoloLectura: function() {
+        $('#saveBtn').hide();
+        $('#descriptorForm').find('input, select, textarea').prop('disabled', true);
+        $('#descriptorForm').find(
+            '#addFuncionClave, #addFuncionSecundaria, #addKPI, #addEducacion, #addExperiencia, #addCompetenciaTecnica, #addCompetenciaConductual'
+        ).hide();
+        $('#descriptorForm').find('.btn-outline-danger').hide();
+        $('#descriptorForm').find('.funciones-add-btn').not('.actividad-btn').hide();
+        if ($('#readOnlyDescriptorAlert').length === 0) {
+            $('.descriptor-save-top').after(
+                '<div id="readOnlyDescriptorAlert" class="alert alert-info py-2 mb-3">' +
+                '<i class="fas fa-eye me-1"></i> Modo solo lectura: puede consultar el descriptor, pero no modificarlo.' +
+                '</div>'
+            );
+        }
     }
 };
 

@@ -685,6 +685,8 @@
             return;
         }
         actividadFuncionActiva = funcionId;
+        var readOnly = !!window._readOnlyDescriptor;
+        var agregarActividadBtn = readOnly ? '' : '<button type="button" class="btn btn-sm btn-light fw-semibold funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus me-1"></i> Agregar actividad</button>';
         var html = '<div class="funcion-actividad-card">' +
             '<div class="actividad-panel-top">' +
             '<button type="button" class="btn btn-sm btn-light border" onclick="volverFuncionesClaveGlobal()"><i class="fas fa-arrow-left me-1"></i> Volver a funciones clave</button>' +
@@ -694,7 +696,7 @@
             '<h5 class="actividad-panel-title"><span class="icon-box"><i class="fas fa-list-check"></i></span>Actividades de la función ' + funcion.codigo + '</h5>' +
             '<div class="actividad-panel-subtitle">' + funcion.nombre + '</div>' +
             '</div>' +
-            '<button type="button" class="btn btn-sm btn-light fw-semibold funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus me-1"></i> Agregar actividad</button>' +
+            agregarActividadBtn +
             '</div>' +
             '<div class="actividad-panel-body">' +
             '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:70px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
@@ -728,10 +730,11 @@
     };
     
     function buildActividadRow(funcionId, texto) {
+        var readOnly = !!window._readOnlyDescriptor;
         return '<tr class="actividad-item">' +
             '<td class="actividad-codigo"><span class="actividad-codigo-text"></span></td>' +
-            '<td><input type="text" class="form-control actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"></td>' +
-            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="var fid=$(this).closest(\'tbody\').attr(\'id\').replace(\'actividades-funcion-\', \'\'); $(this).closest(\'tr\').remove(); if (typeof renumerarActividadesGlobal === \'function\') renumerarActividadesGlobal(fid);"><i class="fas fa-trash"></i></button></td>' +
+            '<td><input type="text" class="form-control actividad-input" data-funcion="' + funcionId + '" placeholder="Describa una actividad" value="' + (texto || '').replace(/"/g, '&quot;') + '"' + (readOnly ? ' disabled' : '') + '></td>' +
+            '<td class="text-center">' + (readOnly ? '' : '<button type="button" class="btn btn-sm btn-outline-danger" onclick="var fid=$(this).closest(\'tbody\').attr(\'id\').replace(\'actividades-funcion-\', \'\'); $(this).closest(\'tr\').remove(); if (typeof renumerarActividadesGlobal === \'function\') renumerarActividadesGlobal(fid);"><i class="fas fa-trash"></i></button>') + '</td>' +
             '</tr>';
     }
     
@@ -886,6 +889,10 @@
     }
     
     function saveDescriptor() {
+        if (window._readOnlyDescriptor) {
+            Swal.fire('Solo lectura', 'Este descriptor está abierto únicamente para consulta.', 'info');
+            return;
+        }
         var tipoFormato = getTipoFormato();
         if (tipoFormato === 'EXTENSA') guardarActividadesActuales();
         
