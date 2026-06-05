@@ -272,6 +272,7 @@ window.initDescriptorList = function() {
             '<th>Puesto</th>' +
             '<th class="col-area">Área</th>' +
             '<th class="col-version">Versión</th>' +
+            '<th>Formato</th>' +
             '<th>Estado</th>' +
             '<th class="col-reporta">Reporta a</th>' +
             '<th class="col-fecha">Fecha</th>' +
@@ -283,6 +284,10 @@ window.initDescriptorList = function() {
             var estadoTexto = getEstadoTexto(d.estado);
             var estadoClass = getEstadoClass(d.estado);
             var version = d.version || 1;
+            var esExtensa = (d.tipoFormato || 'CORTA') === 'EXTENSA';
+            var formatoBadge = esExtensa
+                ? '<span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="fas fa-file-lines me-1"></i>Extensa</span>'
+                : '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle"><i class="fas fa-file-alt me-1"></i>Corta</span>';
             html += '<tr>' +
                 '<td>' + buildAccionesDropdown(d) + '</td>' +
                 '<td><span class="fw-semibold">' + (d.codigo || 'DES-' + d.id) + '</span></td>' +
@@ -293,6 +298,7 @@ window.initDescriptorList = function() {
             html += '</td>' +
                 '<td class="col-area">' + (d.area || 'N/A') + '</td>' +
                 '<td class="col-version"><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle"><i class="fas fa-code-branch me-1"></i>Versión ' + version + '</span></td>' +
+                '<td>' + formatoBadge + '</td>' +
                 '<td><span class="status-badge status-' + estadoClass + '">' + estadoTexto + '</span></td>' +
                 '<td class="col-reporta">' + (d.reportaA || 'N/A') + '</td>' +
                 '<td class="col-fecha">' + fecha + '</td>' +
