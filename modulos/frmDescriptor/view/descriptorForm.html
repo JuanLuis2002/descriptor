@@ -64,6 +64,8 @@
         .actividad-panel-title .icon-box { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.18); }
         .actividad-panel-subtitle { margin: 4px 0 0 44px; color: rgba(255,255,255,0.86); font-size: 0.82rem; }
         .actividad-panel-body { padding: 12px 0 0; background: transparent; }
+        .actividad-add-btn { background: #fff; color: #0d6efd; border-color: rgba(255,255,255,0.75); }
+        .actividad-add-btn:hover { background: #eef5ff; color: #0a58ca; border-color: #fff; }
         .actividad-empty-state { display: none; text-align: center; color: #6c757d; background: #f8f9fa; border: 1px dashed #cfd8e3; border-radius: 12px; padding: 18px 12px; margin-top: 10px; font-size: 0.86rem; }
         .actividad-empty-state i { display: block; color: #0d6efd; font-size: 1.35rem; margin-bottom: 6px; }
         .actividades-table { font-size: 0.82rem; }
@@ -86,6 +88,10 @@
         .bitacora-item:last-child { border-bottom: none; }
         .bitacora-title { font-weight: 700; color: #495057; }
         .bitacora-meta { font-size: 0.78rem; color: #6c757d; }
+        .resumen-content { border: 1px solid #e9ecef; }
+        .resumen-table { margin-bottom: 0; }
+        .resumen-table td { background: #fff; color: #212529; border-color: #dee2e6; }
+        .resumen-table td:first-child { width: 42%; }
         .perfil-subtabs .nav-link,
         .relaciones-subtabs .nav-link,
         .competencia-subtabs .nav-link { font-size: 0.86rem; font-weight: 700; border-radius: 999px; color: #495057; }
@@ -183,6 +189,20 @@
             background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
             color: #fff;
         }
+        body.dark-mode .actividad-add-btn {
+            background: #f9fafb !important;
+            color: #1d4ed8 !important;
+            border-color: #e5e7eb !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        body.dark-mode .actividad-add-btn:hover {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border-color: #bfdbfe !important;
+        }
+        body.dark-mode .actividad-add-btn i {
+            color: #1d4ed8 !important;
+        }
         body.dark-mode .perfil-subtabs .nav-link,
         body.dark-mode .relaciones-subtabs .nav-link,
         body.dark-mode .competencia-subtabs .nav-link {
@@ -217,6 +237,22 @@
         }
         body.dark-mode .bitacora-meta {
             color: #cbd5e1;
+        }
+        body.dark-mode .resumen-content {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-color: #374151 !important;
+        }
+        body.dark-mode .resumen-table,
+        body.dark-mode .resumen-table tbody,
+        body.dark-mode .resumen-table tr,
+        body.dark-mode .resumen-table td {
+            background: #1f2937 !important;
+            color: #e5e7eb !important;
+            border-color: #374151 !important;
+        }
+        body.dark-mode .resumen-table strong {
+            color: #f9fafb !important;
         }
         body.dark-mode .funciones-table th,
         body.dark-mode .funciones-table td,
@@ -446,7 +482,7 @@
         <!-- SECCIÓN 11: RESUMEN -->
         <div class="form-section" data-section="11">
             <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-primary"></i>Resumen</h5>
-            <div id="resumenContent" class="p-3 bg-light rounded"></div>
+            <div id="resumenContent" class="p-3 bg-light rounded resumen-content"></div>
         </div>
 
         </form>
@@ -941,7 +977,7 @@
         }
         actividadFuncionActiva = funcionId;
         var readOnly = !!window._readOnlyDescriptor;
-        var agregarActividadBtn = readOnly ? '' : '<button type="button" class="btn btn-sm btn-light fw-semibold funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus me-1"></i> Agregar actividad</button>';
+        var agregarActividadBtn = readOnly ? '' : '<button type="button" class="btn btn-sm fw-semibold funciones-add-btn actividad-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus me-1"></i> Agregar actividad</button>';
         var html = '<div class="funcion-actividad-card">' +
             '<div class="actividad-panel-top">' +
             '<button type="button" class="btn btn-sm btn-light border" onclick="volverFuncionesClaveGlobal()"><i class="fas fa-arrow-left me-1"></i> Volver a funciones clave</button>' +
@@ -1118,7 +1154,7 @@
         
         $('#resumenContent').html(
             '<h6>Resumen</h6>' +
-            '<table class="table table-sm">' +
+            '<table class="table table-sm resumen-table">' +
             '<tr><td><strong>Formato:</strong></td><td>' + tipoTexto + '</td></tr>' +
             '<tr><td><strong>Puesto:</strong></td><td>' + puestoVal + '</td></tr>' +
             '<tr><td><strong>Funciones Claves:</strong></td><td>' + funcionesCount + '</td></tr>' +
