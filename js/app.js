@@ -1558,7 +1558,6 @@ function generarHTMLVersionCorta(d) {
         titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
     var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? text(firmaJI.nombre) : text(d.creador);
-    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? firmaJI.nombre : (d.creador || '_________________');
     var sexoDisplay = enumText(perfil.sexo);
     var edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ' - ' + text(perfil.edadMax) + ' años' : '');
     var induccionText = (hasText(entrenamiento.duracion) ? 'Duración: ' + text(entrenamiento.duracion) : '') +
@@ -1742,6 +1741,7 @@ function generarHTMLVersionExtensa(d) {
     if (!titularNombre && firmaCT) {
         titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
+    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? text(firmaJI.nombre) : text(d.creador);
 
     function getActividades(index) {
         var item = actividadesPorFuncion[index] || null;
