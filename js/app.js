@@ -736,8 +736,8 @@ function generarHTMLVersionCorta(d) {
         var meta       = (d.kpis && d.kpis[i]) ? (d.kpis[i].meta       || '') : '';
         var freqMeta   = (frecuencia && meta) ? frecuencia + ' / ' + meta : (frecuencia || meta);
         kpisRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;height:18px;">' + indicador + '</td>'
-            + '<td style="border:1px solid #000;padding:5px 6px;">'             + freqMeta  + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:18px;text-align:left;">' + indicador + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;">'             + freqMeta  + '</td>'
             + '</tr>';
     }
 
@@ -810,8 +810,12 @@ function generarHTMLVersionCorta(d) {
       .sec { font-weight: bold; border: 1px solid #000; padding: 4px 7px; background: #fff; }
 
       /* ── Tablas generales ── */
-      .t td  { border: 1px solid #000; padding: 4px 7px; vertical-align: top; }
-      .lbl   { font-weight: bold; }
+      .t td  { border: 1px solid #000; padding: 4px 7px; vertical-align: top; text-align: left; }
+      .lbl   { font-weight: bold; text-align: left; }
+      .t td.sec,
+      .t .sec { text-align: center; }
+      .kpi-table th:nth-child(2),
+      .kpi-table td:nth-child(2) { text-align: center; }
       .mt6   { margin-top: 6px; }
       .mt10  { margin-top: 10px; }
 
@@ -898,7 +902,7 @@ function generarHTMLVersionCorta(d) {
 </table>
 
 <!-- Indicadores de Desempeño -->
-<table class="t mt6">
+<table class="t mt6 kpi-table">
   <tr><td colspan="2" class="sec">Indicadores de Desempeño</td></tr>
   <tr class="col-hdr">
     <th style="width:55%;">Indicador</th>
@@ -1484,8 +1488,8 @@ function generarHTMLVersionCorta(d) {
         var meta       = text(kpis[i].meta);
         var freqMeta   = (frecuencia && meta) ? frecuencia + ' / ' + meta : (frecuencia || meta);
         kpisRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;height:18px;">' + indicador + '</td>'
-            + '<td style="border:1px solid #000;padding:5px 6px;">'             + freqMeta  + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:18px;text-align:left;">' + indicador + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;">'             + freqMeta  + '</td>'
             + '</tr>';
     }
     if (!kpisRows) kpisRows = emptyRow(2);
@@ -1574,8 +1578,12 @@ function generarHTMLVersionCorta(d) {
       .hdr-title { width: 52%; text-align: center; font-weight: bold; font-size: 11pt; border-left: none !important; border-right: none !important; }
       .hdr-meta  { width: 32%; font-size: 9pt; }
       .sec { font-weight: bold; border: 1px solid #000; padding: 4px 7px; background: #fff; }
-      .t td  { border: 1px solid #000; padding: 4px 7px; vertical-align: top; }
-      .lbl   { font-weight: bold; }
+      .t td  { border: 1px solid #000; padding: 4px 7px; vertical-align: top; text-align: left; }
+      .lbl   { font-weight: bold; text-align: left; }
+      .t td.sec,
+      .t .sec { text-align: center; }
+      .kpi-table th:nth-child(2),
+      .kpi-table td:nth-child(2) { text-align: center; }
       .mt6   { margin-top: 6px; }
       .mt10  { margin-top: 10px; }
       .col-hdr th { border: 1px solid #000; padding: 4px 7px; font-weight: bold; background: #fff; text-align: left; }
@@ -1615,7 +1623,7 @@ function generarHTMLVersionCorta(d) {
   <tr><td class="lbl" style="vertical-align:top;">Funciones Claves</td><td colspan="3" style="padding:0;"><table style="width:100%;border-collapse:collapse;">${funcionesClavesRows}</table></td></tr>
   <tr><td class="lbl" style="vertical-align:top;">Funciones<br>Secundarias</td><td colspan="3" style="padding:0;"><table style="width:100%;border-collapse:collapse;">${funcionesSecRows}</table></td></tr>
 </table>
-<table class="t mt6"><tr><td colspan="2" class="sec">Indicadores de Desempeño</td></tr><tr class="col-hdr"><th style="width:55%;">Indicador</th><th>Frecuencia / Meta</th></tr>${kpisRows}</table>
+<table class="t mt6 kpi-table"><tr><td colspan="2" class="sec">Indicadores de Desempeño</td></tr><tr class="col-hdr"><th style="width:55%;">Indicador</th><th>Frecuencia / Meta</th></tr>${kpisRows}</table>
 <table class="t mt6">
   <tr><td class="lbl" style="width:22%;vertical-align:top;">Supervisa a:</td><td>${text(responsabilidades.personal)}</td></tr>
   <tr><td class="lbl" style="vertical-align:top;">Inducción Específica<br>al Puesto</td><td>${induccionText}</td></tr>
