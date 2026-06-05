@@ -12,6 +12,7 @@ var THController = {
     
     loadView: function() {
         var self = this;
+        $('#pageTitle').text('Revisión Técnica TH');
         $('#contentContainer').empty();
         $.get('modulos/frmAprobacionTH/view/thView.html', function(html) {
             $('#contentContainer').html(html);
@@ -207,10 +208,163 @@ var THController = {
         html += '</div>';
         Swal.fire({ title: 'Historial de participación', html: html, width: '650px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
+
+    abrirFormularioRevision: function(id, descriptor) {
+        if (typeof DescriptorController === 'undefined') {
+            Swal.fire('Error', 'No se puede abrir el formulario del descriptor', 'error');
+            return;
+        }
+
+        $('#pageTitle').text('Revisión Técnica TH');
+        DescriptorController.init(this.currentUser, id, { readOnly: true });
+
+        var self = this;
+        var intentos = 0;
+        function insertarPanelRevision() {
+            intentos++;
+            if ($('#descriptorForm').length === 0 && intentos < 20) {
+                setTimeout(insertarPanelRevision, 150);
+                return;
+            }
+            self.renderPanelRevision(id, THService.getById(id) || descriptor);
+        }
+        setTimeout(insertarPanelRevision, 150);
+    },
+
+    renderPanelRevision: function(id, descriptor) {
+        $('#revisionTHActions').remove();
+
+        var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
+        var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
+        var estadoTexto = this.getEstadoTexto(descriptor.estado);
+        var relaciones = descriptor.relacionesLaborales || {};
+        var riesgos = descriptor.riesgosFisicos || {};
+        var requerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0
+            ? descriptor.requerimientosOrganizacionales
+            : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
+
+        function lista(items, getText) {
+            if (!items || items.length === 0) return '<div class="text-muted small">Sin información registrada</div>';
+            var html = '<ul class="mb-0 ps-3">';
+            for (var i = 0; i < items.length; i++) html += '<li>' + getText(items[i]) + '</li>';
+            return html + '</ul>';
+        }
+
+        var complementosHtml = esExtensa
+            ? '<div class="row g-2 mt-3">' +
+                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Relaciones internas</strong>' + (puedeGestionar ? '<button class="btn btn-sm btn-outline-primary" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(relaciones.internas, function(r) { return '<strong>' + (r.puesto || '-') + ':</strong> ' + (r.razon || '-'); }) + '</div></div>' +
+                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Relaciones externas</strong>' + (puedeGestionar ? '<button class="btn btn-sm btn-outline-primary" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(relaciones.externas, function(r) { return '<strong>' + (r.entidad || '-') + ':</strong> ' + (r.razon || '-'); }) + '</div></div>' +
+                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Requerimientos organizacionales</strong>' + (puedeGestionar ? '<button class="btn btn-sm btn-outline-primary" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(requerimientos, function(r) { return r || '-'; }) + '</div></div>' +
+                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Riesgos físicos</strong>' + (puedeGestionar ? '<button class="btn btn-sm btn-outline-primary" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' +
+                    '<div class="small"><strong>Esfuerzo:</strong> ' + (riesgos.esfuerzo || '-') + '</div>' +
+                    '<div class="small"><strong>Condiciones:</strong> ' + (riesgos.condiciones || '-') + '</div>' +
+                    lista(riesgos.riesgos, function(r) { return r || '-'; }) +
+                '</div></div>' +
+              '</div>'
+            : '<div class="alert alert-secondary mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor es de versión corta, por lo que no requiere relaciones, requerimientos ni riesgos físicos complementados por TH.</div>';
+
+        var accionesHtml = puedeGestionar
+            ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
+                '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+                '<button type="button" class="btn btn-warning" onclick="THController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
+                '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Aprobar y enviar a firmas</button>' +
+              '</div>'
+            : '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
+                '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+              '</div>';
+
+        var panel = '<style>' +
+            '.th-complement-card{height:100%;border:1px solid #d9e6f8;border-radius:12px;background:#f8fbff;padding:12px;}' +
+            '.th-complement-card strong{font-size:.9rem;}' +
+            'body.dark-mode .th-complement-card{background:#111827;border-color:#374151;color:#e5e7eb;}' +
+            '</style>' +
+            '<div id="revisionTHActions" class="alert alert-primary border-primary-subtle mb-3">' +
+            '<div class="d-flex flex-wrap align-items-start justify-content-between gap-3">' +
+            '<div>' +
+            '<h6 class="mb-1"><i class="fas fa-user-check me-1"></i> Revisión técnica de Talento Humano</h6>' +
+            '<div class="small">Descriptor <strong>' + (descriptor.codigo || 'DES-' + id) + '</strong> | Formato: <strong>' + (esExtensa ? 'Versión extensa' : 'Versión corta') + '</strong> | Estado: <strong>' + estadoTexto + '</strong></div>' +
+            (puedeGestionar ? '<div class="small text-muted mt-1">Revise el descriptor y complete los apartados técnicos cuando aplique.</div>' : '<div class="small text-muted mt-1">Este descriptor no está pendiente de revisión técnica.</div>') +
+            '</div>' +
+            accionesHtml +
+            '</div>' +
+            complementosHtml +
+            '</div>';
+
+        var $alert = $('#readOnlyDescriptorAlert');
+        if ($alert.length) {
+            $alert.after(panel);
+        } else {
+            $('.descriptor-save-top').after(panel);
+        }
+    },
+
+    aprobarDesdeFormulario: function(id) {
+        Swal.fire({
+            title: '¿Aprobar descriptor?',
+            text: 'El descriptor pasará al flujo de firmas. Los firmantes podrán firmar en cualquier orden.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, aprobar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            THService.aprobar(id);
+            DescriptorService.registrarEvento(id, {
+                accion: 'APROBACIÓN POR TH GENERALISTA',
+                usuario: THController.currentUser.nombre,
+                rol: THController.currentUser.rolNombre,
+                estadoNuevo: 'APROBADO_TH',
+                estado: 'FIRMA_JTH'
+            });
+
+            Swal.fire('Aprobado', 'Descriptor enviado para firmas. Los firmantes podrán firmar en cualquier orden.', 'success').then(function() {
+                THController.loadView();
+            });
+        });
+    },
+
+    observarDesdeFormulario: function(id) {
+        Swal.fire({
+            title: 'Observaciones',
+            html: '<div class="text-start px-1"><label for="observacionesTH" class="form-label fw-semibold">Detalle de la observación</label><textarea id="observacionesTH" class="form-control" placeholder="Escriba las observaciones..." rows="5" style="resize: vertical;"></textarea></div>',
+            width: '560px',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar observación',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+            preConfirm: function() {
+                var obs = document.getElementById('observacionesTH').value;
+                if (!obs || obs.trim() === '') {
+                    Swal.showValidationMessage('Debe ingresar observaciones');
+                    return false;
+                }
+                return obs.trim();
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed || !result.value) return;
+
+            THService.observar(id, result.value);
+            DescriptorService.registrarEvento(id, {
+                accion: 'OBSERVACIÓN POR TH GENERALISTA',
+                usuario: THController.currentUser.nombre,
+                rol: THController.currentUser.rolNombre,
+                estado: 'OBSERVADO_TH',
+                observacion: result.value
+            });
+
+            Swal.fire('Observado', 'Descriptor devuelto con observaciones.', 'warning').then(function() {
+                THController.loadView();
+            });
+        });
+    },
     
     verDetalle: function(id) {
         var descriptor = THService.getById(id);
         if (!descriptor) return;
+        this.abrirFormularioRevision(id, descriptor);
+        return;
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var tipoFormatoTexto = esExtensa ? 'Versión extensa' : 'Versión corta';
