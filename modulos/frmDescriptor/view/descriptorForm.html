@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .step-wizard { background: white; border-radius: 15px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .step-indicator { display: flex; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
-        .step { text-align: center; flex: 1; position: relative; cursor: pointer; }
-        .step .step-circle { width: 35px; height: 35px; background: #dee2e6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #6c757d; transition: all 0.3s; }
-        .step.active .step-circle { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; box-shadow: 0 0 0 3px rgba(13,110,253,0.3); }
+        .descriptor-main-tabs { border-bottom: 1px solid #dee2e6; margin-bottom: 18px; }
+        .descriptor-main-tabs .nav-link { font-weight: 700; color: #495057; border-radius: 10px 10px 0 0; }
+        .descriptor-main-tabs .nav-link.active { color: #0d6efd; background: #fff; border-color: #dee2e6 #dee2e6 #fff; }
+        .descriptor-tab-pane { display: none; }
+        .descriptor-tab-pane.active { display: block; }
+        .step-indicator { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 24px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+        .step { border: 1px solid #dee2e6; background: #f8f9fa; color: #495057; border-radius: 999px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease; }
+        .step:hover { border-color: #0d6efd; color: #0d6efd; background: #eef5ff; }
+        .step .step-circle { width: 22px; height: 22px; background: #e9ecef; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #6c757d; transition: all 0.2s ease; }
+        .step.active { background: #0d6efd; border-color: #0d6efd; color: #fff; box-shadow: 0 4px 12px rgba(13,110,253,0.22); }
+        .step.active .step-circle { background: #fff; color: #0d6efd; }
         .step.completed .step-circle { background: #198754; color: white; }
-        .step .step-label { font-size: 10px; margin-top: 8px; color: #6c757d; }
-        .step.active .step-label { color: #0d6efd; font-weight: 600; }
+        .step .step-label { font-size: 0.82rem; font-weight: 600; line-height: 1; white-space: nowrap; }
         .form-section { display: none; animation: fadeIn 0.3s ease; }
         .form-section.active-section { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
@@ -21,16 +27,11 @@
         .section-buttons {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             gap: 16px;
             margin-top: 30px;
             padding-top: 18px;
             border-top: 1px solid #dee2e6;
-        }
-        .wizard-nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         .section-buttons .btn {
             min-width: 130px;
@@ -44,15 +45,20 @@
         .form-label { font-weight: 600; font-size: 0.85rem; }
         .actividad-item { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6; }
         .funcion-actividad-card { margin-bottom: 20px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+        .bitacora-card { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; }
+        .bitacora-item { padding: 12px 14px; border-bottom: 1px solid #e9ecef; background: #fff; }
+        .bitacora-item:last-child { border-bottom: none; }
+        .bitacora-title { font-weight: 700; color: #495057; }
+        .bitacora-meta { font-size: 0.78rem; color: #6c757d; }
         @media (max-width: 576px) {
+            .descriptor-main-tabs .nav-link { width: 100%; text-align: center; }
+            .descriptor-main-tabs .nav-item { flex: 1; }
+            .step-indicator { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; }
+            .step { flex: 0 0 auto; }
             .section-buttons {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .wizard-nav-actions {
-                width: 100%;
-            }
-            .wizard-nav-actions .btn,
             .section-buttons #saveBtn {
                 flex: 1;
                 width: 100%;
@@ -63,21 +69,31 @@
 </head>
 <body>
 <div class="step-wizard">
-    <div class="step-indicator">
-        <div class="step" data-step="1"><div class="step-circle">1</div><div class="step-label">Generalidades</div></div>
-        <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Objetivo</div></div>
-        <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Funciones</div></div>
-        <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Actividades</div></div>
-        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Func. Sec.</div></div>
-        <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
-        <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
-        <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Competencias</div></div>
-        <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Responsab.</div></div>
-        <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Entrenam.</div></div>
-        <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Resumen</div></div>
-    </div>
+    <ul class="nav nav-tabs descriptor-main-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" type="button" data-main-tab="descriptor"><i class="fas fa-file-alt me-2"></i>Descriptor</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" data-main-tab="bitacora"><i class="fas fa-clock-rotate-left me-2"></i>Bitácora</button>
+        </li>
+    </ul>
 
-    <form id="descriptorForm">
+    <div class="descriptor-tab-pane active" id="descriptorTabPane">
+        <div class="step-indicator">
+            <div class="step" data-step="1"><div class="step-circle">1</div><div class="step-label">Generalidades</div></div>
+            <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Objetivo</div></div>
+            <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Funciones</div></div>
+            <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Actividades</div></div>
+            <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Func. Sec.</div></div>
+            <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
+            <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
+            <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Competencias</div></div>
+            <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Responsab.</div></div>
+            <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Entrenam.</div></div>
+            <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Resumen</div></div>
+        </div>
+
+        <form id="descriptorForm">
         <!-- SECCIÓN 1: GENERALIDADES -->
         <div class="form-section" data-section="1">
             <h5 class="mb-4"><i class="fas fa-building me-2 text-primary"></i>Generalidades</h5>
@@ -180,14 +196,16 @@
             <div id="resumenContent" class="p-3 bg-light rounded"></div>
         </div>
 
-        <div class="section-buttons">
-            <div class="wizard-nav-actions">
-                <button type="button" class="btn btn-outline-secondary" id="prevBtn" style="display: none;"><i class="fas fa-arrow-left"></i> Anterior</button>
-                <button type="button" class="btn btn-primary" id="nextBtn">Siguiente <i class="fas fa-arrow-right"></i></button>
-            </div>
+            <div class="section-buttons">
             <button type="button" class="btn btn-success" id="saveBtn"><i class="fas fa-save"></i> Guardar</button>
-        </div>
-    </form>
+            </div>
+        </form>
+    </div>
+
+    <div class="descriptor-tab-pane" id="bitacoraTabPane">
+        <h5 class="mb-3"><i class="fas fa-clock-rotate-left me-2 text-primary"></i>Bitácora del Descriptor</h5>
+        <div id="bitacoraContent" class="bitacora-card"></div>
+    </div>
 </div>
 
 <script>
@@ -399,8 +417,6 @@
             if (i < currentStep) $('.step[data-step="' + i + '"]').addClass('completed');
             else if (i === currentStep) $('.step[data-step="' + i + '"]').addClass('active');
         }
-        $('#prevBtn').toggle(currentStep !== pasosActivos[0]);
-        $('#nextBtn').toggle(currentStep !== getLastStep());
         $('#saveBtn').show();
         
         if (getTipoFormato() === 'EXTENSA' && currentStep !== 4 && funcionesClavesList.length > 0) guardarActividadesActuales();
@@ -410,6 +426,71 @@
     
     function nextStep() { currentStep = getNextStep(currentStep); updateStepDisplay(); }
     function prevStep() { currentStep = getPrevStep(currentStep); updateStepDisplay(); }
+    
+    function activarTabPrincipal(tabName) {
+        $('.descriptor-main-tabs .nav-link').removeClass('active');
+        $('.descriptor-main-tabs .nav-link[data-main-tab="' + tabName + '"]').addClass('active');
+        $('.descriptor-tab-pane').removeClass('active');
+        $('#' + tabName + 'TabPane').addClass('active');
+        if (tabName === 'bitacora') renderBitacora();
+    }
+    
+    function getEstadoTextoBitacora(estado) {
+        var estados = {
+            'BORRADOR': 'Borrador',
+            'ENVIADO_JF': 'Enviado a JIS',
+            'OBSERVADO_JF': 'Observado por JIS',
+            'APROBADO_POR_JF': 'Aprobado por JIS',
+            'ENVIADO_TH': 'Enviado a TH',
+            'OBSERVADO_TH': 'Observado por TH',
+            'APROBADO_TH': 'Aprobado por TH',
+            'FIRMA_JTH': 'Pendiente de firmas',
+            'FIRMADO_JTH': 'Firmado por JTH',
+            'FIRMADO_CT': 'Firmado por Colaborador',
+            'FIRMADO_JI': 'Firmado por Jefe Inmediato',
+            'ACTIVO': 'Activo',
+            'INACTIVO': 'Inactivo'
+        };
+        return estados[estado] || estado || '-';
+    }
+    
+    function getAccionBitacoraTexto(accion) {
+        var acciones = {
+            'ENVÍO A JEFE SUPERIOR': 'ENVÍO A JEFE INMEDIATO SUPERIOR',
+            'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)': 'REENVÍO A JEFE INMEDIATO SUPERIOR (DESPUÉS DE CORRECCIÓN)',
+            'APROBACIÓN POR JEFE SUPERIOR': 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
+            'OBSERVACIÓN POR JEFE SUPERIOR': 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR'
+        };
+        return acciones[accion] || accion || 'Evento';
+    }
+    
+    function renderBitacora() {
+        var id = window._editingId || null;
+        if (!id || typeof DescriptorService === 'undefined') {
+            $('#bitacoraContent').html('<div class="bitacora-item text-center text-muted py-4"><i class="fas fa-info-circle me-1"></i>La bitácora estará disponible después de guardar el descriptor.</div>');
+            return;
+        }
+        var descriptor = DescriptorService.getById(id);
+        var eventos = descriptor && descriptor.auditoria && descriptor.auditoria.eventos ? descriptor.auditoria.eventos.slice() : [];
+        if (eventos.length === 0) {
+            $('#bitacoraContent').html('<div class="bitacora-item text-center text-muted py-4">No hay eventos registrados.</div>');
+            return;
+        }
+        eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
+        var html = '';
+        for (var i = 0; i < eventos.length; i++) {
+            var ev = eventos[i];
+            html += '<div class="bitacora-item">' +
+                '<div class="d-flex flex-wrap justify-content-between gap-2">' +
+                '<div class="bitacora-title">' + getAccionBitacoraTexto(ev.accion) + '</div>' +
+                '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">' + getEstadoTextoBitacora(ev.estadoNuevo || ev.estado) + '</span>' +
+                '</div>' +
+                '<div class="bitacora-meta mt-1"><i class="far fa-calendar-alt me-1"></i>' + new Date(ev.fecha).toLocaleString() + ' | <i class="fas fa-user me-1"></i>' + (ev.usuario || 'Sistema') + ' - ' + (ev.rol || '') + '</div>' +
+                (ev.observacion ? '<div class="alert alert-warning mt-2 mb-0 p-2 small">' + ev.observacion + '</div>' : '') +
+                '</div>';
+        }
+        $('#bitacoraContent').html(html);
+    }
     
     function updateResumen() {
         var puestoVal = $('select[name="puesto"]').val() || '-';
@@ -644,9 +725,10 @@
         }
     }
     
-    $('#nextBtn').off('click').click(nextStep);
-    $('#prevBtn').off('click').click(prevStep);
     $('#saveBtn').off('click').click(saveDescriptor);
+    $('.descriptor-main-tabs .nav-link').off('click').on('click', function() {
+        activarTabPrincipal($(this).data('main-tab'));
+    });
     $('.step').off('click').click(function() {
         var step = parseInt($(this).data('step'));
         if (!isNaN(step) && step >= 1 && step <= totalSteps && isPasoActivo(step)) {
