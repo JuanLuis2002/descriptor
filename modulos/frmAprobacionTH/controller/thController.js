@@ -13,6 +13,7 @@ var THController = {
     loadView: function() {
         var self = this;
         $('#pageTitle').text('Revisión Técnica TH');
+        window._thReviewMode = false;
         $('#contentContainer').empty();
         $.get('modulos/frmAprobacionTH/view/thView.html', function(html) {
             $('#contentContainer').html(html);
@@ -216,7 +217,7 @@ var THController = {
         }
 
         $('#pageTitle').text('Revisión Técnica TH');
-        DescriptorController.init(this.currentUser, id, { readOnly: true });
+        DescriptorController.init(this.currentUser, id, { readOnly: true, thReview: true });
 
         var self = this;
         var intentos = 0;
@@ -237,35 +238,14 @@ var THController = {
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
-        var relaciones = descriptor.relacionesLaborales || {};
-        var riesgos = descriptor.riesgosFisicos || {};
-        var requerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0
-            ? descriptor.requerimientosOrganizacionales
-            : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
-
-        function lista(items, getText) {
-            if (!items || items.length === 0) return '<div class="text-muted small">Sin información registrada</div>';
-            var html = '<ul class="mb-0 ps-3">';
-            for (var i = 0; i < items.length; i++) html += '<li>' + getText(items[i]) + '</li>';
-            return html + '</ul>';
-        }
-
         var complementosHtml = esExtensa
-            ? '<div class="row g-2 mt-3">' +
-                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Relaciones internas</strong>' + (puedeGestionar ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="THController.editarRelacionesInternas(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(relaciones.internas, function(r) { return '<strong>' + (r.puesto || '-') + ':</strong> ' + (r.razon || '-'); }) + '</div></div>' +
-                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Relaciones externas</strong>' + (puedeGestionar ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="THController.editarRelacionesExternas(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(relaciones.externas, function(r) { return '<strong>' + (r.entidad || '-') + ':</strong> ' + (r.razon || '-'); }) + '</div></div>' +
-                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Requerimientos organizacionales</strong>' + (puedeGestionar ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="THController.editarRequerimientos(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' + lista(requerimientos, function(r) { return r || '-'; }) + '</div></div>' +
-                '<div class="col-md-6"><div class="th-complement-card"><div class="d-flex justify-content-between gap-2"><strong>Riesgos físicos</strong>' + (puedeGestionar ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="THController.editarRiesgos(' + id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div>' +
-                    '<div class="small"><strong>Esfuerzo:</strong> ' + (riesgos.esfuerzo || '-') + '</div>' +
-                    '<div class="small"><strong>Condiciones:</strong> ' + (riesgos.condiciones || '-') + '</div>' +
-                    lista(riesgos.riesgos, function(r) { return r || '-'; }) +
-                '</div></div>' +
-              '</div>'
-            : '<div class="alert alert-secondary mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor es de versión corta, por lo que no requiere relaciones, requerimientos ni riesgos físicos complementados por TH.</div>';
+            ? '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Complete los apartados <strong>Relaciones</strong>, <strong>Requerimientos</strong> y <strong>Riesgos</strong> desde las pestañas del descriptor.</div>'
+            : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor es de versión corta, por lo que no requiere complementos técnicos de TH.</div>';
 
         var accionesHtml = puedeGestionar
             ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+                (esExtensa ? '<button type="button" class="btn btn-primary" onclick="THController.guardarComplementosDesdeFormulario(' + id + ')"><i class="fas fa-save me-1"></i> Guardar complementos</button>' : '') +
                 '<button type="button" class="btn btn-warning" onclick="THController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
                 '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Aprobar y enviar a firmas</button>' +
               '</div>'
@@ -273,12 +253,7 @@ var THController = {
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
               '</div>';
 
-        var panel = '<style>' +
-            '.th-complement-card{height:100%;border:1px solid #d9e6f8;border-radius:12px;background:#f8fbff;padding:12px;}' +
-            '.th-complement-card strong{font-size:.9rem;}' +
-            'body.dark-mode .th-complement-card{background:#111827;border-color:#374151;color:#e5e7eb;}' +
-            '</style>' +
-            '<div id="revisionTHActions" class="alert alert-primary border-primary-subtle mb-3">' +
+        var panel = '<div id="revisionTHActions" class="alert alert-primary border-primary-subtle mb-3">' +
             '<div class="d-flex flex-wrap align-items-start justify-content-between gap-3">' +
             '<div>' +
             '<h6 class="mb-1"><i class="fas fa-user-check me-1"></i> Revisión técnica de Talento Humano</h6>' +
@@ -298,6 +273,63 @@ var THController = {
         }
     },
 
+    guardarComplementosDesdeFormulario: function(id, silent) {
+        var descriptor = THService.getById(id);
+        if (!this.validarComplementoExtenso(descriptor)) return;
+
+        var internas = [];
+        $('#relacionesInternasTableBody tr').each(function() {
+            var puesto = $(this).find('input[name="relInternaPuesto[]"]').val();
+            var razon = $(this).find('input[name="relInternaRazon[]"]').val();
+            if ((puesto && puesto.trim()) || (razon && razon.trim())) {
+                internas.push({ puesto: (puesto || '').trim(), razon: (razon || '').trim() });
+            }
+        });
+
+        var externas = [];
+        $('#relacionesExternasTableBody tr').each(function() {
+            var entidad = $(this).find('input[name="relExternaEntidad[]"]').val();
+            var razon = $(this).find('input[name="relExternaRazon[]"]').val();
+            if ((entidad && entidad.trim()) || (razon && razon.trim())) {
+                externas.push({ entidad: (entidad || '').trim(), razon: (razon || '').trim() });
+            }
+        });
+
+        var requerimientos = [];
+        $('#requerimientosTableBody tr').each(function() {
+            var req = $(this).find('input[name="requerimientoOrganizacional[]"]').val();
+            if (req && req.trim()) requerimientos.push(req.trim());
+        });
+
+        var riesgosLista = [];
+        $('#riesgosTableBody tr').each(function() {
+            var riesgo = $(this).find('input[name="riesgoProfesional[]"]').val();
+            if (riesgo && riesgo.trim()) riesgosLista.push(riesgo.trim());
+        });
+
+        descriptor.relacionesLaborales = { internas: internas, externas: externas };
+        descriptor.requerimientosOrganizacionales = requerimientos;
+        descriptor.riesgosFisicos = {
+            esfuerzo: ($('textarea[name="riesgoEsfuerzo"]').val() || '').trim(),
+            condiciones: ($('textarea[name="riesgoCondiciones"]').val() || '').trim(),
+            riesgos: riesgosLista
+        };
+
+        THService.guardarComplementos(id, descriptor);
+        if (!silent) {
+            DescriptorService.registrarEvento(id, {
+                accion: 'ACTUALIZACIÓN COMPLEMENTOS TH',
+                usuario: THController.currentUser.nombre,
+                rol: THController.currentUser.rolNombre
+            });
+        }
+
+        if (!silent) {
+            Swal.fire('Guardado', 'Complementos de Talento Humano actualizados.', 'success');
+        }
+        return true;
+    },
+
     aprobarDesdeFormulario: function(id) {
         Swal.fire({
             title: '¿Aprobar descriptor?',
@@ -310,6 +342,9 @@ var THController = {
         }).then(function(result) {
             if (!result.isConfirmed) return;
 
+            if ((THService.getById(id).tipoFormato || 'CORTA') === 'EXTENSA') {
+                THController.guardarComplementosDesdeFormulario(id, true);
+            }
             THService.aprobar(id);
             DescriptorService.registrarEvento(id, {
                 accion: 'APROBACIÓN POR TH GENERALISTA',

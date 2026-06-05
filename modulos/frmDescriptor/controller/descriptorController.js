@@ -8,6 +8,7 @@ var DescriptorController = {
         this.currentUser = user;
         this.descriptorIdToEdit = idToEdit || null;
         this.readOnlyMode = !!(options && options.readOnly);
+        window._thReviewMode = !!(options && options.thReview);
         window._readOnlyDescriptor = this.readOnlyMode;
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
@@ -21,6 +22,7 @@ var DescriptorController = {
         window._editingId = null;
         window._savedActividades = null;
         window._readOnlyDescriptor = false;
+        window._thReviewMode = false;
     },
     
     loadForm: function() {
@@ -170,7 +172,9 @@ var DescriptorController = {
             for (var i = 0; i < descriptor.relacionesLaborales.internas.length; i++) {
                 addRelacionInternaRowWithData(descriptor.relacionesLaborales.internas[i].puesto, descriptor.relacionesLaborales.internas[i].razon);
             }
-        } else {
+        } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+            addRelacionInternaRow();
+        } else if (!this.readOnlyMode) {
             for(var i = 1; i <= 2; i++) addRelacionInternaRow();
         }
         
@@ -179,8 +183,33 @@ var DescriptorController = {
             for (var i = 0; i < descriptor.relacionesLaborales.externas.length; i++) {
                 addRelacionExternaRowWithData(descriptor.relacionesLaborales.externas[i].entidad, descriptor.relacionesLaborales.externas[i].razon);
             }
-        } else {
+        } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+            addRelacionExternaRow();
+        } else if (!this.readOnlyMode) {
             for(var i = 1; i <= 2; i++) addRelacionExternaRow();
+        }
+        
+        // Complementos TH
+        $('#requerimientosContainer').empty();
+        var requerimientos = descriptor.requerimientosOrganizacionales && descriptor.requerimientosOrganizacionales.length > 0
+            ? descriptor.requerimientosOrganizacionales
+            : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
+        for (var r = 0; r < requerimientos.length; r++) {
+            addRequerimientoRowWithData(requerimientos[r]);
+        }
+        
+        $('#riesgosContainer').empty();
+        if (descriptor.riesgosFisicos) {
+            $('textarea[name="riesgoEsfuerzo"]').val(descriptor.riesgosFisicos.esfuerzo || '');
+            $('textarea[name="riesgoCondiciones"]').val(descriptor.riesgosFisicos.condiciones || '');
+            var riesgos = descriptor.riesgosFisicos.riesgos || [];
+            if (riesgos.length > 0) {
+                for (var z = 0; z < riesgos.length; z++) addRiesgoRowWithData(riesgos[z]);
+            } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+                addRiesgoRow();
+            }
+        } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+            addRiesgoRow();
         }
         
         // Responsabilidades
@@ -235,10 +264,17 @@ var DescriptorController = {
         ).hide();
         $('#descriptorForm').find('.btn-outline-danger').hide();
         $('#descriptorForm').find('.funciones-add-btn').not('.actividad-btn').hide();
+        if (window._thReviewMode) {
+            $('#descriptorForm').find('.th-editable-section input, .th-editable-section select, .th-editable-section textarea').prop('disabled', false);
+            $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').show();
+        }
         if ($('#readOnlyDescriptorAlert').length === 0) {
+            var mensajeSoloLectura = window._thReviewMode
+                ? 'Modo revisión TH: el descriptor base es solo lectura; puede modificar únicamente los complementos técnicos habilitados.'
+                : 'Modo solo lectura: puede consultar el descriptor, pero no modificarlo.';
             $('.descriptor-save-top').after(
                 '<div id="readOnlyDescriptorAlert" class="alert alert-info py-2 mb-3">' +
-                '<i class="fas fa-eye me-1"></i> Modo solo lectura: puede consultar el descriptor, pero no modificarlo.' +
+                '<i class="fas fa-eye me-1"></i> ' + mensajeSoloLectura +
                 '</div>'
             );
         }
@@ -496,19 +532,45 @@ function renumerarCompetenciasConductualesTable() {
 }
 
 function addRelacionInternaRow() {
-    $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón"></div></div></div>');
+    if (typeof window.addRelacionInternaFormRow === 'function') {
+        window.addRelacionInternaFormRow('', '');
+    }
 }
 
 function addRelacionInternaRowWithData(puesto, razon) {
-    $('#relacionesInternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relInternaPuesto[]" placeholder="Puesto/Área" value="' + (puesto || '') + '"></div><div class="col-md-6"><input type="text" class="form-control" name="relInternaRazon[]" placeholder="Razón" value="' + (razon || '') + '"></div></div></div>');
+    if (typeof window.addRelacionInternaFormRow === 'function') {
+        window.addRelacionInternaFormRow(puesto, razon);
+    }
 }
 
 function addRelacionExternaRow() {
-    $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón"></div></div></div>');
+    if (typeof window.addRelacionExternaFormRow === 'function') {
+        window.addRelacionExternaFormRow('', '');
+    }
 }
 
 function addRelacionExternaRowWithData(entidad, razon) {
-    $('#relacionesExternasContainer').append('<div class="relacion-row"><div class="remove-row" onclick="$(this).closest(\'.relacion-row\').remove()"><i class="fas fa-trash"></i></div><div class="row"><div class="col-md-6"><input type="text" class="form-control" name="relExternaEntidad[]" placeholder="Entidad externa" value="' + (entidad || '') + '"></div><div class="col-md-6"><input type="text" class="form-control" name="relExternaRazon[]" placeholder="Razón" value="' + (razon || '') + '"></div></div></div>');
+    if (typeof window.addRelacionExternaFormRow === 'function') {
+        window.addRelacionExternaFormRow(entidad, razon);
+    }
+}
+
+function addRequerimientoRowWithData(texto) {
+    if (typeof window.addRequerimientoFormRow === 'function') {
+        window.addRequerimientoFormRow(texto);
+    }
+}
+
+function addRiesgoRow() {
+    if (typeof window.addRiesgoFormRow === 'function') {
+        window.addRiesgoFormRow('');
+    }
+}
+
+function addRiesgoRowWithData(texto) {
+    if (typeof window.addRiesgoFormRow === 'function') {
+        window.addRiesgoFormRow(texto);
+    }
 }
 
 window.DescriptorController = DescriptorController;

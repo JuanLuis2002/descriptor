@@ -87,12 +87,20 @@
         .bitacora-title { font-weight: 700; color: #495057; }
         .bitacora-meta { font-size: 0.78rem; color: #6c757d; }
         .perfil-subtabs .nav-link,
+        .relaciones-subtabs .nav-link,
         .competencia-subtabs .nav-link { font-size: 0.86rem; font-weight: 700; border-radius: 999px; color: #495057; }
         .perfil-subtabs .nav-link.active,
+        .relaciones-subtabs .nav-link.active,
         .competencia-subtabs .nav-link.active { background: #0d6efd; color: #fff; }
         .responsabilidades-grid textarea.form-control { min-height: 74px; resize: vertical; }
+        .th-editable-table { font-size: 0.82rem; }
+        .th-editable-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
+        .th-editable-table td { vertical-align: middle; padding: 6px 8px; }
+        .th-editable-table .form-control { font-size: 0.82rem; padding: 5px 8px; min-height: 32px; }
         .perfil-subtab-pane { display: none; }
         .perfil-subtab-pane.active { display: block; }
+        .relaciones-subtab-pane { display: none; }
+        .relaciones-subtab-pane.active { display: block; }
         .competencia-subtab-pane { display: none; }
         .competencia-subtab-pane.active { display: block; }
         body.dark-mode .actividad-panel-top,
@@ -178,6 +186,9 @@
             <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">KPIs</div></div>
             <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Perfil</div></div>
             <div class="step" data-step="8"><div class="step-circle">8</div><div class="step-label">Competencias</div></div>
+            <div class="step th-complement-step" data-step="12"><div class="step-circle">12</div><div class="step-label">Relaciones</div></div>
+            <div class="step th-complement-step" data-step="13"><div class="step-circle">13</div><div class="step-label">Requerim.</div></div>
+            <div class="step th-complement-step" data-step="14"><div class="step-circle">14</div><div class="step-label">Riesgos</div></div>
             <div class="step" data-step="9"><div class="step-circle">9</div><div class="step-label">Responsab.</div></div>
             <div class="step" data-step="10"><div class="step-circle">10</div><div class="step-label">Entrenam.</div></div>
             <div class="step" data-step="11"><div class="step-circle">11</div><div class="step-label">Resumen</div></div>
@@ -260,6 +271,41 @@
             </div>
         </div>
 
+        <!-- SECCIÓN 12: RELACIONES LABORALES (TH - EXTENSA) -->
+        <div class="form-section th-editable-section" data-section="12">
+            <h5 class="mb-4"><i class="fas fa-people-arrows me-2 text-primary"></i>Relaciones Laborales</h5>
+            <ul class="nav nav-pills mb-3 relaciones-subtabs">
+                <li class="nav-item"><button type="button" class="nav-link active" data-relaciones-subtab="relacionesInternasDatos"><i class="fas fa-building me-1"></i>Internas</button></li>
+                <li class="nav-item"><button type="button" class="nav-link" data-relaciones-subtab="relacionesExternasDatos"><i class="fas fa-handshake me-1"></i>Externas</button></li>
+            </ul>
+            <div class="relaciones-subtab-pane active" id="relacionesInternasDatos">
+                <div id="relacionesInternasContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary th-add-btn" id="addRelacionInterna"><i class="fas fa-plus"></i> Agregar relación interna</button>
+            </div>
+            <div class="relaciones-subtab-pane" id="relacionesExternasDatos">
+                <div id="relacionesExternasContainer"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary th-add-btn" id="addRelacionExterna"><i class="fas fa-plus"></i> Agregar relación externa</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 13: REQUERIMIENTOS ORGANIZACIONALES (TH - EXTENSA) -->
+        <div class="form-section th-editable-section" data-section="13">
+            <h5 class="mb-4"><i class="fas fa-clipboard-check me-2 text-primary"></i>Requerimientos Organizacionales</h5>
+            <div id="requerimientosContainer"></div>
+            <button type="button" class="btn btn-sm btn-outline-primary th-add-btn" id="addRequerimientoOrganizacional"><i class="fas fa-plus"></i> Agregar requerimiento</button>
+        </div>
+
+        <!-- SECCIÓN 14: RIESGOS FÍSICOS (TH - EXTENSA) -->
+        <div class="form-section th-editable-section" data-section="14">
+            <h5 class="mb-4"><i class="fas fa-triangle-exclamation me-2 text-primary"></i>Riesgos Físicos del Puesto</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Esfuerzo físico y mental</label><textarea class="form-control th-complement-input" name="riesgoEsfuerzo" rows="2" placeholder="Describa el esfuerzo requerido"></textarea></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Condiciones ambientales</label><textarea class="form-control th-complement-input" name="riesgoCondiciones" rows="2" placeholder="Describa las condiciones ambientales"></textarea></div>
+            </div>
+            <div id="riesgosContainer"></div>
+            <button type="button" class="btn btn-sm btn-outline-primary th-add-btn" id="addRiesgoFisico"><i class="fas fa-plus"></i> Agregar riesgo</button>
+        </div>
+
         <!-- SECCIÓN 9: RESPONSABILIDADES -->
         <div class="form-section" data-section="9">
             <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
@@ -340,7 +386,14 @@
         return $('#tipoFormato').val() || 'CORTA';
     }
     
+    function isTHReviewMode() {
+        return window._thReviewMode === true;
+    }
+    
     function getPasosActivos() {
+        if (getTipoFormato() === 'EXTENSA' && isTHReviewMode()) {
+            return [2, 3, 7, 8, 12, 13, 14, 9, 10, 11];
+        }
         return pasosPorFormato[getTipoFormato()] || pasosPorFormato.CORTA;
     }
     
@@ -569,6 +622,101 @@
         });
     }
     window.renumerarCompetenciasConductualesGlobal = renumerarCompetenciasConductuales;
+    
+    function ensureRelacionesInternasTable() {
+        if ($('#relacionesInternasTableBody').length > 0) return;
+        $('#relacionesInternasContainer').html('<div class="table-responsive"><table class="table table-bordered th-editable-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Puesto/Área</th><th>Razón de relación</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="relacionesInternasTableBody"></tbody></table></div>');
+    }
+    
+    function buildRelacionInternaRow(puesto, razon) {
+        return '<tr class="relacion-interna-row">' +
+            '<td class="funcion-codigo"><span class="rel-int-codigo-text"></span></td>' +
+            '<td><input type="text" class="form-control th-complement-input" name="relInternaPuesto[]" placeholder="Puesto/Área" value="' + (puesto || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td><input type="text" class="form-control th-complement-input" name="relInternaRazon[]" placeholder="Razón" value="' + (razon || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger th-remove-btn" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarRelacionesInternasGlobal === \'function\') renumerarRelacionesInternasGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function addRelacionInternaRow(puesto, razon) {
+        ensureRelacionesInternasTable();
+        $('#relacionesInternasTableBody').append(buildRelacionInternaRow(puesto, razon));
+        renumerarRelacionesInternas();
+    }
+    
+    function renumerarRelacionesInternas() {
+        $('#relacionesInternasTableBody tr').each(function(index) {
+            $(this).find('.rel-int-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarRelacionesInternasGlobal = renumerarRelacionesInternas;
+    
+    function ensureRelacionesExternasTable() {
+        if ($('#relacionesExternasTableBody').length > 0) return;
+        $('#relacionesExternasContainer').html('<div class="table-responsive"><table class="table table-bordered th-editable-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Entidad externa</th><th>Razón de relación</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="relacionesExternasTableBody"></tbody></table></div>');
+    }
+    
+    function buildRelacionExternaRow(entidad, razon) {
+        return '<tr class="relacion-externa-row">' +
+            '<td class="funcion-codigo"><span class="rel-ext-codigo-text"></span></td>' +
+            '<td><input type="text" class="form-control th-complement-input" name="relExternaEntidad[]" placeholder="Entidad externa" value="' + (entidad || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td><input type="text" class="form-control th-complement-input" name="relExternaRazon[]" placeholder="Razón" value="' + (razon || '').replace(/"/g, '&quot;') + '"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger th-remove-btn" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarRelacionesExternasGlobal === \'function\') renumerarRelacionesExternasGlobal();"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    
+    function addRelacionExternaRow(entidad, razon) {
+        ensureRelacionesExternasTable();
+        $('#relacionesExternasTableBody').append(buildRelacionExternaRow(entidad, razon));
+        renumerarRelacionesExternas();
+    }
+    
+    function renumerarRelacionesExternas() {
+        $('#relacionesExternasTableBody tr').each(function(index) {
+            $(this).find('.rel-ext-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarRelacionesExternasGlobal = renumerarRelacionesExternas;
+    
+    function ensureRequerimientosTable() {
+        if ($('#requerimientosTableBody').length > 0) return;
+        $('#requerimientosContainer').html('<div class="table-responsive"><table class="table table-bordered th-editable-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Requerimiento</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="requerimientosTableBody"></tbody></table></div>');
+    }
+    
+    function addRequerimientoRow(texto) {
+        ensureRequerimientosTable();
+        $('#requerimientosTableBody').append('<tr class="requerimiento-row"><td class="funcion-codigo"><span class="req-codigo-text"></span></td><td><input type="text" class="form-control th-complement-input" name="requerimientoOrganizacional[]" placeholder="Requerimiento organizacional" value="' + (texto || '').replace(/"/g, '&quot;') + '"></td><td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger th-remove-btn" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarRequerimientosGlobal === \'function\') renumerarRequerimientosGlobal();"><i class="fas fa-trash"></i></button></td></tr>');
+        renumerarRequerimientos();
+    }
+    
+    function renumerarRequerimientos() {
+        $('#requerimientosTableBody tr').each(function(index) {
+            $(this).find('.req-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarRequerimientosGlobal = renumerarRequerimientos;
+    
+    function ensureRiesgosTable() {
+        if ($('#riesgosTableBody').length > 0) return;
+        $('#riesgosContainer').html('<div class="table-responsive"><table class="table table-bordered th-editable-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Riesgo profesional</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="riesgosTableBody"></tbody></table></div>');
+    }
+    
+    function addRiesgoRow(texto) {
+        ensureRiesgosTable();
+        $('#riesgosTableBody').append('<tr class="riesgo-row"><td class="funcion-codigo"><span class="riesgo-codigo-text"></span></td><td><input type="text" class="form-control th-complement-input" name="riesgoProfesional[]" placeholder="Riesgo profesional" value="' + (texto || '').replace(/"/g, '&quot;') + '"></td><td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger th-remove-btn" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarRiesgosGlobal === \'function\') renumerarRiesgosGlobal();"><i class="fas fa-trash"></i></button></td></tr>');
+        renumerarRiesgos();
+    }
+    
+    function renumerarRiesgos() {
+        $('#riesgosTableBody tr').each(function(index) {
+            $(this).find('.riesgo-codigo-text').text(index + 1);
+        });
+    }
+    window.renumerarRiesgosGlobal = renumerarRiesgos;
+    
+    window.addRelacionInternaFormRow = addRelacionInternaRow;
+    window.addRelacionExternaFormRow = addRelacionExternaRow;
+    window.addRequerimientoFormRow = addRequerimientoRow;
+    window.addRiesgoFormRow = addRiesgoRow;
     
     for(var i = 1; i <= 4; i++) addFuncionClaveRow();
     for(var i = 1; i <= 4; i++) addFuncionSecundariaRow();
@@ -1094,6 +1242,13 @@
         $('.competencia-subtab-pane').removeClass('active');
         $('#' + tabName).addClass('active');
     });
+    $('.relaciones-subtabs .nav-link').off('click').on('click', function() {
+        var tabName = $(this).data('relaciones-subtab');
+        $('.relaciones-subtabs .nav-link').removeClass('active');
+        $(this).addClass('active');
+        $('.relaciones-subtab-pane').removeClass('active');
+        $('#' + tabName).addClass('active');
+    });
     $('.step').off('click').click(function() {
         var step = parseInt($(this).data('step'));
         if (!isNaN(step) && step >= 1 && step <= totalSteps && isPasoActivo(step)) {
@@ -1112,6 +1267,10 @@
     $('#addExperiencia').off('click').click(function() { addExperienciaRow(); });
     $('#addCompetenciaTecnica').off('click').click(function() { addCompetenciaTecnicaRow(); });
     $('#addCompetenciaConductual').off('click').click(function() { addCompetenciaConductualRow(); });
+    $('#addRelacionInterna').off('click').click(function() { addRelacionInternaRow('', ''); });
+    $('#addRelacionExterna').off('click').click(function() { addRelacionExternaRow('', ''); });
+    $('#addRequerimientoOrganizacional').off('click').click(function() { addRequerimientoRow(''); });
+    $('#addRiesgoFisico').off('click').click(function() { addRiesgoRow(''); });
     $(document).off('input', '.actividad-input').on('input', '.actividad-input', function() {
         guardarActividadesActuales();
     });
