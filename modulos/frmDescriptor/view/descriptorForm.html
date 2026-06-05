@@ -57,9 +57,15 @@
         }
         .form-label { font-weight: 600; font-size: 0.85rem; }
         .actividad-item { background: white; }
-        .funcion-actividad-card { margin-bottom: 18px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; background: #fff; }
-        .funcion-actividad-card .card-header { font-size: 0.86rem; padding: 8px 12px !important; }
-        .funcion-actividad-card .card-body { padding: 10px !important; background: #fff !important; }
+        .funcion-actividad-card { margin-bottom: 18px; border: 1px solid #d9e6f8; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 8px 22px rgba(13,110,253,0.08); }
+        .actividad-panel-top { padding: 12px 14px; background: #f8fbff; border-bottom: 1px solid #e5eefb; }
+        .actividad-panel-header { padding: 16px; background: linear-gradient(135deg, #0d6efd 0%, #4f9cff 100%); color: #fff; }
+        .actividad-panel-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1rem; font-weight: 800; }
+        .actividad-panel-title .icon-box { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.18); }
+        .actividad-panel-subtitle { margin: 4px 0 0 44px; color: rgba(255,255,255,0.86); font-size: 0.82rem; }
+        .actividad-panel-body { padding: 14px; background: #fff; }
+        .actividad-empty-state { display: none; text-align: center; color: #6c757d; background: #f8f9fa; border: 1px dashed #cfd8e3; border-radius: 12px; padding: 18px 12px; margin-top: 10px; font-size: 0.86rem; }
+        .actividad-empty-state i { display: block; color: #0d6efd; font-size: 1.35rem; margin-bottom: 6px; }
         .actividades-table { font-size: 0.82rem; }
         .actividades-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
         .actividades-table td { vertical-align: middle; padding: 6px 8px; }
@@ -87,6 +93,22 @@
         .perfil-subtab-pane.active { display: block; }
         .competencia-subtab-pane { display: none; }
         .competencia-subtab-pane.active { display: block; }
+        body.dark-mode .actividad-panel-top,
+        body.dark-mode .actividad-panel-body {
+            background: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+        body.dark-mode .actividad-empty-state {
+            background: #111827;
+            color: #cbd5e1;
+            border-color: #4b5563;
+        }
+        body.dark-mode .actividades-table th,
+        body.dark-mode .actividades-table td {
+            background: #1f2937 !important;
+            color: #e5e7eb !important;
+            border-color: #374151 !important;
+        }
         @media (max-width: 576px) {
             .descriptor-main-tabs .nav-link { width: 100%; text-align: center; }
             .descriptor-main-tabs .nav-item { flex: 1; }
@@ -104,6 +126,16 @@
             }
             .descriptor-save-top {
                 align-items: stretch;
+            }
+            .actividad-panel-header .btn,
+            .actividad-panel-top .btn {
+                width: 100%;
+            }
+            .actividad-panel-title {
+                align-items: flex-start;
+            }
+            .actividad-panel-subtitle {
+                margin-left: 0;
             }
         }
     </style>
@@ -639,20 +671,26 @@
         }
         actividadFuncionActiva = funcionId;
         var html = '<div class="funcion-actividad-card">' +
-            '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">' +
+            '<div class="actividad-panel-top">' +
+            '<button type="button" class="btn btn-sm btn-light border" onclick="volverFuncionesClaveGlobal()"><i class="fas fa-arrow-left me-1"></i> Volver a funciones clave</button>' +
+            '</div>' +
+            '<div class="actividad-panel-header d-flex flex-wrap justify-content-between align-items-center gap-3">' +
             '<div>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary mb-2" onclick="volverFuncionesClaveGlobal()"><i class="fas fa-arrow-left me-1"></i> Volver a funciones clave</button>' +
-            '<h5 class="mb-1"><i class="fas fa-list-check me-2 text-primary"></i>Actividades de la función ' + funcion.codigo + '</h5>' +
-            '<div class="text-muted small">' + funcion.nombre + '</div>' +
+            '<h5 class="actividad-panel-title"><span class="icon-box"><i class="fas fa-list-check"></i></span>Actividades de la función ' + funcion.codigo + '</h5>' +
+            '<div class="actividad-panel-subtitle">' + funcion.nombre + '</div>' +
             '</div>' +
-            '<button type="button" class="btn btn-sm btn-outline-primary funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus"></i> Agregar Actividad</button>' +
+            '<button type="button" class="btn btn-sm btn-light fw-semibold funciones-add-btn" onclick="agregarActividad(' + funcion.id + ')"><i class="fas fa-plus me-1"></i> Agregar actividad</button>' +
             '</div>' +
-            '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
-            '<small class="text-muted">Estas actividades quedarán asociadas únicamente a esta función clave.</small>' +
+            '<div class="actividad-panel-body">' +
+            '<div class="table-responsive"><table class="table table-bordered actividades-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Actividad</th><th style="width:70px;" class="text-center">Acción</th></tr></thead><tbody id="actividades-funcion-' + funcion.id + '"></tbody></table></div>' +
+            '<div class="actividad-empty-state" id="actividades-empty-' + funcion.id + '"><i class="fas fa-clipboard-list"></i>No hay actividades registradas para esta función. Use el botón <strong>Agregar actividad</strong> para iniciar.</div>' +
+            '<small class="text-muted d-block mt-2">Estas actividades quedarán asociadas únicamente a esta función clave.</small>' +
+            '</div>' +
             '</div>';
         $('#actividadFuncionPanel').html(html).show();
         $('#funcionesTablePanel').hide();
         restaurarActividades(funcion.id);
+        renumerarActividades(funcion.id);
     }
     
     window.abrirActividadesFuncionGlobal = abrirActividadesFuncion;
@@ -683,9 +721,11 @@
     }
     
     function renumerarActividades(funcionId) {
-        $('#actividades-funcion-' + funcionId + ' tr').each(function(index) {
+        var $filas = $('#actividades-funcion-' + funcionId + ' tr');
+        $filas.each(function(index) {
             $(this).find('.actividad-codigo-text').text(index + 1);
         });
+        $('#actividades-empty-' + funcionId).toggle($filas.length === 0);
     }
     window.renumerarActividadesGlobal = renumerarActividades;
     
