@@ -12,6 +12,7 @@ var AprobacionController = {
     
     loadView: function() {
         var self = this;
+        $('#pageTitle').text('Pendientes de Aprobación');
         $('#contentContainer').empty();
         $.get('modulos/frmAprobacion/view/aprobacionView.html', function(html) {
             $('#contentContainer').html(html);
@@ -219,10 +220,131 @@ var AprobacionController = {
         html += '</div>';
         Swal.fire({ title: 'Historial de participación', html: html, width: '650px', confirmButtonText: 'Cerrar', confirmButtonColor: '#0d6efd' });
     },
+
+    abrirFormularioRevision: function(id, descriptor) {
+        if (typeof DescriptorController === 'undefined') {
+            Swal.fire('Error', 'No se puede abrir el formulario del descriptor', 'error');
+            return;
+        }
+
+        $('#pageTitle').text('Revisar Descriptor');
+        DescriptorController.init(this.currentUser, id, { readOnly: true });
+
+        var self = this;
+        var intentos = 0;
+        function insertarPanelRevision() {
+            intentos++;
+            if ($('#descriptorForm').length === 0 && intentos < 20) {
+                setTimeout(insertarPanelRevision, 150);
+                return;
+            }
+            self.renderPanelRevision(id, descriptor);
+        }
+        setTimeout(insertarPanelRevision, 150);
+    },
+
+    renderPanelRevision: function(id, descriptor) {
+        $('#revisionJISActions').remove();
+
+        var puedeGestionar = descriptor.estado === 'ENVIADO_JF' || descriptor.estado === 'APROBADO_POR_JF';
+        var estadoTexto = this.getEstadoTexto(descriptor.estado);
+        var accionesHtml = puedeGestionar
+            ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
+                '<button type="button" class="btn btn-outline-secondary" onclick="AprobacionController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+                '<button type="button" class="btn btn-warning" onclick="AprobacionController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
+                '<button type="button" class="btn btn-success" onclick="AprobacionController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Aprobar y enviar a TH</button>' +
+              '</div>'
+            : '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
+                '<button type="button" class="btn btn-outline-secondary" onclick="AprobacionController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+              '</div>';
+
+        var panel = '<div id="revisionJISActions" class="alert alert-primary border-primary-subtle mb-3">' +
+            '<div class="d-flex flex-wrap align-items-center justify-content-between gap-3">' +
+            '<div>' +
+            '<h6 class="mb-1"><i class="fas fa-user-check me-1"></i> Revisión de Jefe Inmediato Superior</h6>' +
+            '<div class="small">Descriptor <strong>' + (descriptor.codigo || 'DES-' + id) + '</strong> | Estado actual: <strong>' + estadoTexto + '</strong></div>' +
+            (puedeGestionar ? '<div class="small text-muted mt-1">Revise el detalle completo y registre su aprobación u observación.</div>' : '<div class="small text-muted mt-1">Este descriptor no está pendiente de aprobación para JIS.</div>') +
+            '</div>' +
+            accionesHtml +
+            '</div>' +
+            '</div>';
+
+        var $alert = $('#readOnlyDescriptorAlert');
+        if ($alert.length) {
+            $alert.after(panel);
+        } else {
+            $('.descriptor-save-top').after(panel);
+        }
+    },
+
+    aprobarDesdeFormulario: function(id) {
+        Swal.fire({
+            title: '¿Aprobar descriptor?',
+            text: 'Se registrará la aprobación del Jefe Inmediato Superior y el descriptor pasará a Talento Humano.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, aprobar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            AprobacionService.aprobar(id);
+            DescriptorService.registrarEvento(id, {
+                accion: 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
+                usuario: AprobacionController.currentUser.nombre,
+                rol: AprobacionController.currentUser.rolNombre,
+                estadoNuevo: 'APROBADO_POR_JF',
+                estado: 'ENVIADO_TH'
+            });
+
+            Swal.fire('Aprobado', 'La aprobación fue registrada y el descriptor fue enviado a Talento Humano.', 'success').then(function() {
+                AprobacionController.loadView();
+            });
+        });
+    },
+
+    observarDesdeFormulario: function(id) {
+        Swal.fire({
+            title: 'Observaciones',
+            html: '<div class="text-start px-1"><label for="observaciones" class="form-label fw-semibold">Detalle de la observación</label><textarea id="observaciones" class="form-control" placeholder="Escriba las observaciones..." rows="5" style="resize: vertical;"></textarea></div>',
+            width: '560px',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar observación',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+            preConfirm: function() {
+                var obs = document.getElementById('observaciones').value;
+                if (!obs || obs.trim() === '') {
+                    Swal.showValidationMessage('Debe ingresar observaciones');
+                    return false;
+                }
+                return obs.trim();
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed || !result.value) return;
+
+            AprobacionService.observar(id, result.value);
+            DescriptorService.registrarEvento(id, {
+                accion: 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR',
+                usuario: AprobacionController.currentUser.nombre,
+                rol: AprobacionController.currentUser.rolNombre,
+                estado: 'OBSERVADO_JF',
+                observacion: result.value
+            });
+
+            Swal.fire('Observado', 'Descriptor devuelto con observaciones.', 'warning').then(function() {
+                AprobacionController.loadView();
+            });
+        });
+    },
     
     verDetalle: function(id) {
         var descriptor = AprobacionService.getDetalle(id);
         if (!descriptor) return;
+
+        this.abrirFormularioRevision(id, descriptor);
+        return;
         
         var isAprobado = AprobacionService.isAprobadoPendienteEnvio(id);
         var puedeGestionar = descriptor.estado === 'ENVIADO_JF' || descriptor.estado === 'APROBADO_POR_JF';
