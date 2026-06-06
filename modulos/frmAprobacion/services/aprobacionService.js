@@ -1,5 +1,17 @@
 // Servicio de Aprobación
 var AprobacionService = {
+    getUsuariosEquivalentes: function(usuario) {
+        var usuarios = [usuario];
+        if (usuario === 'Ing. Roberto Cortez') {
+            usuarios.push('Dr. Roberto Chang', 'Roberto Chang');
+        }
+        return usuarios;
+    },
+
+    esUsuarioEquivalente: function(eventoUsuario, usuario) {
+        return this.getUsuariosEquivalentes(usuario).indexOf(eventoUsuario) !== -1;
+    },
+
     // Obtener descriptores pendientes de aprobación por Jefe Superior
     getPendientesAprobacion: function() {
         return DescriptorService.getAll().filter(function(d) {
@@ -8,10 +20,11 @@ var AprobacionService = {
     },
     
     getGestionadosPorUsuario: function(usuario) {
+        var self = this;
         return DescriptorService.getAll().filter(function(d) {
             var eventos = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
             return eventos.some(function(ev) {
-                return ev.usuario === usuario && (
+                return self.esUsuarioEquivalente(ev.usuario, usuario) && (
                     ev.accion === 'APROBACIÓN POR JEFE SUPERIOR' ||
                     ev.accion === 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR' ||
                     ev.accion === 'OBSERVACIÓN POR JEFE SUPERIOR' ||
@@ -23,9 +36,10 @@ var AprobacionService = {
     },
     
     getEventosUsuario: function(descriptor, usuario) {
+        var self = this;
         var eventos = (descriptor.auditoria && descriptor.auditoria.eventos) ? descriptor.auditoria.eventos : [];
         return eventos.filter(function(ev) {
-            return ev.usuario === usuario;
+            return self.esUsuarioEquivalente(ev.usuario, usuario);
         });
     },
     

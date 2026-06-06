@@ -37,6 +37,11 @@ function checkAuth() {
         return;
     }
     currentUser = JSON.parse(userStr);
+    if (currentUser.usuario === 'roberto.chang' || currentUser.nombre === 'Dr. Roberto Chang') {
+        currentUser.usuario = 'roberto.cortez';
+        currentUser.nombre = 'Ing. Roberto Cortez';
+        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
 }
 
 // Cargar usuario en UI
