@@ -532,17 +532,18 @@
     }
 
     var responsablesPorPuesto = {
-        'Analista Programador': ['Ing. Juan Hércules'],
-        'Coordinador': ['Dr. Roberto Cortez'],
-        'Jefe de Subgerencia': ['Dr. Roberto Cortez'],
-        'Gerente': ['Dr. Roberto Cortez']
+        'Analista Programador': ['Ing. Mauricio Rivas'],
+        'Coordinador': ['Licda. Patricia Morales'],
+        'Jefe de Subgerencia': ['MSc. Verónica Salazar'],
+        'Gerente': ['Dr. Ricardo Méndez']
     };
 
     function actualizarResponsablesPorPuesto(valorActual) {
         var puesto = $('select[name="puesto"]').val();
         var responsables = responsablesPorPuesto[puesto] || [];
         var $reporta = $('#reportaASelect');
-        var valorPrevio = valorActual || $reporta.val() || '';
+        var preservarValorGuardado = arguments.length > 0;
+        var valorPrevio = preservarValorGuardado ? (valorActual || '') : '';
 
         $reporta.empty();
         if (!puesto) {
@@ -557,7 +558,7 @@
             $reporta.append('<option value="' + responsables[i] + '">' + responsables[i] + '</option>');
         }
 
-        if (valorPrevio && responsables.indexOf(valorPrevio) === -1) {
+        if (preservarValorGuardado && valorPrevio && responsables.indexOf(valorPrevio) === -1) {
             $reporta.append('<option value="' + valorPrevio + '">' + valorPrevio + '</option>');
         }
 
