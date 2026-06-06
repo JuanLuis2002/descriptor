@@ -87,7 +87,12 @@ var DescriptorController = {
         $('select[name="tipoFormato"]').val(descriptor.tipoFormato || 'CORTA').trigger('change');
         $('select[name="puesto"]').val(descriptor.puesto);
         $('#areaUsuario').val(descriptor.area);
-        $('input[name="reportaA"]').val(descriptor.reportaA);
+        if (typeof window.actualizarResponsablesPorPuesto === 'function') {
+            window.actualizarResponsablesPorPuesto(descriptor.reportaA);
+        } else {
+            $('select[name="puesto"]').trigger('change');
+            $('select[name="reportaA"]').val(descriptor.reportaA);
+        }
         $('input[name="fechaEmision"]').val(descriptor.fechaEmision);
         $('textarea[name="objetivo"]').val(descriptor.objetivo);
         

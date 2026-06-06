@@ -319,7 +319,7 @@
                 <div class="col-md-6 mb-3"><label class="form-label">Tipo de formato *</label><select class="form-select" name="tipoFormato" id="tipoFormato" required><option value="CORTA">Versión corta</option><option value="EXTENSA">Versión extensa</option></select><small class="text-muted">Define los campos que se llenarán y el reporte que se generará.</small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Coordinador">Coordinador</option><option value="Jefe de Subgerencia">Jefe de Subgerencia</option><option value="Gerente">Gerente</option></select></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Área</label><input type="text" class="form-control" name="area" id="areaUsuario" readonly></div>
-                <div class="col-md-6 mb-3"><label class="form-label">Reporta a</label><input type="text" class="form-control" name="reportaA" required></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Reporta a *</label><select class="form-select" name="reportaA" id="reportaASelect" required><option value="">Seleccione un puesto primero...</option></select><small class="text-muted">Se carga según el puesto seleccionado.</small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Fecha Emisión</label><input type="date" class="form-control" name="fechaEmision" id="fechaEmision"></div>
             </div>
         </div>
@@ -530,6 +530,45 @@
         }
         return options;
     }
+
+    var responsablesPorPuesto = {
+        'Analista Programador': ['Ing. Juan Hércules'],
+        'Coordinador': ['Dr. Roberto Cortez'],
+        'Jefe de Subgerencia': ['Dr. Roberto Cortez'],
+        'Gerente': ['Dr. Roberto Cortez']
+    };
+
+    function actualizarResponsablesPorPuesto(valorActual) {
+        var puesto = $('select[name="puesto"]').val();
+        var responsables = responsablesPorPuesto[puesto] || [];
+        var $reporta = $('#reportaASelect');
+        var valorPrevio = valorActual || $reporta.val() || '';
+
+        $reporta.empty();
+        if (!puesto) {
+            $reporta.append('<option value="">Seleccione un puesto primero...</option>');
+            $reporta.prop('disabled', true);
+            return;
+        }
+
+        $reporta.prop('disabled', false);
+        $reporta.append('<option value="">Seleccione responsable...</option>');
+        for (var i = 0; i < responsables.length; i++) {
+            $reporta.append('<option value="' + responsables[i] + '">' + responsables[i] + '</option>');
+        }
+
+        if (valorPrevio && responsables.indexOf(valorPrevio) === -1) {
+            $reporta.append('<option value="' + valorPrevio + '">' + valorPrevio + '</option>');
+        }
+
+        if (valorPrevio) {
+            $reporta.val(valorPrevio);
+        } else if (responsables.length === 1) {
+            $reporta.val(responsables[0]);
+        }
+    }
+
+    window.actualizarResponsablesPorPuesto = actualizarResponsablesPorPuesto;
     
     function getTipoFormato() {
         return $('#tipoFormato').val() || 'CORTA';
@@ -1266,7 +1305,7 @@
             puesto: $('select[name="puesto"]').val(),
             tipoFormato: tipoFormato,
             area: $('input[name="area"]').val(),
-            reportaA: $('input[name="reportaA"]').val(),
+            reportaA: $('select[name="reportaA"]').val(),
             fechaEmision: $('input[name="fechaEmision"]').val(),
             objetivo: $('textarea[name="objetivo"]').val(),
             funcionesClaves: funcionesClaves,
@@ -1418,6 +1457,9 @@
         normalizarPasoActual();
         updateStepDisplay();
     });
+    $('select[name="puesto"]').off('change.responsable').on('change.responsable', function() {
+        actualizarResponsablesPorPuesto();
+    });
     $('#addFuncionClave').off('click').click(function() { addFuncionClaveRow(); });
     $('#addFuncionSecundaria').off('click').click(function() { addFuncionSecundariaRow(); });
     $('#addKPI').off('click').click(function() { addKPIRow(); });
@@ -1433,6 +1475,7 @@
         guardarActividadesActuales();
     });
     
+    actualizarResponsablesPorPuesto();
     updateStepDisplay();
 })();
 </script>
