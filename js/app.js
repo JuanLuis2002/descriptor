@@ -58,7 +58,11 @@ function loadUser() {
 function setupEvents() {
     $('#toggleSidebar').click(function() {
         if (isMobile) {
-            openMobileSidebar();
+            if ($('#sidebar').hasClass('mobile-open')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
         } else {
             $('#sidebar').toggleClass('desktop-hidden');
             $('#mainContent').toggleClass('full-width');
