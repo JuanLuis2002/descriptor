@@ -192,7 +192,10 @@ window.initDescriptorList = function() {
             'REENVÍO A JEFE SUPERIOR (DESPUÉS DE CORRECCIÓN)': 'REENVÍO A JEFE INMEDIATO SUPERIOR (DESPUÉS DE CORRECCIÓN)',
             'APROBACIÓN POR JEFE SUPERIOR': 'APROBACIÓN POR JEFE INMEDIATO SUPERIOR',
             'OBSERVACIÓN POR JEFE SUPERIOR': 'OBSERVACIÓN POR JEFE INMEDIATO SUPERIOR',
-            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH'
+            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH',
+            'APROBACIÓN SIMPLE DEL JEFE DE TALENTO HUMANO': 'APROBACIÓN DEL JEFE DE TALENTO HUMANO',
+            'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR': 'APROBACIÓN DEL COLABORADOR/TITULAR',
+            'APROBACIÓN SIMPLE DEL JEFE INMEDIATO': 'APROBACIÓN DEL JEFE INMEDIATO'
         };
         return acciones[accion] || accion || 'Evento';
     }
@@ -640,7 +643,7 @@ window.initDescriptorList = function() {
                 descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
                 DescriptorService.update(id, descriptorActualizado);
                 DescriptorService.registrarEvento(id, {
-                    accion: 'APROBACIÓN SIMPLE DEL JEFE INMEDIATO',
+                    accion: 'APROBACIÓN DEL JEFE INMEDIATO',
                     usuario: currentUserGlobal.nombre,
                     rol: currentUserGlobal.rolNombre,
                     estadoNuevo: 'FIRMADO_JI',

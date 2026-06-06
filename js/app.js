@@ -464,7 +464,7 @@ function firmarDescriptorJI(id) {
             descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
             DescriptorService.update(id, descriptorActualizado);
             DescriptorService.registrarEvento(id, {
-                accion: 'APROBACIÓN SIMPLE DEL JEFE INMEDIATO',
+                accion: 'APROBACIÓN DEL JEFE INMEDIATO',
                 usuario: currentUser.nombre,
                 rol: currentUser.rolNombre,
                 estadoNuevo: 'FIRMADO_JI',
@@ -1603,7 +1603,7 @@ function generarHTMLVersionCorta(d) {
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
-            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
+            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
                 titularNombre = text(eventosAuditoria[i].usuario);
                 break;
             }
@@ -1791,7 +1791,7 @@ function generarHTMLVersionExtensa(d) {
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
-            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
+            if ((eventosAuditoria[i].accion === 'FIRMA DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN DEL COLABORADOR/TITULAR' || eventosAuditoria[i].accion === 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR') && hasText(eventosAuditoria[i].usuario)) {
                 titularNombre = text(eventosAuditoria[i].usuario);
                 break;
             }

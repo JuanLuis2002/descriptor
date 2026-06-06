@@ -327,7 +327,7 @@ var JTHController = {
                 var descriptorActualizado = JTHService.getById(id);
                 var estadoFirma = descriptorActualizado ? descriptorActualizado.estado : 'FIRMA_JTH';
                 DescriptorService.registrarEvento(id, {
-                    accion: 'APROBACIÓN SIMPLE DEL JEFE DE TALENTO HUMANO',
+                    accion: 'APROBACIÓN DEL JEFE DE TALENTO HUMANO',
                     usuario: JTHController.currentUser.nombre,
                     rol: JTHController.currentUser.rolNombre,
                     estadoNuevo: 'FIRMADO_JTH',

@@ -319,7 +319,7 @@ var CTController = {
                 var descriptorActualizado = CTService.getById(id);
                 var estadoFirma = descriptorActualizado ? descriptorActualizado.estado : 'FIRMA_JTH';
                 DescriptorService.registrarEvento(id, {
-                    accion: 'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR',
+                    accion: 'APROBACIÓN DEL COLABORADOR/TITULAR',
                     usuario: CTController.currentUser.nombre,
                     rol: CTController.currentUser.rolNombre,
                     estadoNuevo: 'FIRMADO_CT',
