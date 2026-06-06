@@ -222,17 +222,43 @@
             e.preventDefault();
             const username = $('#username').val().toLowerCase().trim();
             const password = $('#password').val();
-            
+
+            function showLoginWarning(title, text) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: title,
+                    text: text,
+                    confirmButtonColor: '#0d6efd'
+                });
+            }
+
+            if (!username) {
+                showLoginWarning('Usuario requerido', 'Necesita ingresar el usuario.');
+                $('#username').focus();
+                return;
+            }
+
+            if (!password) {
+                showLoginWarning('Contraseña requerida', 'Necesita ingresar la contraseña.');
+                $('#password').focus();
+                return;
+            }
+
+            if (!users[username]) {
+                showLoginWarning('Usuario incorrecto', 'El usuario ingresado no existe.');
+                $('#username').focus();
+                return;
+            }
+
+            if (users[username].password !== password) {
+                showLoginWarning('Contraseña incorrecta', 'La contraseña ingresada no es correcta.');
+                $('#password').focus();
+                return;
+            }
+
             if (users[username] && users[username].password === password) {
                 sessionStorage.setItem('currentUser', JSON.stringify({ ...users[username], usuario: username }));
                 window.location.href = 'index.html';
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Credenciales incorrectas',
-                    text: 'Usuario o contraseña incorrectos',
-                    confirmButtonColor: '#0d6efd'
-                });
             }
         });
     </script>
