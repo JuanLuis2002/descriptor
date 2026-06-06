@@ -155,6 +155,8 @@ var THController = {
         var estados = {
             'ENVIADO_TH': 'Pendiente de revisión TH',
             'OBSERVADO_TH': 'Observado por TH',
+            'REVISADO_GTH': 'Revisado por GTH',
+            'APROBADO_TH': 'Revisado por GTH',
             'FIRMA_JTH': 'Pendiente de firmas',
             'FIRMADO_JTH': 'Firmado por JTH',
             'FIRMADO_CT': 'Firmado por colaborador',
@@ -168,6 +170,8 @@ var THController = {
         var classes = {
             'ENVIADO_TH': 'bg-warning text-dark',
             'OBSERVADO_TH': 'bg-warning text-dark',
+            'REVISADO_GTH': 'bg-success',
+            'APROBADO_TH': 'bg-success',
             'FIRMA_JTH': 'bg-primary',
             'FIRMADO_JTH': 'bg-primary',
             'FIRMADO_CT': 'bg-primary',
@@ -175,6 +179,13 @@ var THController = {
             'INACTIVO': 'bg-danger'
         };
         return classes[estado] || 'bg-secondary';
+    },
+
+    getAccionTexto: function(accion) {
+        var acciones = {
+            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH'
+        };
+        return acciones[accion] || accion || 'Evento';
     },
     
     cargarGestionados: function() {
@@ -192,7 +203,7 @@ var THController = {
         } else {
             eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
             for (var i = 0; i < eventos.length; i++) {
-                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small>';
+                html += '<div class="border-bottom py-2"><strong>' + this.getAccionTexto(eventos[i].accion) + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small>';
                 if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
                 html += '</div>';
             }
@@ -212,7 +223,7 @@ var THController = {
         } else {
             eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
             for (var i = 0; i < eventos.length; i++) {
-                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
+                html += '<div class="border-bottom py-2"><strong>' + this.getAccionTexto(eventos[i].accion) + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + '</small>';
                 if (eventos[i].observacion) html += '<div class="alert alert-warning mt-2 mb-0 p-2">' + eventos[i].observacion + '</div>';
                 html += '</div>';
             }
@@ -266,7 +277,7 @@ var THController = {
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
                 (esExtensa ? '<button type="button" class="btn btn-primary" onclick="THController.guardarComplementosDesdeFormulario(' + id + ')"><i class="fas fa-save me-1"></i> Guardar complementos</button>' : '') +
                 '<button type="button" class="btn btn-warning" onclick="THController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
-                '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Aprobar y enviar a firmas</button>' +
+                '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Revisar y enviar a firmas</button>' +
               '</div>'
             : '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
@@ -357,11 +368,11 @@ var THController = {
 
     aprobarDesdeFormulario: function(id) {
         Swal.fire({
-            title: '¿Aprobar descriptor?',
-            text: 'El descriptor pasará al flujo de firmas. Los firmantes podrán firmar en cualquier orden.',
+            title: '¿Marcar como revisado?',
+            text: 'Se registrará la revisión de la Generalista de TH y el descriptor pasará al flujo de firmas.',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Sí, aprobar',
+            confirmButtonText: 'Sí, marcar revisado',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#198754'
         }).then(function(result) {
@@ -372,14 +383,14 @@ var THController = {
             }
             THService.aprobar(id);
             DescriptorService.registrarEvento(id, {
-                accion: 'APROBACIÓN POR TH GENERALISTA',
+                accion: 'REVISADO POR GENERALISTA DE TH',
                 usuario: THController.currentUser.nombre,
                 rol: THController.currentUser.rolNombre,
-                estadoNuevo: 'APROBADO_TH',
+                estadoNuevo: 'REVISADO_GTH',
                 estado: 'FIRMA_JTH'
             });
 
-            Swal.fire('Aprobado', 'Descriptor enviado para firmas. Los firmantes podrán firmar en cualquier orden.', 'success').then(function() {
+            Swal.fire('Revisado', 'Descriptor revisado por Generalista de TH y enviado para firmas.', 'success').then(function() {
                 THController.loadView();
             });
         });
@@ -620,18 +631,18 @@ var THController = {
                 if (!puedeGestionar) {
                     return true;
                 }
-                return Swal.fire({ title: 'Aprobar Descriptor', text: '¿Está seguro de aprobar este descriptor? Se enviará para firmas.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
+                return Swal.fire({ title: 'Marcar descriptor como revisado', text: '¿Está seguro de registrar la revisión de la Generalista de TH? Se enviará para firmas.', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí' })
                     .then(function(result) {
                         if (result.isConfirmed) {
                             THService.aprobar(id);
                             DescriptorService.registrarEvento(id, {
-                                accion: 'APROBACIÓN POR TH GENERALISTA',
+                                accion: 'REVISADO POR GENERALISTA DE TH',
                                 usuario: THController.currentUser.nombre,
                                 rol: THController.currentUser.rolNombre,
-                                estadoNuevo: 'APROBADO_TH',
+                                estadoNuevo: 'REVISADO_GTH',
                                 estado: 'FIRMA_JTH'
                             });
-                            Swal.fire('Aprobado', 'Descriptor enviado para firmas. Los firmantes podrán firmar en cualquier orden.', 'success').then(function() {
+                            Swal.fire('Revisado', 'Descriptor revisado por Generalista de TH y enviado para firmas.', 'success').then(function() {
                                 THController.cargarPendientes();
                                 THController.cargarGestionados();
                             });

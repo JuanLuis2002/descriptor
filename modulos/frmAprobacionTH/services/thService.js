@@ -12,6 +12,7 @@ var THService = {
             var eventos = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
             return eventos.some(function(ev) {
                 return ev.usuario === usuario && (
+                    ev.accion === 'REVISADO POR GENERALISTA DE TH' ||
                     ev.accion === 'APROBACIÓN POR TH GENERALISTA' ||
                     ev.accion === 'OBSERVACIÓN POR TH GENERALISTA'
                 );
@@ -54,7 +55,7 @@ var THService = {
         return false;
     },
     
-    // Aprobar descriptor (enviar a Jefe de TH)
+    // Registrar revisión de TH y enviar a firmas
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
