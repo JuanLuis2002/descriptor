@@ -2,8 +2,8 @@
 var AprobacionService = {
     getUsuariosEquivalentes: function(usuario) {
         var usuarios = [usuario];
-        if (usuario === 'Ing. Roberto Cortez') {
-            usuarios.push('Dr. Roberto Chang', 'Roberto Chang');
+        if (usuario === 'Dr. Roberto Cortez') {
+            usuarios.push('Ing. Roberto Cortez', 'Dr. Roberto Chang', 'Roberto Chang');
         }
         return usuarios;
     },

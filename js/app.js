@@ -39,7 +39,10 @@ function checkAuth() {
     currentUser = JSON.parse(userStr);
     if (currentUser.usuario === 'roberto.chang' || currentUser.nombre === 'Dr. Roberto Chang') {
         currentUser.usuario = 'roberto.cortez';
-        currentUser.nombre = 'Ing. Roberto Cortez';
+        currentUser.nombre = 'Dr. Roberto Cortez';
+        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else if (currentUser.usuario === 'roberto.cortez' && currentUser.nombre === 'Ing. Roberto Cortez') {
+        currentUser.nombre = 'Dr. Roberto Cortez';
         sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 }
