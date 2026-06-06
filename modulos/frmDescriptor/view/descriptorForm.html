@@ -99,6 +99,7 @@
         .relaciones-subtabs .nav-link.active,
         .competencia-subtabs .nav-link.active { background: #0d6efd; color: #fff; }
         .responsabilidades-grid textarea.form-control { min-height: 74px; resize: vertical; }
+        .responsabilidad-extensa-only { display: block; }
         .th-editable-table { font-size: 0.82rem; }
         .th-editable-table th { background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: .02em; }
         .th-editable-table td { vertical-align: middle; padding: 6px 8px; }
@@ -459,12 +460,12 @@
         <div class="form-section" data-section="9">
             <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Responsabilidades</h5>
             <div class="row responsabilidades-grid">
-                <div class="col-md-6 mb-3"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
+                <div class="col-md-6 mb-3 responsabilidad-extensa-only"><label class="form-label">De equipo</label><select class="form-select" name="respEquipo"><option>Computadora, Mobiliario y Equipo</option><option>Equipo especializado</option><option>Ninguno</option></select></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Impacto Económico</label><select class="form-select" name="impactoEconomico"><option value="Rango 1: Poco significativo - menor a $50,000">Rango 1: Poco significativo - menor a $50,000</option><option value="Rango 2: $2,500 a $25,000">Rango 2: $2,500 a $25,000</option></select></div>
-                <div class="col-md-6 mb-3"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
-                <div class="col-md-6 mb-3"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
-                <div class="col-md-6 mb-3"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
-                <div class="col-md-6 mb-3"><label class="form-label">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3 responsabilidad-extensa-only"><label class="form-label">De fondos o valores</label><textarea class="form-control" name="respFondos" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3 responsabilidad-extensa-only"><label class="form-label">De documentos</label><textarea class="form-control" name="respDocumentos" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3 responsabilidad-extensa-only"><label class="form-label">Toma de decisiones</label><textarea class="form-control" name="tomaDecisiones" rows="2"></textarea></div>
+                <div class="col-md-6 mb-3"><label class="form-label" id="respPersonalLabel">De personal</label><textarea class="form-control" name="respPersonal" rows="2"></textarea><small class="text-muted responsabilidad-corta-help">Campo usado como "Supervisa a" en la versión corta.</small></div>
             </div>
         </div>
 
@@ -940,6 +941,14 @@
         if (!esExtensa && actividadFuncionActiva !== null) volverFuncionesClave();
         actualizarContadoresActividades();
     }
+
+    function actualizarResponsabilidadesPorFormato() {
+        var esExtensa = getTipoFormato() === 'EXTENSA';
+        $('.responsabilidad-extensa-only').toggle(esExtensa);
+        $('.responsabilidad-corta-help').toggle(!esExtensa);
+        $('#respPersonalLabel').text(esExtensa ? 'De personal' : 'Supervisa a');
+        $('textarea[name="respPersonal"]').attr('placeholder', esExtensa ? '' : 'Indique el puesto o personal que supervisa');
+    }
     
     function actualizarContadoresActividades() {
         var actividadesGuardadas = window._savedActividades || [];
@@ -1115,6 +1124,7 @@
             $('#saveBtn').show();
         }
         sincronizarAccionesActividades();
+        actualizarResponsabilidadesPorFormato();
         if (getTipoFormato() === 'EXTENSA') guardarActividadesActuales();
         if (currentStep === getLastStep()) updateResumen();
     }
@@ -1331,10 +1341,10 @@
             competenciasTecnicas: competenciasTecnicas,
             competenciasConductuales: competenciasConductuales,
             responsabilidades: {
-                equipo: $('select[name="respEquipo"]').val(),
-                fondos: $('textarea[name="respFondos"]').val(),
-                documentos: $('textarea[name="respDocumentos"]').val(),
-                tomaDecisiones: $('textarea[name="tomaDecisiones"]').val(),
+                equipo: tipoFormato === 'EXTENSA' ? $('select[name="respEquipo"]').val() : '',
+                fondos: tipoFormato === 'EXTENSA' ? $('textarea[name="respFondos"]').val() : '',
+                documentos: tipoFormato === 'EXTENSA' ? $('textarea[name="respDocumentos"]').val() : '',
+                tomaDecisiones: tipoFormato === 'EXTENSA' ? $('textarea[name="tomaDecisiones"]').val() : '',
                 personal: $('textarea[name="respPersonal"]').val(),
                 impactoEconomico: $('select[name="impactoEconomico"]').val()
             },
