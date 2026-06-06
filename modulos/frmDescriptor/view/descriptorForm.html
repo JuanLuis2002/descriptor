@@ -317,7 +317,7 @@
             <h5 class="mb-4"><i class="fas fa-building me-2 text-primary"></i>Generalidades</h5>
             <div class="row">
                 <div class="col-md-6 mb-3"><label class="form-label">Tipo de formato *</label><select class="form-select" name="tipoFormato" id="tipoFormato" required><option value="CORTA">Versión corta</option><option value="EXTENSA">Versión extensa</option></select><small class="text-muted">Define los campos que se llenarán y el reporte que se generará.</small></div>
-                <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Coordinador">Coordinador</option><option value="Jefe de Subgerencia">Jefe de Subgerencia</option><option value="Gerente">Gerente</option></select></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Desarrollador de Software">Desarrollador de Software</option><option value="Administrador de Sistemas">Administrador de Sistemas</option><option value="Especialista en Soporte Técnico">Especialista en Soporte Técnico</option><option value="Coordinador de Infraestructura TI">Coordinador de Infraestructura TI</option></select></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Área</label><input type="text" class="form-control" name="area" id="areaUsuario" readonly></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Reporta a *</label><select class="form-select" name="reportaA" id="reportaASelect" required><option value="">Seleccione un puesto primero...</option></select><small class="text-muted">Se carga según el puesto seleccionado.</small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Fecha Emisión</label><input type="date" class="form-control" name="fechaEmision" id="fechaEmision"></div>
@@ -533,9 +533,10 @@
 
     var responsablesPorPuesto = {
         'Analista Programador': ['Ing. Mauricio Rivas'],
-        'Coordinador': ['Licda. Patricia Morales'],
-        'Jefe de Subgerencia': ['MSc. Verónica Salazar'],
-        'Gerente': ['Dr. Ricardo Méndez']
+        'Desarrollador de Software': ['Ing. Carlos Menjívar'],
+        'Administrador de Sistemas': ['Ing. Ricardo Molina'],
+        'Especialista en Soporte Técnico': ['Ing. Fernando Aguilar'],
+        'Coordinador de Infraestructura TI': ['Ing. Esteban Figueroa']
     };
 
     function actualizarResponsablesPorPuesto(valorActual) {
