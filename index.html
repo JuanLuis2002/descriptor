@@ -259,6 +259,7 @@
 
         .sidebar.collapsed {
             width: 70px;
+            overflow: visible;
         }
 
         @media (min-width: 769px) {
@@ -270,6 +271,65 @@
             .main-content.expanded {
                 margin-left: 70px;
                 width: calc(100% - 70px);
+            }
+
+            .sidebar.collapsed .menu-tree {
+                position: relative;
+            }
+
+            .sidebar.collapsed .tree-section {
+                display: none !important;
+                position: absolute;
+                left: 62px;
+                top: 112px;
+                width: 260px;
+                background: #fff;
+                border: 1px solid #d8e2ec;
+                border-radius: 10px;
+                padding: 10px;
+                box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+                z-index: 1600;
+            }
+
+            .sidebar.collapsed .menu-tree:hover .tree-section,
+            .sidebar.collapsed .tree-section:hover,
+            .sidebar.collapsed.flyout-open .tree-section {
+                display: block !important;
+            }
+
+            .sidebar.collapsed .tree-section::before {
+                content: '';
+                position: absolute;
+                left: -8px;
+                top: 18px;
+                width: 14px;
+                height: 14px;
+                background: inherit;
+                border-left: 1px solid #d8e2ec;
+                border-bottom: 1px solid #d8e2ec;
+                transform: rotate(45deg);
+            }
+
+            .sidebar.collapsed .tree-section .submenu-title,
+            .sidebar.collapsed .tree-section .submenu-link {
+                display: flex !important;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 10px;
+                margin: 4px 0;
+                padding: 10px 12px;
+                width: 100%;
+            }
+
+            .sidebar.collapsed .tree-section .submenu-title span,
+            .sidebar.collapsed .tree-section .submenu-link,
+            .sidebar.collapsed .tree-section .chevron {
+                display: initial !important;
+            }
+
+            .sidebar.collapsed .tree-section .submenu-options {
+                display: block !important;
+                margin-top: 4px;
             }
         }
 
@@ -639,6 +699,16 @@
 
         body.dark-mode .submenu-link {
             color: #93c5fd;
+        }
+
+        body.dark-mode .sidebar.collapsed .tree-section {
+            background: #1f2937;
+            border-color: #374151;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+        }
+
+        body.dark-mode .sidebar.collapsed .tree-section::before {
+            border-color: #374151;
         }
 
         body.dark-mode .menu-link:hover,
