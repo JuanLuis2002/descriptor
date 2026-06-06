@@ -151,6 +151,15 @@ var CTController = {
         $('#firmadosContainer').empty();
     },
 
+    getAccionTexto: function(accion) {
+        var acciones = {
+            'APROBACIÓN SIMPLE DEL JEFE DE TALENTO HUMANO': 'APROBACIÓN DEL JEFE DE TALENTO HUMANO',
+            'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR': 'APROBACIÓN DEL COLABORADOR/TITULAR',
+            'APROBACIÓN SIMPLE DEL JEFE INMEDIATO': 'APROBACIÓN DEL JEFE INMEDIATO'
+        };
+        return acciones[accion] || accion || 'Evento';
+    },
+
     verDetalle: function(id) {
         var descriptor = CTService.getById(id);
         if (!descriptor) return;
@@ -258,7 +267,7 @@ var CTController = {
         } else {
             eventos.sort(function(a, b) { return new Date(a.fecha) - new Date(b.fecha); });
             for (var i = 0; i < eventos.length; i++) {
-                html += '<div class="border-bottom py-2"><strong>' + (eventos[i].accion || 'Evento') + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small></div>';
+                html += '<div class="border-bottom py-2"><strong>' + this.getAccionTexto(eventos[i].accion) + '</strong><br><small class="text-muted">' + new Date(eventos[i].fecha).toLocaleString() + ' | ' + (eventos[i].usuario || 'Sistema') + ' - ' + (eventos[i].rol || '') + '</small></div>';
             }
         }
         html += '</div>';

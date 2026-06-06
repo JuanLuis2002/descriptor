@@ -183,7 +183,10 @@ var THController = {
 
     getAccionTexto: function(accion) {
         var acciones = {
-            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH'
+            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH',
+            'APROBACIÓN SIMPLE DEL JEFE DE TALENTO HUMANO': 'APROBACIÓN DEL JEFE DE TALENTO HUMANO',
+            'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR': 'APROBACIÓN DEL COLABORADOR/TITULAR',
+            'APROBACIÓN SIMPLE DEL JEFE INMEDIATO': 'APROBACIÓN DEL JEFE INMEDIATO'
         };
         return acciones[accion] || accion || 'Evento';
     },

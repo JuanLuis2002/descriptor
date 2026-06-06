@@ -1318,6 +1318,12 @@ function generarHTMLVersionExtensa(d) {
             'ACTIVO': 'Activo',
             'INACTIVO': 'Inactivo'
         };
+        var accionTextoAuditoria = {
+            'APROBACIÓN POR TH GENERALISTA': 'REVISADO POR GENERALISTA DE TH',
+            'APROBACIÓN SIMPLE DEL JEFE DE TALENTO HUMANO': 'APROBACIÓN DEL JEFE DE TALENTO HUMANO',
+            'APROBACIÓN SIMPLE DEL COLABORADOR/TITULAR': 'APROBACIÓN DEL COLABORADOR/TITULAR',
+            'APROBACIÓN SIMPLE DEL JEFE INMEDIATO': 'APROBACIÓN DEL JEFE INMEDIATO'
+        };
         var eventos = d.auditoria.eventos;
         eventos.sort(function(a,b) { return new Date(a.fecha) - new Date(b.fecha); });
         auditoriaHtml = '<table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;">' +
@@ -1325,7 +1331,8 @@ function generarHTMLVersionExtensa(d) {
         for (var i = 0; i < eventos.length; i++) {
             var fecha = new Date(eventos[i].fecha).toLocaleString();
             var estadoEvento = eventos[i].estadoNuevo || eventos[i].estado || '';
-            auditoriaHtml += '<tr><td>' + fecha + '</td><td>' + (eventos[i].accion || '') + '</td><td>' + (eventos[i].usuario || '') + '</td><td>' + (estadoTextoAuditoria[estadoEvento] || estadoEvento) + '</td></tr>';
+            var accionEvento = eventos[i].accion || '';
+            auditoriaHtml += '<tr><td>' + fecha + '</td><td>' + (accionTextoAuditoria[accionEvento] || accionEvento) + '</td><td>' + (eventos[i].usuario || '') + '</td><td>' + (estadoTextoAuditoria[estadoEvento] || estadoEvento) + '</td></tr>';
         }
         auditoriaHtml += '</table>';
     }
