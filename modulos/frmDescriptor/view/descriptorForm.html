@@ -584,7 +584,7 @@
     function getPasosActivos() {
         if (window._descriptorWorkflowEditor === true) {
             return getTipoFormato() === 'EXTENSA'
-                ? [2, 3, 7, 8, 13, 9, 10, 11]
+                ? [2, 3, 7, 8, 12, 13, 14, 9, 10, 11]
                 : [2, 3, 5, 6, 7, 8, 13, 9, 10, 11];
         }
         if (getTipoFormato() === 'EXTENSA' && isTHReviewMode()) {
@@ -949,10 +949,13 @@
 
     function actualizarResponsabilidadesPorFormato() {
         var esExtensa = getTipoFormato() === 'EXTENSA';
+        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true;
         $('.responsabilidad-extensa-only').toggle(esExtensa);
         $('.responsabilidad-corta-help').toggle(!esExtensa);
         $('#respPersonalLabel').text(esExtensa ? 'De personal' : 'Supervisa a');
         $('textarea[name="respPersonal"]').attr('placeholder', esExtensa ? '' : 'Indique el puesto o personal que supervisa');
+        $('select[name="impactoEconomico"]').closest('.col-md-6').toggle(puedeEditarAportesTH);
+        $('select[name="impactoEconomico"]').prop('disabled', !puedeEditarAportesTH);
     }
     
     function actualizarContadoresActividades() {
@@ -1383,7 +1386,7 @@
                 documentos: tipoFormato === 'EXTENSA' ? $('textarea[name="respDocumentos"]').val() : '',
                 tomaDecisiones: tipoFormato === 'EXTENSA' ? $('textarea[name="tomaDecisiones"]').val() : '',
                 personal: $('textarea[name="respPersonal"]').val(),
-                impactoEconomico: $('select[name="impactoEconomico"]').val()
+                impactoEconomico: window._descriptorWorkflowEditor === true ? $('select[name="impactoEconomico"]').val() : ''
             },
             entrenamiento: {
                 personalCargo: $('input[name="personalCargo"]').val(),
@@ -1422,6 +1425,9 @@
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
                 formData.creador = existingDescriptor.creador || formData.creador;
+                if (window._descriptorWorkflowEditor !== true && existingDescriptor.responsabilidades) {
+                    formData.responsabilidades.impactoEconomico = existingDescriptor.responsabilidades.impactoEconomico || '';
+                }
                 
                 if (normalizarPuesto(existingDescriptor.puesto) === normalizarPuesto(formData.puesto)) {
                     formData.version = existingDescriptor.version || 1;

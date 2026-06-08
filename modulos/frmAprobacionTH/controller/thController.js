@@ -246,7 +246,7 @@ var THController = {
         this.navigationToken = token;
         var puedeEditarDescriptor = descriptor.estado === 'ENVIADO_TH';
         DescriptorController.init(this.currentUser, id, {
-            readOnly: true,
+            readOnly: !puedeEditarDescriptor,
             thReview: true,
             canEditThComplements: puedeEditarDescriptor,
             navigationToken: token,
@@ -273,7 +273,7 @@ var THController = {
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
-        var complementosHtml = '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede completar <strong>Requerimientos Organizacionales</strong> y <strong>Impacto Económico</strong>. El resto del descriptor queda a cargo del jefe inmediato.</div>';
+        var complementosHtml = '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>';
 
         var accionesHtml = puedeGestionar
             ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +

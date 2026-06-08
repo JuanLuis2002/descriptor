@@ -184,7 +184,7 @@ var JTHController = {
         var estadosFirma = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
         var puedeEditarDescriptor = estadosFirma.indexOf(descriptor.estado) !== -1 && !firmaJTH;
         DescriptorController.init(this.currentUser, id, {
-            readOnly: true,
+            readOnly: !puedeEditarDescriptor,
             thReview: true,
             canEditThComplements: puedeEditarDescriptor,
             navigationToken: token,
