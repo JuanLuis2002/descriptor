@@ -653,6 +653,7 @@ function generarVersionCorta(id) {
         cancelButtonText: 'Cerrar',
         didOpen: function() {
             $('#btnImprimirPDF').click(function() {
+                var printed = false;
                 // Crear un iframe oculto
                 var iframe = document.createElement('iframe');
                 iframe.style.position = 'absolute';
@@ -669,6 +670,8 @@ function generarVersionCorta(id) {
                 
                 // Esperar a que cargue y luego imprimir
                 iframe.onload = function() {
+                    if (printed) return;
+                    printed = true;
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
                     
@@ -680,7 +683,8 @@ function generarVersionCorta(id) {
                 
                 // Si el onload no se dispara, forzar impresión
                 setTimeout(function() {
-                    if (iframe.contentWindow) {
+                    if (!printed && iframe.contentWindow) {
+                        printed = true;
                         iframe.contentWindow.focus();
                         iframe.contentWindow.print();
                         setTimeout(function() {
@@ -891,8 +895,15 @@ function generarHTMLVersionCorta(d) {
       .firma-lbl2 { width: 20%; font-size: 9.5pt; }
       .firma-val2 { width: 30%; }
 
-      .page-break { page-break-before: always; }
+      .page-break { page-break-before: auto; break-before: auto; }
       .footer { text-align: right; font-size: 8pt; color: #444; margin-top: 12px; }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .page-break { page-break-before: auto !important; break-before: auto !important; }
+      }
     </style>`;
 
     return `<!DOCTYPE html>
@@ -1132,6 +1143,9 @@ function generarVersionExtensa(id) {
             setTimeout(ajustarAlturaPreviewExtenso, 250);
             
             $('#btnImprimirPDFExtenso').click(function() {
+                if (previewFrame.contentWindow && typeof previewFrame.contentWindow.actualizarPaginacionReporte === 'function') {
+                    previewFrame.contentWindow.actualizarPaginacionReporte();
+                }
                 previewFrame.contentWindow.focus();
                 previewFrame.contentWindow.print();
             });
@@ -1664,9 +1678,16 @@ function generarHTMLVersionCorta(d) {
       .firma-val  { width: 28%; }
       .firma-lbl2 { width: 20%; font-size: 9.5pt; }
       .firma-val2 { width: 30%; }
-      .page-break { page-break-before: always; }
+      .page-break { page-break-before: auto; break-before: auto; }
       .footer { text-align: right; font-size: 8pt; color: #444; margin-top: 12px; }
       .empty-cell { color: #777; font-style: italic; text-align: center; }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .page-break { page-break-before: auto !important; break-before: auto !important; }
+      }
     </style>`;
 
     return `<!DOCTYPE html>
@@ -1983,7 +2004,7 @@ function generarHTMLVersionExtensa(d) {
 
     var CSS = `<style>
         @page { size: letter; margin: 0.13in 0.24in 0.38in 0.24in; }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         html, body { margin: 0; padding: 0; background: #fff; color: #000; }
         body { font-family: "Arial Narrow", Arial, Helvetica, sans-serif; font-size: 8pt; font-stretch: condensed; }
         .report-page { width: 8.02in; margin: 0 auto; background: #fff; }
@@ -2037,16 +2058,12 @@ function generarHTMLVersionExtensa(d) {
         .firma-val2 { width: 28%; }
         .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         @media print {
-            .page-number,
-            .page-total { font-size: 0; }
-            .page-number::after {
-                content: counter(page);
-                font-size: 8pt;
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            .page-total::after {
-                content: counter(pages);
-                font-size: 8pt;
-            }
+            html, body { background: #fff !important; }
+            .report-page { width: auto; margin: 0; }
         }
         .center { text-align: center; }
         .flow-block { break-inside: avoid; page-break-inside: avoid; }
@@ -2102,6 +2119,7 @@ function generarHTMLVersionExtensa(d) {
                 for (var i = 0; i < totals.length; i++) totals[i].textContent = total;
                 for (var j = 0; j < numbers.length; j++) numbers[j].textContent = j + 1;
             }
+            window.actualizarPaginacionReporte = actualizarPaginacion;
             window.addEventListener('load', actualizarPaginacion);
             setTimeout(actualizarPaginacion, 100);
             setTimeout(actualizarPaginacion, 500);
