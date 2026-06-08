@@ -637,6 +637,25 @@ function generarVersionCorta(id) {
     
     // Generar el HTML para el PDF
     var pdfHtml = generarHTMLVersionCorta(descriptor);
+
+    function prepararHTMLImpresionCorta(html) {
+        var printStyles = '<style id="print-version-corta-fix">' +
+            '@page{size:letter;margin:0.25in;}' +
+            '@media print{' +
+            'html,body{margin:0!important;background:#fff!important;}' +
+            'body{padding:0!important;width:auto!important;max-width:none!important;}' +
+            '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}' +
+            'table{break-inside:auto!important;page-break-inside:auto!important;}' +
+            'tr,td,th{break-inside:avoid!important;page-break-inside:avoid!important;}' +
+            '.page-break{break-before:auto!important;page-break-before:auto!important;}' +
+            '.hdr,.t,.firma-t{width:100%!important;}' +
+            '}' +
+            '</style>';
+        if (html.indexOf('</head>') !== -1) {
+            return html.replace('</head>', printStyles + '</head>');
+        }
+        return printStyles + html;
+    }
     
     // Mostrar modal con previsualización
     Swal.fire({
@@ -665,7 +684,7 @@ function generarVersionCorta(id) {
                 // Escribir el contenido en el iframe
                 var iframeDoc = iframe.contentWindow.document;
                 iframeDoc.open();
-                iframeDoc.write(pdfHtml);
+                iframeDoc.write(prepararHTMLImpresionCorta(pdfHtml));
                 iframeDoc.close();
                 
                 // Esperar a que cargue y luego imprimir
