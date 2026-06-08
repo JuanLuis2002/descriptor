@@ -605,13 +605,14 @@
             ? (puestosPorArea[area] || [])
             : (puestosPorArea[currentUser.area] || puestosPorArea['Subgerencia TI']);
         var $puesto = $('select[name="puesto"]');
-        var valorPrevio = puestoActual || $puesto.val() || '';
+        var preservarPuesto = arguments.length > 0;
+        var valorPrevio = preservarPuesto ? (puestoActual || '') : '';
 
         $puesto.empty().append('<option value="">Seleccione...</option>');
         for (var i = 0; i < puestos.length; i++) {
             $puesto.append('<option value="' + puestos[i] + '">' + puestos[i] + '</option>');
         }
-        if (valorPrevio && puestos.indexOf(valorPrevio) === -1 && puedeCrearCualquierArea()) {
+        if (preservarPuesto && valorPrevio && puestos.indexOf(valorPrevio) === -1 && puedeCrearCualquierArea()) {
             $puesto.append('<option value="' + valorPrevio + '">' + valorPrevio + '</option>');
         }
         if (valorPrevio) $puesto.val(valorPrevio);
