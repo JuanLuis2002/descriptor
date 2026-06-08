@@ -887,7 +887,8 @@
     window.actualizarCompetenciasConductualesPorFormato = actualizarCompetenciasConductualesPorFormato;
 
     function actualizarRequerimientosPorPermiso() {
-        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true;
+        var esUsuarioTH = currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH';
+        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true || (esUsuarioTH && window._readOnlyDescriptor !== true);
         $('#requerimientosContainer').find('input, select, textarea').prop('disabled', !puedeEditarAportesTH);
         $('#addRequerimientoOrganizacional, #requerimientosContainer .th-remove-btn').toggle(puedeEditarAportesTH);
     }
@@ -1046,8 +1047,9 @@
 
     function actualizarResponsabilidadesPorFormato() {
         var esExtensa = getTipoFormato() === 'EXTENSA';
-        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true;
-        var puedeVerAportesTH = puedeEditarAportesTH || window._afterDescriptorSaveModule === 'TH' || window._afterDescriptorSaveModule === 'JTH';
+        var esUsuarioTH = currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH';
+        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true || (esUsuarioTH && window._readOnlyDescriptor !== true);
+        var puedeVerAportesTH = puedeEditarAportesTH || esUsuarioTH || window._afterDescriptorSaveModule === 'TH' || window._afterDescriptorSaveModule === 'JTH';
         $('.responsabilidad-extensa-only').toggle(esExtensa);
         $('.responsabilidad-corta-help').toggle(!esExtensa);
         $('#respPersonalLabel').text(esExtensa ? 'De personal' : 'Supervisa a');
@@ -1423,8 +1425,10 @@
             });
         });
 
+        var esUsuarioTH = currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH';
+        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true || (esUsuarioTH && window._readOnlyDescriptor !== true);
         var requerimientosOrganizacionales = [];
-        if (window._descriptorWorkflowEditor === true) {
+        if (puedeEditarAportesTH) {
             $('#requerimientosTableBody tr').each(function() {
                 var req = $(this).find('input[name="requerimientoOrganizacional[]"]').val();
                 if (req && req.trim()) requerimientosOrganizacionales.push(req.trim());
@@ -1485,7 +1489,7 @@
                 documentos: tipoFormato === 'EXTENSA' ? $('textarea[name="respDocumentos"]').val() : '',
                 tomaDecisiones: tipoFormato === 'EXTENSA' ? $('textarea[name="tomaDecisiones"]').val() : '',
                 personal: $('textarea[name="respPersonal"]').val(),
-                impactoEconomico: window._descriptorWorkflowEditor === true ? $('select[name="impactoEconomico"]').val() : ''
+                impactoEconomico: puedeEditarAportesTH ? $('select[name="impactoEconomico"]').val() : ''
             },
             entrenamiento: {
                 personalCargo: $('input[name="personalCargo"]').val(),
@@ -1507,7 +1511,7 @@
                 riesgos: riesgosLista
             };
         }
-        if (window._descriptorWorkflowEditor === true || !window._isEditing) {
+        if (puedeEditarAportesTH || !window._isEditing) {
             formData.requerimientosOrganizacionales = requerimientosOrganizacionales;
         }
         
@@ -1524,10 +1528,10 @@
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
                 formData.creador = existingDescriptor.creador || formData.creador;
-                if (window._descriptorWorkflowEditor !== true && existingDescriptor.responsabilidades) {
+                if (!puedeEditarAportesTH && existingDescriptor.responsabilidades) {
                     formData.responsabilidades.impactoEconomico = existingDescriptor.responsabilidades.impactoEconomico || '';
                 }
-                if (window._descriptorWorkflowEditor !== true) {
+                if (!puedeEditarAportesTH) {
                     formData.requerimientosOrganizacionales = existingDescriptor.requerimientosOrganizacionales || formData.requerimientosOrganizacionales || requerimientosOrganizacionalesDefault.slice();
                 }
                 
