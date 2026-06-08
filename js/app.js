@@ -795,7 +795,8 @@ function generarHTMLVersionCorta(d) {
         var indicador  = (d.kpis && d.kpis[i]) ? (d.kpis[i].indicador  || '') : '';
         var frecuencia = (d.kpis && d.kpis[i]) ? (d.kpis[i].frecuencia || '') : '';
         var meta       = (d.kpis && d.kpis[i]) ? (d.kpis[i].meta       || '') : '';
-        var freqMeta   = (frecuencia && meta) ? frecuencia + ' / ' + meta : (frecuencia || meta);
+        var metaPorcentaje = meta && String(meta).indexOf('%') === -1 ? meta + '%' : meta;
+        var freqMeta   = (frecuencia && metaPorcentaje) ? frecuencia + ' / ' + metaPorcentaje : (frecuencia || metaPorcentaje);
         kpisRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;height:18px;text-align:left;">' + indicador + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;">'             + freqMeta  + '</td>'
@@ -1197,9 +1198,10 @@ function generarHTMLVersionExtensa(d) {
             '<tr bgcolor="#F0F0F0"><th width="50%">Indicador</th><th width="50%">Frecuencia / Meta</th></tr>';
         for (var i = 0; i < d.kpis.length; i++) {
             var freqMeta = '';
-            if (d.kpis[i].frecuencia && d.kpis[i].meta) freqMeta = d.kpis[i].frecuencia + ' / ' + d.kpis[i].meta;
+            var metaKpi = d.kpis[i].meta && String(d.kpis[i].meta).indexOf('%') === -1 ? d.kpis[i].meta + '%' : (d.kpis[i].meta || '');
+            if (d.kpis[i].frecuencia && metaKpi) freqMeta = d.kpis[i].frecuencia + ' / ' + metaKpi;
             else if (d.kpis[i].frecuencia) freqMeta = d.kpis[i].frecuencia;
-            else freqMeta = d.kpis[i].meta || '';
+            else freqMeta = metaKpi;
             kpisHtml += '<tr><td>' + (d.kpis[i].indicador || '') + '</td><td>' + freqMeta + '</td></tr>';
         }
         kpisHtml += '</table>';
@@ -1555,7 +1557,8 @@ function generarHTMLVersionCorta(d) {
         var indicador  = text(kpis[i].indicador);
         var frecuencia = text(kpis[i].frecuencia);
         var meta       = text(kpis[i].meta);
-        var freqMeta   = (frecuencia && meta) ? frecuencia + ' / ' + meta : (frecuencia || meta);
+        var metaPorcentaje = meta && String(meta).indexOf('%') === -1 ? meta + '%' : meta;
+        var freqMeta   = (frecuencia && metaPorcentaje) ? frecuencia + ' / ' + metaPorcentaje : (frecuencia || metaPorcentaje);
         kpisRows += '<tr>'
             + '<td style="border:1px solid #000;padding:5px 6px;height:18px;text-align:left;">' + indicador + '</td>'
             + '<td style="border:1px solid #000;padding:5px 6px;text-align:center;">'             + freqMeta  + '</td>'
