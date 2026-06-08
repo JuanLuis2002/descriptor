@@ -200,7 +200,7 @@ var DescriptorController = {
                 addRelacionInternaRowWithData(descriptor.relacionesLaborales.internas[i].puesto, descriptor.relacionesLaborales.internas[i].razon);
             }
         } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-            addRelacionInternaRow();
+            for (var ri = 1; ri <= 2; ri++) addRelacionInternaRow();
         } else if (!this.readOnlyMode) {
             for(var i = 1; i <= 2; i++) addRelacionInternaRow();
         }
@@ -211,7 +211,7 @@ var DescriptorController = {
                 addRelacionExternaRowWithData(descriptor.relacionesLaborales.externas[i].entidad, descriptor.relacionesLaborales.externas[i].razon);
             }
         } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-            addRelacionExternaRow();
+            for (var re = 1; re <= 2; re++) addRelacionExternaRow();
         } else if (!this.readOnlyMode) {
             for(var i = 1; i <= 2; i++) addRelacionExternaRow();
         }
@@ -233,14 +233,14 @@ var DescriptorController = {
             if (riesgos.length > 0) {
                 for (var z = 0; z < riesgos.length; z++) addRiesgoRowWithData(riesgos[z]);
             } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-                addRiesgoRow();
+                for (var rt = 1; rt <= 2; rt++) addRiesgoRow();
             } else if (!this.readOnlyMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-                addRiesgoRow();
+                for (var rn = 1; rn <= 2; rn++) addRiesgoRow();
             }
         } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-            addRiesgoRow();
+            for (var rr = 1; rr <= 2; rr++) addRiesgoRow();
         } else if (!this.readOnlyMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
-            addRiesgoRow();
+            for (var rd = 1; rd <= 2; rd++) addRiesgoRow();
         }
         
         // Responsabilidades
