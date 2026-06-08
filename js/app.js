@@ -448,10 +448,14 @@ function cargarFirmasCT() {
 function firmarDescriptorJI(id) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) return;
+    if (descriptor.estado !== 'FIRMADO_CT' || !descriptor.firmaCT || descriptor.firmaJI) {
+        Swal.fire('Fuera de turno', 'El jefe inmediato solo puede aprobar después de la aprobación del colaborador/titular.', 'info');
+        return;
+    }
     
     Swal.fire({
         title: '¿Aprobar descriptor?',
-        html: '<div class="text-start"><p>Se registrará la aprobación simple del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+        html: '<div class="text-start"><p>Se registrará la aprobación del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Aprobar',

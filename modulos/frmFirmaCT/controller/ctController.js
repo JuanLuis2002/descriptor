@@ -61,9 +61,12 @@ var CTController = {
             var formatoBadge = esExtensa
                 ? '<span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="fas fa-file-lines me-1"></i>Extensa</span>'
                 : '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle"><i class="fas fa-file-alt me-1"></i>Corta</span>';
+            var puedeAprobar = !tieneFirma && d.estado === 'FIRMA_JTH';
             var accionFirma = tieneFirma
                 ? '<li><button class="dropdown-item" onclick="CTController.verFirma(' + d.id + ')"><i class="fas fa-check-circle me-2 text-success"></i>Ver aprobación</button></li>'
-                : '<li><button class="dropdown-item" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-check me-2 text-warning"></i>Aprobar documento</button></li>';
+                : (puedeAprobar
+                    ? '<li><button class="dropdown-item" onclick="CTController.firmar(' + d.id + ')"><i class="fas fa-check me-2 text-warning"></i>Aprobar documento</button></li>'
+                    : '<li><span class="dropdown-item text-muted"><i class="fas fa-clock me-2"></i>Fuera de turno</span></li>');
             
             html += '<tr>' +
                 '<td><div class="dropdown workflow-actions"><button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-display="static"><i class="fas fa-ellipsis-v"></i></button>' +
@@ -199,7 +202,7 @@ var CTController = {
         var firmaJTH = descriptor.firmaJTH || firmasGuardadas['jth_' + id];
         var firmaCT = descriptor.firmaCT || firmasGuardadas['ct_' + id];
         var firmaJI = descriptor.firmaJI || firmasGuardadas['ji_' + id];
-        var puedeFirmar = !firmaCT && ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(descriptor.estado) !== -1;
+        var puedeFirmar = !firmaCT && descriptor.estado === 'FIRMA_JTH';
 
         function firmaItem(nombre, firmada, fecha) {
             return '<div class="firma-status-item">' +
@@ -228,9 +231,9 @@ var CTController = {
             '</div>' +
             '</div>' +
             '<div class="firma-status-grid">' +
-            firmaItem('Jefe de Talento Humano', !!firmaJTH, descriptor.fechaFirmaJTH) +
             firmaItem('Colaborador / Titular', !!firmaCT, descriptor.fechaFirmaCT) +
             firmaItem('Jefe Inmediato', !!firmaJI, descriptor.fechaFirmaJI) +
+            firmaItem('Jefe de Talento Humano', !!firmaJTH, descriptor.fechaFirmaJTH) +
             '</div>' +
             '</div>';
 
@@ -306,10 +309,14 @@ var CTController = {
     firmar: function(id) {
         var descriptor = CTService.getById(id);
         if (!descriptor) return;
+        if (descriptor.estado !== 'FIRMA_JTH' || descriptor.firmaCT || CTService.getFirma(id)) {
+            Swal.fire('Fuera de turno', 'La aprobación del colaborador solo está disponible al inicio del flujo de firmas.', 'info');
+            return;
+        }
 
         Swal.fire({
             title: '¿Aprobar descriptor?',
-            html: '<div class="text-start"><p>Se registrará la aprobación simple del colaborador/titular.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            html: '<div class="text-start"><p>Se registrará la aprobación del colaborador/titular.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-check"></i> Aprobar',

@@ -200,7 +200,15 @@ var DescriptorService = {
     },
     
     getEstadoDespuesDeFirma: function(descriptor) {
-        return this.tieneTodasLasFirmas(descriptor) ? 'ACTIVO' : 'FIRMA_JTH';
+        if (!descriptor) return 'FIRMA_JTH';
+        var firmaCT = descriptor.firmaCT || this.getFirmaGuardada('ct', descriptor.id);
+        var firmaJI = descriptor.firmaJI || this.getFirmaGuardada('ji', descriptor.id);
+        var firmaJTH = descriptor.firmaJTH || this.getFirmaGuardada('jth', descriptor.id);
+
+        if (firmaCT && firmaJI && firmaJTH) return 'ACTIVO';
+        if (firmaCT && firmaJI) return 'FIRMADO_JI';
+        if (firmaCT) return 'FIRMADO_CT';
+        return 'FIRMA_JTH';
     },
     
     // Obtener auditoría completa

@@ -223,10 +223,10 @@ window.initDescriptorList = function() {
         if (d.estado === 'APROBADO_POR_JF') {
             html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
         }
-        var estaEnFirmas = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(d.estado) !== -1;
+        var estaEnFirmas = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(d.estado) !== -1;
         if (estaEnFirmas) {
             html += '<li><button class="dropdown-item btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell me-2 text-primary"></i>Notificar firmantes</button></li>';
-            if (!d.firmaJI) {
+            if (d.estado === 'FIRMADO_CT' && d.firmaCT && !d.firmaJI) {
                 html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-check me-2 text-primary"></i>Aprobar documento</button></li>';
             }
         }
@@ -440,9 +440,9 @@ window.initDescriptorList = function() {
         html += '<hr><h6 class="border-bottom pb-2">Resumen de Aprobaciones</h6>';
         
         var firmas = [
-            { nombre: 'Jefe de Talento Humano', estado: descriptor.firmaJTH ? 'Aprobado' : 'Pendiente' },
             { nombre: 'Colaborador/Titular', estado: descriptor.firmaCT ? 'Aprobado' : 'Pendiente' },
-            { nombre: 'Jefe Inmediato', estado: descriptor.firmaJI ? 'Aprobado' : 'Pendiente' }
+            { nombre: 'Jefe Inmediato', estado: descriptor.firmaJI ? 'Aprobado' : 'Pendiente' },
+            { nombre: 'Jefe de Talento Humano', estado: descriptor.firmaJTH ? 'Aprobado' : 'Pendiente' }
         ];
         
         for (var f = 0; f < firmas.length; f++) {
@@ -587,11 +587,12 @@ window.initDescriptorList = function() {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
         
-        // Mantener el descriptor disponible para todos los firmantes.
+        // Notificar sin retroceder el flujo secuencial de firmas.
         var titulo = descriptor.titular || 'Ing. Juan Pérez';
+        var estadoActual = descriptor.estado || 'FIRMA_JTH';
         
         DescriptorService.update(id, { 
-            estado: 'FIRMA_JTH',
+            estado: estadoActual,
             titular: titulo
         });
         
@@ -600,12 +601,12 @@ window.initDescriptorList = function() {
             accion: 'NOTIFICACIÓN A FIRMANTES',
             usuario: currentUser.nombre,
             rol: currentUser.rolNombre,
-            estado: 'FIRMA_JTH'
+            estado: estadoActual
         });
         
         Swal.fire({ 
             title: 'Notificaciones Enviadas', 
-            text: 'Se ha notificado al Jefe de Talento Humano, al Jefe Inmediato y al Colaborador/Titular (' + titulo + ') para que registren su aprobación.\n\nEl descriptor ahora está en estado "Pendiente de aprobaciones".',
+            text: 'Se ha notificado el flujo de aprobación secuencial: primero Colaborador/Titular (' + titulo + '), luego Jefe Inmediato y por último Jefe de Talento Humano.\n\nEl descriptor conserva su avance actual.',
             icon: 'success' 
         });
         

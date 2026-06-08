@@ -3,10 +3,9 @@ var CTService = {
     getPendientesFirma: function(nombreTitular) {
         var todos = DescriptorService.getAll();
         var resultado = [];
-        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
         for (var i = 0; i < todos.length; i++) {
             var d = todos[i];
-            if (estadosFirma.indexOf(d.estado) !== -1 && !d.firmaCT && !this.getFirma(d.id)) {
+            if (d.estado === 'FIRMA_JTH' && !d.firmaCT && !this.getFirma(d.id)) {
                 resultado.push(d);
             }
         }

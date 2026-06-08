@@ -62,10 +62,13 @@ var JTHController = {
             var formatoBadge = esExtensa
                 ? '<span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="fas fa-file-lines me-1"></i>Extensa</span>'
                 : '<span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle"><i class="fas fa-file-alt me-1"></i>Corta</span>';
+            var puedeAprobar = !tieneFirma && d.estado === 'FIRMADO_JI';
             var btnText = tieneFirma ? 'Ver Aprobación' : 'Aprobar Documento';
             var accionFirma = tieneFirma
                 ? '<li><button class="dropdown-item" onclick="JTHController.verFirma(' + d.id + ')"><i class="fas fa-check-circle me-2 text-success"></i>' + btnText + '</button></li>'
-                : '<li><button class="dropdown-item" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-check me-2 text-warning"></i>' + btnText + '</button></li>';
+                : (puedeAprobar
+                    ? '<li><button class="dropdown-item" onclick="JTHController.firmar(' + d.id + ')"><i class="fas fa-check me-2 text-warning"></i>' + btnText + '</button></li>'
+                    : '<li><span class="dropdown-item text-muted"><i class="fas fa-clock me-2"></i>Fuera de turno</span></li>');
             var reportes = '';
             if (d.estado === 'ACTIVO') {
                 reportes = (d.tipoFormato || 'CORTA') === 'EXTENSA'
@@ -181,7 +184,7 @@ var JTHController = {
         this.navigationToken = token;
         var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
         var firmaJTH = descriptor.firmaJTH || firmasGuardadas['jth_' + id];
-        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
+        var estadosFirma = ['FIRMADO_JI'];
         var puedeEditarDescriptor = estadosFirma.indexOf(descriptor.estado) !== -1 && !firmaJTH;
         DescriptorController.init(this.currentUser, id, {
             readOnly: !puedeEditarDescriptor,
@@ -212,7 +215,7 @@ var JTHController = {
         var firmaJTH = descriptor.firmaJTH || firmasGuardadas['jth_' + id];
         var firmaCT = descriptor.firmaCT || firmasGuardadas['ct_' + id];
         var firmaJI = descriptor.firmaJI || firmasGuardadas['ji_' + id];
-        var puedeFirmar = !firmaJTH && ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(descriptor.estado) !== -1;
+        var puedeFirmar = !firmaJTH && descriptor.estado === 'FIRMADO_JI';
 
         function firmaItem(nombre, firmada, fecha) {
             return '<div class="firma-status-item">' +
@@ -241,9 +244,9 @@ var JTHController = {
             '</div>' +
             '</div>' +
             '<div class="firma-status-grid">' +
-            firmaItem('Jefe de Talento Humano', !!firmaJTH, descriptor.fechaFirmaJTH) +
             firmaItem('Colaborador / Titular', !!firmaCT, descriptor.fechaFirmaCT) +
             firmaItem('Jefe Inmediato', !!firmaJI, descriptor.fechaFirmaJI) +
+            firmaItem('Jefe de Talento Humano', !!firmaJTH, descriptor.fechaFirmaJTH) +
             '</div>' +
             '</div>';
 
@@ -319,10 +322,14 @@ var JTHController = {
     firmar: function(id) {
         var descriptor = JTHService.getById(id);
         if (!descriptor) return;
+        if (descriptor.estado !== 'FIRMADO_JI' || descriptor.firmaJTH || JTHService.getFirma(id)) {
+            Swal.fire('Fuera de turno', 'El Jefe de Talento Humano solo puede aprobar después del colaborador y del jefe inmediato.', 'info');
+            return;
+        }
 
         Swal.fire({
             title: '¿Aprobar descriptor?',
-            html: '<div class="text-start"><p>Se registrará la aprobación simple del Jefe de Talento Humano.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            html: '<div class="text-start"><p>Se registrará la aprobación del Jefe de Talento Humano.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-check"></i> Aprobar',

@@ -3,9 +3,8 @@ var JTHService = {
     getPendientesFirma: function() {
         var todos = DescriptorService.getAll();
         var resultado = [];
-        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
         for (var i = 0; i < todos.length; i++) {
-            if (estadosFirma.indexOf(todos[i].estado) !== -1 && !todos[i].firmaJTH && !this.getFirma(todos[i].id)) {
+            if (todos[i].estado === 'FIRMADO_JI' && !todos[i].firmaJTH && !this.getFirma(todos[i].id)) {
                 resultado.push(todos[i]);
             }
         }
