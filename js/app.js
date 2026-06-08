@@ -909,6 +909,7 @@ function generarHTMLVersionCorta(d) {
 
       /* ── Firmas ── */
       .firma-t td { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
+      .firma-title { font-weight: bold; border: none !important; padding: 4px 0 !important; color: var(--formato-azul); }
       .firma-lbl  { width: 22%; font-size: 9.5pt; }
       .firma-val  { width: 28%; }
       .firma-lbl2 { width: 20%; font-size: 9.5pt; }
@@ -1674,25 +1675,31 @@ function generarHTMLVersionCorta(d) {
 
     var CSS = `
     <style>
+      :root {
+        --formato-azul: #002060;
+        --formato-azul-claro: #eaf2f8;
+        --formato-borde: #1f4e79;
+      }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; padding: 20px 25px; }
       table { border-collapse: collapse; width: 100%; }
       td, th { font-size: 10pt; }
-      .hdr td { border: 1.5px solid #000; padding: 5px 8px; vertical-align: middle; }
+      .hdr td { border: 1.5px solid var(--formato-azul); padding: 5px 8px; vertical-align: middle; }
       .hdr-logo  { width: 16%; text-align: center; }
-      .hdr-title { width: 52%; text-align: center; font-weight: bold; font-size: 11pt; border-left: none !important; border-right: none !important; }
+      .hdr-title { width: 52%; text-align: center; font-weight: bold; font-size: 11pt; border-left: none !important; border-right: none !important; color: var(--formato-azul); }
       .hdr-meta  { width: 32%; font-size: 9pt; }
-      .sec { font-weight: bold; border: 1px solid #000; padding: 4px 7px; background: #fff; }
+      .sec { font-weight: bold; border: 1px solid var(--formato-borde); padding: 4px 7px; background: var(--formato-azul-claro); color: var(--formato-azul); }
       .t td  { border: 1px solid #000; padding: 4px 7px; vertical-align: top; text-align: left; }
-      .lbl   { font-weight: bold; text-align: left; }
+      .lbl   { font-weight: bold; text-align: left; color: var(--formato-azul); }
       .t td.sec,
       .t .sec { text-align: center; }
       .kpi-table th:nth-child(2),
       .kpi-table td:nth-child(2) { text-align: center; }
       .mt6   { margin-top: 6px; }
       .mt10  { margin-top: 10px; }
-      .col-hdr th { border: 1px solid #000; padding: 4px 7px; font-weight: bold; background: #fff; text-align: left; }
+      .col-hdr th { border: 1px solid var(--formato-borde); padding: 4px 7px; font-weight: bold; background: var(--formato-azul-claro); color: var(--formato-azul); text-align: left; }
       .firma-t td { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
+      .firma-title { font-weight: bold; border: none !important; padding: 4px 0 !important; color: var(--formato-azul); }
       .firma-lbl  { width: 22%; font-size: 9.5pt; }
       .firma-val  { width: 28%; }
       .firma-lbl2 { width: 20%; font-size: 9.5pt; }
@@ -1751,9 +1758,9 @@ function generarHTMLVersionCorta(d) {
 <div class="page-break">
 <table class="t"><tr><td colspan="2" class="sec">EXPERIENCIA</td></tr><tr class="col-hdr"><th>Requisito</th><th style="width:22%;">Requerido</th></tr>${expRows}</table>
 <table class="t mt10"><tr><td colspan="3" class="sec">COMPETENCIAS TÉCNICAS</td></tr><tr class="col-hdr"><th style="width:12%;">Código</th><th>Competencias Técnicas Requeridas</th><th style="width:22%;">Nivel de Dominio</th></tr>${compTechRows}</table>
-<table class="t mt10"><tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>${compCondRows}</table>
+<table class="t mt10"><tr><td colspan="2" class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
-  <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
+  <tr><td colspan="4" class="firma-title">FIRMAS</td></tr>
   <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
   <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${jefeInmediatoNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
   <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
