@@ -522,12 +522,14 @@ function addCompetenciaConductualRow() {
     ensureCompetenciasConductualesTable();
     $('#competenciasConductualesTableBody').append(buildCompetenciaConductualTableRow('', '', 'SI'));
     renumerarCompetenciasConductualesTable();
+    if (typeof actualizarCompetenciasConductualesPorFormato === 'function') actualizarCompetenciasConductualesPorFormato();
 }
 
 function addCompetenciaConductualRowWithData(nombre, descripcion, aplicabilidad) {
     ensureCompetenciasConductualesTable();
     $('#competenciasConductualesTableBody').append(buildCompetenciaConductualTableRow(nombre, descripcion, aplicabilidad));
     renumerarCompetenciasConductualesTable();
+    if (typeof actualizarCompetenciasConductualesPorFormato === 'function') actualizarCompetenciasConductualesPorFormato();
 }
 
 function ensureCompetenciasTecnicasTable() {
@@ -553,15 +555,15 @@ function renumerarCompetenciasTecnicasTable() {
 
 function ensureCompetenciasConductualesTable() {
     if ($('#competenciasConductualesTableBody').length > 0) return;
-    $('#competenciasConductualesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Competencia conductual</th><th>Descripción</th><th style="width:170px;">Aplicabilidad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="competenciasConductualesTableBody"></tbody></table></div>');
+    $('#competenciasConductualesContainer').html('<div class="table-responsive"><table class="table table-bordered funciones-table mb-2"><thead><tr><th style="width:80px;">Código</th><th>Competencia conductual</th><th class="comp-cond-extra">Descripción</th><th class="comp-cond-extra" style="width:170px;">Aplicabilidad</th><th style="width:54px;" class="text-center">Acción</th></tr></thead><tbody id="competenciasConductualesTableBody"></tbody></table></div>');
 }
 
 function buildCompetenciaConductualTableRow(nombre, descripcion, aplicabilidad) {
     return '<tr class="dynamic-row competencia-conductual-row">' +
         '<td class="funcion-codigo"><span class="comp-cond-codigo-text"></span></td>' +
         '<td><input type="text" class="form-control" name="compCondNombre[]" placeholder="Competencia conductual" value="' + (nombre || '').replace(/"/g, '&quot;') + '"></td>' +
-        '<td><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción" value="' + (descripcion || '').replace(/"/g, '&quot;') + '"></td>' +
-        '<td><select class="form-select" name="compCondAplicabilidad[]"><option value="SI" ' + (aplicabilidad === 'SI' ? 'selected' : '') + '>Requerida</option><option value="NO" ' + (aplicabilidad === 'NO' ? 'selected' : '') + '>No aplica</option><option value="DESEABLE" ' + (aplicabilidad === 'DESEABLE' ? 'selected' : '') + '>Deseable</option></select></td>' +
+        '<td class="comp-cond-extra"><input type="text" class="form-control" name="compCondDescripcion[]" placeholder="Descripción" value="' + (descripcion || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td class="comp-cond-extra"><select class="form-select" name="compCondAplicabilidad[]"><option value="SI" ' + (aplicabilidad === 'SI' ? 'selected' : '') + '>Requerida</option><option value="NO" ' + (aplicabilidad === 'NO' ? 'selected' : '') + '>No aplica</option><option value="DESEABLE" ' + (aplicabilidad === 'DESEABLE' ? 'selected' : '') + '>Deseable</option></select></td>' +
         '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarCompetenciasConductualesGlobal === \'function\') renumerarCompetenciasConductualesGlobal(); else renumerarCompetenciasConductualesTable();"><i class="fas fa-trash"></i></button></td>' +
         '</tr>';
 }

@@ -866,10 +866,8 @@ function generarHTMLVersionCorta(d) {
     var compCondRows = '';
     for (var i = 0; i < 3; i++) {
         var nomCond  = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].nombre      || '') : '';
-        var descCond = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].descripcion || '') : '';
         compCondRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;width:40%;height:22px;">' + nomCond  + '</td>'
-            + '<td style="border:1px solid #000;padding:5px 6px;">'                       + descCond + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;">' + nomCond  + '</td>'
             + '</tr>';
     }
 
@@ -1076,7 +1074,7 @@ function generarHTMLVersionCorta(d) {
 
 <!-- Competencias Conductuales -->
 <table class="t mt10">
-  <tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>
+  <tr><td style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>
   ${compCondRows}
 </td>
 
@@ -1640,16 +1638,14 @@ function generarHTMLVersionCorta(d) {
     if (!compTechRows) compTechRows = emptyRow(3);
 
     var compCondRows = '';
-    var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre', 'descripcion']);
+    var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre']);
     for (var i = 0; i < competenciasConductuales.length; i++) {
         var nomCond  = text(competenciasConductuales[i].nombre);
-        var descCond = text(competenciasConductuales[i].descripcion);
         compCondRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;width:40%;height:22px;">' + nomCond  + '</td>'
-            + '<td style="border:1px solid #000;padding:5px 6px;">' + descCond + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;">' + nomCond  + '</td>'
             + '</tr>';
     }
-    if (!compCondRows) compCondRows = emptyRow(2);
+    if (!compCondRows) compCondRows = emptyRow(1);
 
     var perfil = d.perfil || {};
     var responsabilidades = d.responsabilidades || {};
@@ -1758,7 +1754,7 @@ function generarHTMLVersionCorta(d) {
 <div class="page-break">
 <table class="t"><tr><td colspan="2" class="sec">EXPERIENCIA</td></tr><tr class="col-hdr"><th>Requisito</th><th style="width:22%;">Requerido</th></tr>${expRows}</table>
 <table class="t mt10"><tr><td colspan="3" class="sec">COMPETENCIAS TÉCNICAS</td></tr><tr class="col-hdr"><th style="width:12%;">Código</th><th>Competencias Técnicas Requeridas</th><th style="width:22%;">Nivel de Dominio</th></tr>${compTechRows}</table>
-<table class="t mt10"><tr><td colspan="2" class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
+<table class="t mt10"><tr><td class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" class="firma-title">FIRMAS</td></tr>
   <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
