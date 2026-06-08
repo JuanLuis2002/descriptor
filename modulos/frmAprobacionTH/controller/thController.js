@@ -273,7 +273,9 @@ var THController = {
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
-        var complementosHtml = '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>';
+        var complementosHtml = puedeGestionar
+            ? '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>'
+            : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor ya fue enviado a firmas. Solo puede consultarlo en modo lectura.</div>';
 
         var accionesHtml = puedeGestionar
             ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +

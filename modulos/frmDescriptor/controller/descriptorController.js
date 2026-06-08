@@ -18,7 +18,7 @@ var DescriptorController = {
         window._canEditThComplements = this.canEditThComplements;
         window._readOnlyDescriptor = this.readOnlyMode;
         window._allowDescriptorPartialSave = this.readOnlyMode && this.canEditThComplements;
-        window._descriptorWorkflowEditor = this.afterSaveModule === 'TH' || this.afterSaveModule === 'JTH';
+        window._descriptorWorkflowEditor = (this.afterSaveModule === 'TH' || this.afterSaveModule === 'JTH') && this.canEditThComplements;
         window._afterDescriptorSaveModule = this.afterSaveModule;
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
