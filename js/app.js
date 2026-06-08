@@ -864,11 +864,17 @@ function generarHTMLVersionCorta(d) {
 
     // ── Competencias Conductuales ─────────────────────────────────────────────
     var compCondRows = '';
-    for (var i = 0; i < 3; i++) {
-        var nomCond  = (d.competenciasConductuales && d.competenciasConductuales[i]) ? (d.competenciasConductuales[i].nombre      || '') : '';
+    var competenciasConductualesCorta = d.competenciasConductuales || [];
+    for (var i = 0; i < competenciasConductualesCorta.length; i += 2) {
+        var nomCondIzq = competenciasConductualesCorta[i] ? (competenciasConductualesCorta[i].nombre || '') : '';
+        var nomCondDer = competenciasConductualesCorta[i + 1] ? (competenciasConductualesCorta[i + 1].nombre || '') : '';
         compCondRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;">' + nomCond  + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">' + nomCondIzq + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">' + nomCondDer + '</td>'
             + '</tr>';
+    }
+    if (!compCondRows) {
+        compCondRows = '<tr><td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;"></td><td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;"></td></tr>';
     }
 
     var sexoDisplay = '';
@@ -1074,7 +1080,7 @@ function generarHTMLVersionCorta(d) {
 
 <!-- Competencias Conductuales -->
 <table class="t mt10">
-  <tr><td style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>
+  <tr><td colspan="2" style="text-align:center;border:1px solid #000;padding:4px 7px;font-weight:bold;">Competencias Conductuales</td></tr>
   ${compCondRows}
 </td>
 
@@ -1639,13 +1645,15 @@ function generarHTMLVersionCorta(d) {
 
     var compCondRows = '';
     var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre']);
-    for (var i = 0; i < competenciasConductuales.length; i++) {
-        var nomCond  = text(competenciasConductuales[i].nombre);
+    for (var i = 0; i < competenciasConductuales.length; i += 2) {
+        var nomCondIzq = text(competenciasConductuales[i] ? competenciasConductuales[i].nombre : '');
+        var nomCondDer = text(competenciasConductuales[i + 1] ? competenciasConductuales[i + 1].nombre : '');
         compCondRows += '<tr>'
-            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;">' + nomCond  + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">' + nomCondIzq + '</td>'
+            + '<td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">' + nomCondDer + '</td>'
             + '</tr>';
     }
-    if (!compCondRows) compCondRows = emptyRow(1);
+    if (!compCondRows) compCondRows = emptyRow(2);
 
     var perfil = d.perfil || {};
     var responsabilidades = d.responsabilidades || {};
@@ -1754,7 +1762,7 @@ function generarHTMLVersionCorta(d) {
 <div class="page-break">
 <table class="t"><tr><td colspan="2" class="sec">EXPERIENCIA</td></tr><tr class="col-hdr"><th>Requisito</th><th style="width:22%;">Requerido</th></tr>${expRows}</table>
 <table class="t mt10"><tr><td colspan="3" class="sec">COMPETENCIAS TÉCNICAS</td></tr><tr class="col-hdr"><th style="width:12%;">Código</th><th>Competencias Técnicas Requeridas</th><th style="width:22%;">Nivel de Dominio</th></tr>${compTechRows}</table>
-<table class="t mt10"><tr><td class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
+<table class="t mt10"><tr><td colspan="2" class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" class="firma-title">FIRMAS</td></tr>
   <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
