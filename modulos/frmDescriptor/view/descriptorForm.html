@@ -954,11 +954,12 @@
     function actualizarResponsabilidadesPorFormato() {
         var esExtensa = getTipoFormato() === 'EXTENSA';
         var puedeEditarAportesTH = window._descriptorWorkflowEditor === true;
+        var puedeVerAportesTH = puedeEditarAportesTH || window._afterDescriptorSaveModule === 'TH' || window._afterDescriptorSaveModule === 'JTH';
         $('.responsabilidad-extensa-only').toggle(esExtensa);
         $('.responsabilidad-corta-help').toggle(!esExtensa);
         $('#respPersonalLabel').text(esExtensa ? 'De personal' : 'Supervisa a');
         $('textarea[name="respPersonal"]').attr('placeholder', esExtensa ? '' : 'Indique el puesto o personal que supervisa');
-        $('select[name="impactoEconomico"]').closest('.col-md-6').toggle(puedeEditarAportesTH);
+        $('select[name="impactoEconomico"]').closest('.col-md-6').toggle(puedeVerAportesTH);
         $('select[name="impactoEconomico"]').prop('disabled', !puedeEditarAportesTH);
     }
     
