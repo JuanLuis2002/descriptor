@@ -244,11 +244,13 @@ var THController = {
         $('#pageTitle').text('Revisión Técnica TH');
         var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
         this.navigationToken = token;
+        var puedeEditarDescriptor = descriptor.estado === 'ENVIADO_TH';
         DescriptorController.init(this.currentUser, id, {
             readOnly: true,
             thReview: true,
-            canEditThComplements: descriptor.estado === 'ENVIADO_TH',
-            navigationToken: token
+            canEditThComplements: puedeEditarDescriptor,
+            navigationToken: token,
+            afterSaveModule: 'TH'
         });
 
         var self = this;
@@ -271,14 +273,11 @@ var THController = {
         var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
-        var complementosHtml = esExtensa
-            ? '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Complete los apartados <strong>Relaciones</strong>, <strong>Requerimientos</strong> y <strong>Riesgos</strong> desde las pestañas del descriptor.</div>'
-            : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor es de versión corta, por lo que no requiere complementos técnicos de TH.</div>';
+        var complementosHtml = '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede completar <strong>Requerimientos Organizacionales</strong> y <strong>Impacto Económico</strong>. El resto del descriptor queda a cargo del jefe inmediato.</div>';
 
         var accionesHtml = puedeGestionar
             ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
-                (esExtensa ? '<button type="button" class="btn btn-primary" onclick="THController.guardarComplementosDesdeFormulario(' + id + ')"><i class="fas fa-save me-1"></i> Guardar complementos</button>' : '') +
                 '<button type="button" class="btn btn-warning" onclick="THController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
                 '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Revisar y enviar a firmas</button>' +
               '</div>'
@@ -308,31 +307,13 @@ var THController = {
 
     guardarComplementosDesdeFormulario: function(id, silent) {
         var descriptor = THService.getById(id);
-        if (!this.validarComplementoExtenso(descriptor)) return;
+        if (!descriptor) return false;
         if (descriptor.estado !== 'ENVIADO_TH') {
             if (!silent) {
-                Swal.fire('Solo lectura', 'Los complementos técnicos solo pueden modificarse mientras el descriptor está pendiente de revisión TH.', 'info');
+                Swal.fire('Solo lectura', 'Los aportes de TH solo pueden modificarse mientras el descriptor está pendiente de revisión TH.', 'info');
             }
             return false;
         }
-
-        var internas = [];
-        $('#relacionesInternasTableBody tr').each(function() {
-            var puesto = $(this).find('input[name="relInternaPuesto[]"]').val();
-            var razon = $(this).find('input[name="relInternaRazon[]"]').val();
-            if ((puesto && puesto.trim()) || (razon && razon.trim())) {
-                internas.push({ puesto: (puesto || '').trim(), razon: (razon || '').trim() });
-            }
-        });
-
-        var externas = [];
-        $('#relacionesExternasTableBody tr').each(function() {
-            var entidad = $(this).find('input[name="relExternaEntidad[]"]').val();
-            var razon = $(this).find('input[name="relExternaRazon[]"]').val();
-            if ((entidad && entidad.trim()) || (razon && razon.trim())) {
-                externas.push({ entidad: (entidad || '').trim(), razon: (razon || '').trim() });
-            }
-        });
 
         var requerimientos = [];
         $('#requerimientosTableBody tr').each(function() {
@@ -340,31 +321,21 @@ var THController = {
             if (req && req.trim()) requerimientos.push(req.trim());
         });
 
-        var riesgosLista = [];
-        $('#riesgosTableBody tr').each(function() {
-            var riesgo = $(this).find('input[name="riesgoProfesional[]"]').val();
-            if (riesgo && riesgo.trim()) riesgosLista.push(riesgo.trim());
-        });
-
-        descriptor.relacionesLaborales = { internas: internas, externas: externas };
         descriptor.requerimientosOrganizacionales = requerimientos;
-        descriptor.riesgosFisicos = {
-            esfuerzo: ($('textarea[name="riesgoEsfuerzo"]').val() || '').trim(),
-            condiciones: ($('textarea[name="riesgoCondiciones"]').val() || '').trim(),
-            riesgos: riesgosLista
-        };
+        descriptor.responsabilidades = descriptor.responsabilidades || {};
+        descriptor.responsabilidades.impactoEconomico = $('select[name="impactoEconomico"]').val() || descriptor.responsabilidades.impactoEconomico || '';
 
-        THService.guardarComplementos(id, descriptor);
+        DescriptorService.update(id, descriptor);
         if (!silent) {
             DescriptorService.registrarEvento(id, {
-                accion: 'ACTUALIZACIÓN COMPLEMENTOS TH',
+                accion: 'ACTUALIZACIÓN DE APORTES TH',
                 usuario: THController.currentUser.nombre,
                 rol: THController.currentUser.rolNombre
             });
         }
 
         if (!silent) {
-            Swal.fire('Guardado', 'Complementos de Talento Humano actualizados.', 'success');
+            Swal.fire('Guardado', 'Aportes de Talento Humano actualizados.', 'success');
         }
         return true;
     },
@@ -381,9 +352,7 @@ var THController = {
         }).then(function(result) {
             if (!result.isConfirmed) return;
 
-            if ((THService.getById(id).tipoFormato || 'CORTA') === 'EXTENSA') {
-                THController.guardarComplementosDesdeFormulario(id, true);
-            }
+            THController.guardarComplementosDesdeFormulario(id, true);
             THService.aprobar(id);
             DescriptorService.registrarEvento(id, {
                 accion: 'REVISADO POR GENERALISTA DE TH',

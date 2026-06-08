@@ -5,6 +5,7 @@ var DescriptorController = {
     readOnlyMode: false,
     canEditThComplements: false,
     navigationToken: null,
+    afterSaveModule: null,
     
     init: function(user, idToEdit, options) {
         this.currentUser = user;
@@ -12,9 +13,13 @@ var DescriptorController = {
         this.readOnlyMode = !!(options && options.readOnly);
         this.canEditThComplements = !!(options && options.canEditThComplements);
         this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
+        this.afterSaveModule = options && options.afterSaveModule ? options.afterSaveModule : null;
         window._thReviewMode = !!(options && options.thReview);
         window._canEditThComplements = this.canEditThComplements;
         window._readOnlyDescriptor = this.readOnlyMode;
+        window._allowDescriptorPartialSave = this.readOnlyMode && this.canEditThComplements;
+        window._descriptorWorkflowEditor = this.afterSaveModule === 'TH' || this.afterSaveModule === 'JTH';
+        window._afterDescriptorSaveModule = this.afterSaveModule;
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
         }
@@ -29,6 +34,9 @@ var DescriptorController = {
         window._readOnlyDescriptor = false;
         window._thReviewMode = false;
         window._canEditThComplements = false;
+        window._allowDescriptorPartialSave = false;
+        window._descriptorWorkflowEditor = false;
+        window._afterDescriptorSaveModule = null;
     },
     
     loadForm: function() {
@@ -228,8 +236,12 @@ var DescriptorController = {
                 for (var z = 0; z < riesgos.length; z++) addRiesgoRowWithData(riesgos[z]);
             } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
                 addRiesgoRow();
+            } else if (!this.readOnlyMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+                addRiesgoRow();
             }
         } else if (this.readOnlyMode && window._thReviewMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
+            addRiesgoRow();
+        } else if (!this.readOnlyMode && (descriptor.tipoFormato || 'CORTA') === 'EXTENSA') {
             addRiesgoRow();
         }
         
@@ -255,7 +267,7 @@ var DescriptorController = {
             $('input[name="puestosResponsables"]').val(descriptor.entrenamiento.puestosResponsables);
         }
         
-        window._isEditing = !this.readOnlyMode;
+        window._isEditing = !this.readOnlyMode || window._allowDescriptorPartialSave === true;
         window._editingId = id;
         
         // Guardar las actividades para cargarlas después de que se actualicen las funciones
@@ -287,15 +299,19 @@ var DescriptorController = {
         $('#descriptorForm').find('.btn-outline-danger').hide();
         $('#descriptorForm').find('.funciones-add-btn').not('.actividad-btn').hide();
         if (window._thReviewMode && window._canEditThComplements) {
-            $('#descriptorForm').find('.th-editable-section input, .th-editable-section select, .th-editable-section textarea').prop('disabled', false);
-            $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').show();
+            $('.descriptor-save-top').show();
+            $('#saveBtn').show();
+            $('#descriptorForm').find('select[name="impactoEconomico"]').prop('disabled', false);
+            $('#descriptorForm').find('#requerimientosContainer input, #requerimientosContainer select, #requerimientosContainer textarea').prop('disabled', false);
+            $('#descriptorForm').find('#addRequerimientoOrganizacional, #requerimientosContainer .th-remove-btn').show();
+            $('#descriptorForm').find('#addRelacionInterna, #addRelacionExterna, #addRiesgoFisico').hide();
         } else if (window._thReviewMode) {
             $('#descriptorForm').find('.th-editable-section input, .th-editable-section select, .th-editable-section textarea').prop('disabled', true);
             $('#descriptorForm').find('.th-editable-section .th-add-btn, .th-editable-section .th-remove-btn').hide();
         }
         if ($('#readOnlyDescriptorAlert').length === 0) {
             var mensajeSoloLectura = window._thReviewMode && window._canEditThComplements
-                ? 'Modo revisión TH: el descriptor base es solo lectura; puede modificar únicamente los complementos técnicos habilitados.'
+                ? 'Modo revisión TH: puede modificar Requerimientos Organizacionales e Impacto Económico. El resto del descriptor queda a cargo del jefe inmediato.'
                 : 'Modo solo lectura: puede consultar el descriptor, pero no modificarlo.';
             $('.descriptor-save-top').after(
                 '<div id="readOnlyDescriptorAlert" class="alert alert-info py-2 mb-3">' +

@@ -179,11 +179,16 @@ var JTHController = {
         $('#pageTitle').text('Detalle del Descriptor');
         var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
         this.navigationToken = token;
+        var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
+        var firmaJTH = descriptor.firmaJTH || firmasGuardadas['jth_' + id];
+        var estadosFirma = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'];
+        var puedeEditarDescriptor = estadosFirma.indexOf(descriptor.estado) !== -1 && !firmaJTH;
         DescriptorController.init(this.currentUser, id, {
             readOnly: true,
-            thReview: (descriptor.tipoFormato || 'CORTA') === 'EXTENSA',
-            canEditThComplements: false,
-            navigationToken: token
+            thReview: true,
+            canEditThComplements: puedeEditarDescriptor,
+            navigationToken: token,
+            afterSaveModule: 'JTH'
         });
 
         var self = this;

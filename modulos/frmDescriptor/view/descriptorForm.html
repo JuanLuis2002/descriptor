@@ -510,7 +510,7 @@
     var totalSteps = 14;
     var pasosPorFormato = {
         CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11],
-        EXTENSA: [2, 3, 7, 8, 9, 10, 11]
+        EXTENSA: [2, 3, 7, 8, 12, 14, 9, 10, 11]
     };
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
@@ -582,6 +582,11 @@
     }
     
     function getPasosActivos() {
+        if (window._descriptorWorkflowEditor === true) {
+            return getTipoFormato() === 'EXTENSA'
+                ? [2, 3, 7, 8, 13, 9, 10, 11]
+                : [2, 3, 5, 6, 7, 8, 13, 9, 10, 11];
+        }
         if (getTipoFormato() === 'EXTENSA' && isTHReviewMode()) {
             return [2, 3, 7, 8, 12, 13, 14, 9, 10, 11];
         }
@@ -1116,7 +1121,7 @@
             if (i < currentIndex) $('.step[data-step="' + stepValue + '"]').addClass('completed');
             else if (i === currentIndex) $('.step[data-step="' + stepValue + '"]').addClass('active');
         }
-        if (window._readOnlyDescriptor) {
+        if (window._readOnlyDescriptor && window._allowDescriptorPartialSave !== true) {
             $('.descriptor-save-top').hide();
             $('#saveBtn').hide();
         } else {
@@ -1243,7 +1248,7 @@
     }
     
     function saveDescriptor() {
-        if (window._readOnlyDescriptor) {
+        if (window._readOnlyDescriptor && window._allowDescriptorPartialSave !== true) {
             Swal.fire('Solo lectura', 'Este descriptor está abierto únicamente para consulta.', 'info');
             return;
         }
@@ -1315,6 +1320,38 @@
                 aplicabilidad: $(this).find('select[name="compCondAplicabilidad[]"]').val() 
             });
         });
+
+        var requerimientosOrganizacionales = [];
+        if (window._descriptorWorkflowEditor === true) {
+            $('#requerimientosTableBody tr').each(function() {
+                var req = $(this).find('input[name="requerimientoOrganizacional[]"]').val();
+                if (req && req.trim()) requerimientosOrganizacionales.push(req.trim());
+            });
+        }
+
+        var relacionesInternas = [];
+        $('#relacionesInternasTableBody tr').each(function() {
+            var puesto = $(this).find('input[name="relInternaPuesto[]"]').val();
+            var razon = $(this).find('input[name="relInternaRazon[]"]').val();
+            if ((puesto && puesto.trim()) || (razon && razon.trim())) {
+                relacionesInternas.push({ puesto: (puesto || '').trim(), razon: (razon || '').trim() });
+            }
+        });
+
+        var relacionesExternas = [];
+        $('#relacionesExternasTableBody tr').each(function() {
+            var entidad = $(this).find('input[name="relExternaEntidad[]"]').val();
+            var razonExterna = $(this).find('input[name="relExternaRazon[]"]').val();
+            if ((entidad && entidad.trim()) || (razonExterna && razonExterna.trim())) {
+                relacionesExternas.push({ entidad: (entidad || '').trim(), razon: (razonExterna || '').trim() });
+            }
+        });
+
+        var riesgosLista = [];
+        $('#riesgosTableBody tr').each(function() {
+            var riesgo = $(this).find('input[name="riesgoProfesional[]"]').val();
+            if (riesgo && riesgo.trim()) riesgosLista.push(riesgo.trim());
+        });
         
         var formData = {
             puesto: $('select[name="puesto"]').val(),
@@ -1359,8 +1396,17 @@
         };
         if (tipoFormato === 'CORTA') {
             formData.relacionesLaborales = { internas: [], externas: [] };
-            formData.requerimientosOrganizacionales = [];
             formData.riesgosFisicos = { esfuerzo: '', condiciones: '', riesgos: [] };
+        } else {
+            formData.relacionesLaborales = { internas: relacionesInternas, externas: relacionesExternas };
+            formData.riesgosFisicos = {
+                esfuerzo: ($('textarea[name="riesgoEsfuerzo"]').val() || '').trim(),
+                condiciones: ($('textarea[name="riesgoCondiciones"]').val() || '').trim(),
+                riesgos: riesgosLista
+            };
+        }
+        if (window._descriptorWorkflowEditor === true) {
+            formData.requerimientosOrganizacionales = requerimientosOrganizacionales;
         }
         
         if (window._isEditing && window._editingId) {
@@ -1375,6 +1421,7 @@
                 formData.id = existingDescriptor.id;
                 formData.codigo = existingDescriptor.codigo;
                 formData.fechaCreacion = existingDescriptor.fechaCreacion;
+                formData.creador = existingDescriptor.creador || formData.creador;
                 
                 if (normalizarPuesto(existingDescriptor.puesto) === normalizarPuesto(formData.puesto)) {
                     formData.version = existingDescriptor.version || 1;
@@ -1382,21 +1429,8 @@
                     formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
                 }
                 
-                // CORRECCIÓN: Mantener el estado original según el caso
-                if (existingDescriptor.estado === 'OBSERVADO_TH') {
-                    // Si estaba observado por TH, mantener OBSERVADO_TH (luego se reenvía a TH)
-                    formData.estado = 'OBSERVADO_TH';
-                } 
-                else if (existingDescriptor.estado === 'OBSERVADO_JF') {
-                    // Si estaba observado por JF, mantener OBSERVADO_JF (luego se reenvía a JF)
-                    formData.estado = 'OBSERVADO_JF';
-                }
-                else if (existingDescriptor.estado === 'APROBADO_POR_JF') {
-                    formData.estado = 'APROBADO_POR_JF';
-                }
-                else {
-                    formData.estado = 'BORRADOR';
-                }
+                // Una edición no debe reiniciar el flujo de aprobación.
+                formData.estado = existingDescriptor.estado || 'BORRADOR';
                 
                 DescriptorService.update(window._editingId, formData);
                 DescriptorService.registrarEvento(window._editingId, {
@@ -1409,7 +1443,13 @@
                     window._isEditing = false;
                     window._editingId = null;
                     limpiarActividadesGuardadas();
-                    if (typeof window.cargarMisDescriptores === 'function') {
+                    var afterSaveModule = window._afterDescriptorSaveModule;
+                    window._afterDescriptorSaveModule = null;
+                    if (afterSaveModule === 'TH' && typeof THController !== 'undefined') {
+                        THController.loadView();
+                    } else if (afterSaveModule === 'JTH' && typeof JTHController !== 'undefined') {
+                        JTHController.loadView();
+                    } else if (typeof window.cargarMisDescriptores === 'function') {
                         window.cargarMisDescriptores();
                     } else {
                         location.reload();
