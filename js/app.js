@@ -134,8 +134,12 @@ function loadMenu() {
     } else if (currentUser.rol === 'JEFE_SUPERIOR') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="pendientesAprobar">Pendientes de Aprobación</a>';
     } else if (currentUser.rol === 'TH_GENERALISTA') {
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="revisionTH">Revisión Técnica</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Aprobaciones Pendientes</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Aprobación</a>';

@@ -537,7 +537,23 @@
         'Desarrollador de Software': ['Ing. Carlos Menjívar'],
         'Administrador de Sistemas': ['Ing. Ricardo Molina'],
         'Especialista en Soporte Técnico': ['Ing. Fernando Aguilar'],
-        'Coordinador de Infraestructura TI': ['Ing. Esteban Figueroa']
+        'Coordinador de Infraestructura TI': ['Ing. Esteban Figueroa'],
+        'Analista de Recursos Humanos': ['Licda. Patricia Méndez'],
+        'Generalista de Talento Humano': ['Lic. Roberto Salinas'],
+        'Analista Financiero': ['Lic. Karla Pineda'],
+        'Contador General': ['Lic. Mario Escobar'],
+        'Asistente Administrativo': ['Licda. Mónica Castillo'],
+        'Coordinador Administrativo': ['Lic. Ernesto Varela'],
+        'Analista de Mercadeo': ['Licda. Sofía Aguiluz'],
+        'Coordinador de Comunicaciones': ['Lic. Daniel Fuentes']
+    };
+
+    var puestosPorArea = {
+        'Subgerencia TI': ['Analista Programador', 'Desarrollador de Software', 'Administrador de Sistemas', 'Especialista en Soporte Técnico', 'Coordinador de Infraestructura TI'],
+        'Talento Humano': ['Analista de Recursos Humanos', 'Generalista de Talento Humano'],
+        'Finanzas': ['Analista Financiero', 'Contador General'],
+        'Administración': ['Asistente Administrativo', 'Coordinador Administrativo'],
+        'Mercadeo y Comunicaciones': ['Analista de Mercadeo', 'Coordinador de Comunicaciones']
     };
 
     var requerimientosOrganizacionalesDefault = [
@@ -578,6 +594,46 @@
     }
 
     window.actualizarResponsablesPorPuesto = actualizarResponsablesPorPuesto;
+
+    function puedeCrearCualquierArea() {
+        return currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH';
+    }
+
+    function cargarPuestosPorArea(puestoActual) {
+        var area = $('[name="area"]').val() || currentUser.area || 'Subgerencia TI';
+        var puestos = puedeCrearCualquierArea()
+            ? (puestosPorArea[area] || [])
+            : (puestosPorArea[currentUser.area] || puestosPorArea['Subgerencia TI']);
+        var $puesto = $('select[name="puesto"]');
+        var valorPrevio = puestoActual || $puesto.val() || '';
+
+        $puesto.empty().append('<option value="">Seleccione...</option>');
+        for (var i = 0; i < puestos.length; i++) {
+            $puesto.append('<option value="' + puestos[i] + '">' + puestos[i] + '</option>');
+        }
+        if (valorPrevio && puestos.indexOf(valorPrevio) === -1 && puedeCrearCualquierArea()) {
+            $puesto.append('<option value="' + valorPrevio + '">' + valorPrevio + '</option>');
+        }
+        if (valorPrevio) $puesto.val(valorPrevio);
+        actualizarResponsablesPorPuesto();
+    }
+
+    function configurarCatalogoAreaPuesto(areaActual, puestoActual) {
+        var area = areaActual || currentUser.area || 'Subgerencia TI';
+        if (puedeCrearCualquierArea()) {
+            var opciones = '';
+            Object.keys(puestosPorArea).forEach(function(nombreArea) {
+                opciones += '<option value="' + nombreArea + '"' + (nombreArea === area ? ' selected' : '') + '>' + nombreArea + '</option>';
+            });
+            $('#areaUsuario').replaceWith('<select class="form-select" name="area" id="areaUsuario">' + opciones + '</select>');
+        } else {
+            $('#areaUsuario').replaceWith('<input type="text" class="form-control" name="area" id="areaUsuario" readonly>');
+            $('#areaUsuario').val(area);
+        }
+        cargarPuestosPorArea(puestoActual);
+    }
+
+    window.configurarCatalogoAreaPuesto = configurarCatalogoAreaPuesto;
     
     function getTipoFormato() {
         return $('#tipoFormato').val() || 'CORTA';
@@ -964,7 +1020,7 @@
     cargarRequerimientosDefaultSiVacio();
     asegurarFilasRelacionesYRiesgos();
     
-    $('#areaUsuario').val(currentUser.area || '');
+    configurarCatalogoAreaPuesto(currentUser.area || 'Subgerencia TI');
     $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
     
     function sincronizarFuncionesClavesList() {
@@ -1401,7 +1457,7 @@
         var formData = {
             puesto: $('select[name="puesto"]').val(),
             tipoFormato: tipoFormato,
-            area: $('input[name="area"]').val(),
+            area: $('[name="area"]').val(),
             reportaA: $('select[name="reportaA"]').val(),
             fechaEmision: $('input[name="fechaEmision"]').val(),
             objetivo: $('textarea[name="objetivo"]').val(),
@@ -1565,6 +1621,9 @@
     });
     $('select[name="puesto"]').off('change.responsable').on('change.responsable', function() {
         actualizarResponsablesPorPuesto();
+    });
+    $(document).off('change.areaPuesto', '#areaUsuario').on('change.areaPuesto', '#areaUsuario', function() {
+        cargarPuestosPorArea();
     });
     $('#addFuncionClave').off('click').click(function() { addFuncionClaveRow(); });
     $('#addFuncionSecundaria').off('click').click(function() { addFuncionSecundariaRow(); });

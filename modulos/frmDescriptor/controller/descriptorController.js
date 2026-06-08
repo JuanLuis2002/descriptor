@@ -93,8 +93,12 @@ var DescriptorController = {
         
         // Datos básicos
         $('select[name="tipoFormato"]').val(descriptor.tipoFormato || 'CORTA').trigger('change');
+        if (typeof window.configurarCatalogoAreaPuesto === 'function') {
+            window.configurarCatalogoAreaPuesto(descriptor.area, descriptor.puesto);
+        } else {
+            $('#areaUsuario').val(descriptor.area);
+        }
         $('select[name="puesto"]').val(descriptor.puesto);
-        $('#areaUsuario').val(descriptor.area);
         if (typeof window.actualizarResponsablesPorPuesto === 'function') {
             window.actualizarResponsablesPorPuesto(descriptor.reportaA);
         } else {
