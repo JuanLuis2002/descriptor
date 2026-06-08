@@ -509,8 +509,8 @@
     var currentStep = 2;
     var totalSteps = 14;
     var pasosPorFormato = {
-        CORTA: [2, 3, 5, 6, 7, 8, 9, 10, 11],
-        EXTENSA: [2, 3, 7, 8, 12, 14, 9, 10, 11]
+        CORTA: [2, 3, 5, 6, 7, 8, 13, 9, 10, 11],
+        EXTENSA: [2, 3, 7, 8, 12, 13, 14, 9, 10, 11]
     };
     var catalogoFrecuenciasKPI = [
         { codigo: 'DIARIA', descripcion: 'Diaria', activo: true },
@@ -539,6 +539,12 @@
         'Especialista en Soporte Técnico': ['Ing. Fernando Aguilar'],
         'Coordinador de Infraestructura TI': ['Ing. Esteban Figueroa']
     };
+
+    var requerimientosOrganizacionalesDefault = [
+        'Cumplir con los valores institucionales',
+        'Cumplir con los normativos institucionales',
+        'Cumplir con las competencias requeridas para el cargo'
+    ];
 
     function actualizarResponsablesPorPuesto(valorActual) {
         var puesto = $('select[name="puesto"]').val();
@@ -822,6 +828,13 @@
         $('.comp-cond-extra').toggle(getTipoFormato() === 'EXTENSA');
     }
     window.actualizarCompetenciasConductualesPorFormato = actualizarCompetenciasConductualesPorFormato;
+
+    function actualizarRequerimientosPorPermiso() {
+        var puedeEditarAportesTH = window._descriptorWorkflowEditor === true;
+        $('#requerimientosContainer').find('input, select, textarea').prop('disabled', !puedeEditarAportesTH);
+        $('#addRequerimientoOrganizacional, #requerimientosContainer .th-remove-btn').toggle(puedeEditarAportesTH);
+    }
+    window.actualizarRequerimientosPorPermiso = actualizarRequerimientosPorPermiso;
     
     function ensureRelacionesInternasTable() {
         if ($('#relacionesInternasTableBody').length > 0) return;
@@ -886,6 +899,7 @@
         ensureRequerimientosTable();
         $('#requerimientosTableBody').append('<tr class="requerimiento-row"><td class="funcion-codigo"><span class="req-codigo-text"></span></td><td><input type="text" class="form-control th-complement-input" name="requerimientoOrganizacional[]" placeholder="Requerimiento organizacional" value="' + (texto || '').replace(/"/g, '&quot;') + '"></td><td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger th-remove-btn" onclick="$(this).closest(\'tr\').remove(); if (typeof renumerarRequerimientosGlobal === \'function\') renumerarRequerimientosGlobal();"><i class="fas fa-trash"></i></button></td></tr>');
         renumerarRequerimientos();
+        actualizarRequerimientosPorPermiso();
     }
     
     function renumerarRequerimientos() {
@@ -917,6 +931,13 @@
     window.addRelacionExternaFormRow = addRelacionExternaRow;
     window.addRequerimientoFormRow = addRequerimientoRow;
     window.addRiesgoFormRow = addRiesgoRow;
+
+    function cargarRequerimientosDefaultSiVacio() {
+        if ($('#requerimientosTableBody tr').length > 0) return;
+        for (var i = 0; i < requerimientosOrganizacionalesDefault.length; i++) {
+            addRequerimientoRow(requerimientosOrganizacionalesDefault[i]);
+        }
+    }
     
     for(var i = 1; i <= 4; i++) addFuncionClaveRow();
     for(var i = 1; i <= 4; i++) addFuncionSecundariaRow();
@@ -927,6 +948,7 @@
     addCompetenciaTecnicaRow();
     addCompetenciaConductualRow();
     addCompetenciaConductualRow();
+    cargarRequerimientosDefaultSiVacio();
     
     $('#areaUsuario').val(currentUser.area || '');
     $('#fechaEmision').val(new Date().toISOString().split('T')[0]);
@@ -1139,6 +1161,7 @@
         sincronizarAccionesActividades();
         actualizarResponsabilidadesPorFormato();
         actualizarCompetenciasConductualesPorFormato();
+        actualizarRequerimientosPorPermiso();
         if (getTipoFormato() === 'EXTENSA') guardarActividadesActuales();
         if (currentStep === getLastStep()) updateResumen();
     }
@@ -1412,7 +1435,7 @@
                 riesgos: riesgosLista
             };
         }
-        if (window._descriptorWorkflowEditor === true) {
+        if (window._descriptorWorkflowEditor === true || !window._isEditing) {
             formData.requerimientosOrganizacionales = requerimientosOrganizacionales;
         }
         
@@ -1431,6 +1454,9 @@
                 formData.creador = existingDescriptor.creador || formData.creador;
                 if (window._descriptorWorkflowEditor !== true && existingDescriptor.responsabilidades) {
                     formData.responsabilidades.impactoEconomico = existingDescriptor.responsabilidades.impactoEconomico || '';
+                }
+                if (window._descriptorWorkflowEditor !== true) {
+                    formData.requerimientosOrganizacionales = existingDescriptor.requerimientosOrganizacionales || formData.requerimientosOrganizacionales || requerimientosOrganizacionalesDefault.slice();
                 }
                 
                 if (normalizarPuesto(existingDescriptor.puesto) === normalizarPuesto(formData.puesto)) {
