@@ -9,6 +9,8 @@ var AreasPuestosController = {
         this.currentUser = user;
         this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
         this.tipoCatalogo = options && options.tipoCatalogo ? options.tipoCatalogo : 'areas';
+        this.areaSeleccionada = null;
+        this.jefeSeleccionado = null;
         if (!user || (user.rol !== 'TH_GENERALISTA' && user.rol !== 'JEFE_TH')) {
             $('#contentContainer').html('<div class="alert alert-warning">No tiene permisos para administrar áreas y puestos.</div>');
             return;
