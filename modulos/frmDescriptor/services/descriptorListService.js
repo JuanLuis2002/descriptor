@@ -71,14 +71,8 @@ var DescriptorListService = {
             revisionCambiosTH: descriptores.filter(function(d) { return d.estado === 'REVISION_CAMBIOS_TH'; }).length,
             enviadosJF: descriptores.filter(function(d) { return d.estado === 'ENVIADO_JF'; }).length,
             observadosJF: descriptores.filter(function(d) { return d.estado === 'OBSERVADO_JF'; }).length,
-            aprobadosJF: descriptores.filter(function(d) { return d.estado === 'APROBADO_POR_JF'; }).length,
             enviadosTH: descriptores.filter(function(d) { return d.estado === 'ENVIADO_TH'; }).length,
             observadosTH: descriptores.filter(function(d) { return d.estado === 'OBSERVADO_TH'; }).length,
-            aprobadosTH: descriptores.filter(function(d) { return d.estado === 'APROBADO_TH'; }).length,
-            firmaJTH: descriptores.filter(function(d) { return d.estado === 'FIRMA_JTH'; }).length,
-            firmadoJTH: descriptores.filter(function(d) { return d.estado === 'FIRMADO_JTH'; }).length,
-            firmadoCT: descriptores.filter(function(d) { return d.estado === 'FIRMADO_CT'; }).length,
-            firmadoJI: descriptores.filter(function(d) { return d.estado === 'FIRMADO_JI'; }).length,
             activos: descriptores.filter(function(d) { return d.estado === 'ACTIVO'; }).length,
             inactivos: descriptores.filter(function(d) { return d.estado === 'INACTIVO'; }).length
         };

@@ -54,12 +54,11 @@
     <div class="row text-center">
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statBorradores">0</div><div class="stat-label">Borradores</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statRevisionJI">0</div><div class="stat-label">Revisión inicial JI</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosJF">0</div><div class="stat-label">Enviados a JIS</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosJF">0</div><div class="stat-label">Observados por JIS</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosJF">0</div><div class="stat-label">Aprobados por JIS</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statRevisionCambiosTH">0</div><div class="stat-label">Revisión cambios TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statInactivos">0</div><div class="stat-label">Inactivos</div></div>
@@ -117,12 +116,11 @@ window.initDescriptorList = function() {
             var stats = DescriptorListService.getEstadisticas(currentUser);
             $('#statTotal').text(stats.total);
             $('#statBorradores').text(stats.borradores);
+            $('#statRevisionJI').text(stats.revisionJI || 0);
             $('#statEnviadosJF').text(stats.enviadosJF || 0);
             $('#statObservadosJF').text(stats.observadosJF || 0);
-            $('#statAprobadosJF').text(stats.aprobadosJF || 0);
             $('#statEnviadosTH').text(stats.enviadosTH || 0);
             $('#statObservadosTH').text(stats.observadosTH || 0);
-            $('#statAprobadosTH').text(stats.aprobadosTH || 0);
             $('#statRevisionCambiosTH').text(stats.revisionCambiosTH || 0);
             $('#statActivos').text(stats.activos);
             $('#statInactivos').text(stats.inactivos || 0);
@@ -154,15 +152,8 @@ window.initDescriptorList = function() {
             'REVISION_CAMBIOS_TH': 'Revisión de cambios TH',
             'ENVIADO_JF': 'Enviado a JIS',
             'OBSERVADO_JF': 'Observado por JIS',
-            'APROBADO_POR_JF': 'Aprobado por JIS',
             'ENVIADO_TH': 'Enviado a TH',
             'OBSERVADO_TH': 'Observado por TH',
-            'REVISADO_GTH': 'Revisado por GTH',
-            'APROBADO_TH': 'Revisado por GTH',
-            'FIRMA_JTH': 'Pendiente de firmas',
-            'FIRMADO_JTH': 'Firmado por JTH',
-            'FIRMADO_CT': 'Firmado por Colaborador',
-            'FIRMADO_JI': 'Firmado por Jefe Inmediato',
             'ACTIVO': 'Activo',
             'INACTIVO': 'Inactivo'
         };
@@ -176,15 +167,8 @@ window.initDescriptorList = function() {
             'REVISION_CAMBIOS_TH': 'enviado_th',
             'ENVIADO_JF': 'enviado_jf',
             'OBSERVADO_JF': 'observado_jf',
-            'APROBADO_POR_JF': 'aprobado_jf',
             'ENVIADO_TH': 'enviado_th',
             'OBSERVADO_TH': 'observado_th',
-            'REVISADO_GTH': 'revisado_gth',
-            'APROBADO_TH': 'revisado_gth',
-            'FIRMA_JTH': 'firma_jth',
-            'FIRMADO_JTH': 'firmado_jth',
-            'FIRMADO_CT': 'firmado_ct',
-            'FIRMADO_JI': 'firmado_ji',
             'ACTIVO': 'activo',
             'INACTIVO': 'inactivo'
         };
@@ -230,9 +214,6 @@ window.initDescriptorList = function() {
         }
         if (d.estado === 'OBSERVADO_TH' && esJefeInmediato) {
             html += '<li><button class="dropdown-item btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Reenviar a TH</button></li>';
-        }
-        if (d.estado === 'APROBADO_POR_JF' && esJefeInmediato) {
-            html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
         }
         if (d.flujoCreadoPorTH && d.estado === 'REVISION_JI_TH' && currentUser.rol === 'JEFE_INMEDIATO') {
             html += '<li><button class="dropdown-item btn-visto-bueno-ji" data-id="' + d.id + '"><i class="fas fa-clipboard-check me-2 text-success"></i>Revisar y dar visto bueno</button></li>';
@@ -415,15 +396,8 @@ window.initDescriptorList = function() {
             'REVISION_CAMBIOS_TH': 'bg-warning text-dark',
             'ENVIADO_JF': 'bg-info',
             'OBSERVADO_JF': 'bg-warning',
-            'APROBADO_POR_JF': 'bg-success',
             'ENVIADO_TH': 'bg-primary',
             'OBSERVADO_TH': 'bg-warning',
-            'REVISADO_GTH': 'bg-success',
-            'APROBADO_TH': 'bg-success',
-            'FIRMA_JTH': 'bg-primary',
-            'FIRMADO_JTH': 'bg-primary',
-            'FIRMADO_CT': 'bg-primary',
-            'FIRMADO_JI': 'bg-primary',
             'ACTIVO': 'bg-success',
             'INACTIVO': 'bg-danger'
         };
@@ -735,36 +709,6 @@ window.initDescriptorList = function() {
         });
     }
     
-    function notificarFirmantes(id) {
-        var descriptor = DescriptorService.getById(id);
-        if (!descriptor) return;
-        
-        // Notificar sin retroceder el flujo secuencial de firmas.
-        var titulo = descriptor.titular || 'Ing. Juan Pérez';
-        var estadoActual = descriptor.estado || 'FIRMA_JTH';
-        
-        DescriptorService.update(id, { 
-            estado: estadoActual,
-            titular: titulo
-        });
-        
-        // Registrar evento
-        DescriptorService.registrarEvento(id, {
-            accion: 'NOTIFICACIÓN A FIRMANTES',
-            usuario: currentUser.nombre,
-            rol: currentUser.rolNombre,
-            estado: estadoActual
-        });
-        
-        Swal.fire({ 
-            title: 'Notificaciones Enviadas', 
-            text: 'Se ha notificado el flujo de aprobación secuencial: primero Colaborador/Titular (' + titulo + '), luego Jefe Inmediato y por último Jefe de Talento Humano.\n\nEl descriptor conserva su avance actual.',
-            icon: 'success' 
-        });
-        
-        cargarDescriptores();
-    }
-
     function darVistoBuenoJI(id) {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor || descriptor.estado !== 'REVISION_JI_TH' || !descriptor.flujoCreadoPorTH) {
@@ -842,54 +786,6 @@ window.initDescriptorList = function() {
     }
 
     window.registrarVistoBuenoRevisionJI = registrarVistoBuenoRevisionJI;
-    
-    function firmarDescriptorJI(id) {
-        var descriptor = DescriptorService.getById(id);
-        if (!descriptor) return;
-        if (descriptor.estado !== 'FIRMADO_CT' || !descriptor.firmaCT || descriptor.firmaJI) {
-            Swal.fire('Fuera de turno', 'El jefe inmediato solo puede emitir la aprobación formal después de la aprobación del colaborador/titular.', 'info');
-            return;
-        }
-        
-        Swal.fire({
-            title: '¿Aprobar descriptor?',
-            html: '<div class="text-start"><p>Se registrará la aprobación formal del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#198754'
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-                var aprobacion = {
-                    aprobado: true,
-                    nombre: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    fecha: new Date().toISOString(),
-                    tipo: 'APROBACION_SIMPLE'
-                };
-                var firmasGuardadas = JSON.parse(localStorage.getItem('firmas')) || {};
-                firmasGuardadas['ji_' + id] = aprobacion;
-                localStorage.setItem('firmas', JSON.stringify(firmasGuardadas));
-                var descriptorActualizado = DescriptorService.getById(id);
-                descriptorActualizado.firmaJI = aprobacion;
-                descriptorActualizado.fechaFirmaJI = new Date().toISOString();
-                descriptorActualizado.estado = DescriptorService.getEstadoDespuesDeFirma(descriptorActualizado);
-                DescriptorService.update(id, descriptorActualizado);
-                DescriptorService.registrarEvento(id, {
-                    accion: 'APROBACIÓN DEL JEFE INMEDIATO',
-                    usuario: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    estadoNuevo: 'FIRMADO_JI',
-                    estado: descriptorActualizado.estado
-                });
-                var mensaje = descriptorActualizado.estado === 'ACTIVO' ? 'Descriptor aprobado y activado correctamente' : 'Descriptor aprobado exitosamente. Aún quedan aprobaciones pendientes.';
-                Swal.fire('Aprobado', mensaje, 'success');
-                cargarDescriptores();
-            }
-        });
-    }
 
     function abrirAsignacionColaboradores(id) {
         var descriptor = DescriptorService.getById(id);
