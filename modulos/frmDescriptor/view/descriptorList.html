@@ -213,19 +213,22 @@ window.initDescriptorList = function() {
         html += '<li><button class="dropdown-item btn-ver" data-id="' + d.id + '"><i class="fas fa-eye me-2 text-info"></i>Ver detalle</button></li>';
         html += '<li><button class="dropdown-item btn-auditoria" data-id="' + d.id + '"><i class="fas fa-history me-2 text-secondary"></i>Auditoría</button></li>';
 
-        if (d.estado === 'BORRADOR' || d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH') {
+        var esJefeInmediato = currentUser.rol === 'JEFE_INMEDIATO';
+        var esCreador = d.creador === currentUser.nombre;
+        var puedeCorregirObservacion = esJefeInmediato && (d.estado === 'OBSERVADO_JF' || d.estado === 'OBSERVADO_TH');
+        if ((d.estado === 'BORRADOR' && esCreador) || puedeCorregirObservacion) {
             html += '<li><button class="dropdown-item btn-editar" data-id="' + d.id + '"><i class="fas fa-edit me-2 text-warning"></i>Editar</button></li>';
         }
-        if (d.estado === 'BORRADOR') {
+        if (d.estado === 'BORRADOR' && esJefeInmediato && esCreador) {
             html += '<li><button class="dropdown-item btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-primary"></i>Enviar a JIS</button></li>';
         }
-        if (d.estado === 'OBSERVADO_JF') {
+        if (d.estado === 'OBSERVADO_JF' && esJefeInmediato) {
             html += '<li><button class="dropdown-item btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-warning"></i>Reenviar a JIS</button></li>';
         }
-        if (d.estado === 'OBSERVADO_TH') {
+        if (d.estado === 'OBSERVADO_TH' && esJefeInmediato) {
             html += '<li><button class="dropdown-item btn-enviar-th-directo" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Reenviar a TH</button></li>';
         }
-        if (d.estado === 'APROBADO_POR_JF') {
+        if (d.estado === 'APROBADO_POR_JF' && esJefeInmediato) {
             html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
         }
         if (d.flujoCreadoPorTH && d.estado === 'REVISION_JI_TH' && currentUser.rol === 'JEFE_INMEDIATO') {
