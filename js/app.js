@@ -136,11 +136,17 @@ function loadMenu() {
     } else if (currentUser.rol === 'TH_GENERALISTA') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoPuestos">Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoJefes">Jefes Inmediatos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoColaboradores">Colaboradores</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoPuestos">Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoJefes">Jefes Inmediatos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoColaboradores">Colaboradores</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="descriptoresAsignados">Mis Descriptores</a>';
     }
@@ -220,7 +226,19 @@ function cargarModulo(modulo) {
             cargarDescriptoresAsignados();
             break;
         case 'areasPuestos':
-            cargarAreasPuestos();
+            cargarAreasPuestos('areas');
+            break;
+        case 'catalogoAreas':
+            cargarAreasPuestos('areas');
+            break;
+        case 'catalogoPuestos':
+            cargarAreasPuestos('puestos');
+            break;
+        case 'catalogoJefes':
+            cargarAreasPuestos('jefes');
+            break;
+        case 'catalogoColaboradores':
+            cargarAreasPuestos('colaboradores');
             break;
         case 'descriptoresAsignados':
             cargarDescriptoresAsignados();
@@ -230,10 +248,10 @@ function cargarModulo(modulo) {
     }
 }
 
-function cargarAreasPuestos() {
+function cargarAreasPuestos(tipoCatalogo) {
     const token = beginNavigation();
     if (typeof AreasPuestosController !== 'undefined' && AreasPuestosController.init) {
-        AreasPuestosController.init(currentUser, { navigationToken: token });
+        AreasPuestosController.init(currentUser, { navigationToken: token, tipoCatalogo: tipoCatalogo || 'areas' });
     } else {
         $('#contentContainer').html('<div class="alert alert-danger">Error: No se pudo cargar el módulo de áreas y puestos.</div>');
     }

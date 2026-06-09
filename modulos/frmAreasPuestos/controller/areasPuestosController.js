@@ -2,10 +2,12 @@
 var AreasPuestosController = {
     currentUser: null,
     navigationToken: null,
+    tipoCatalogo: 'areas',
 
     init: function(user, options) {
         this.currentUser = user;
         this.navigationToken = options && options.navigationToken ? options.navigationToken : (window._currentNavigationToken || null);
+        this.tipoCatalogo = options && options.tipoCatalogo ? options.tipoCatalogo : 'areas';
         if (!user || (user.rol !== 'TH_GENERALISTA' && user.rol !== 'JEFE_TH')) {
             $('#contentContainer').html('<div class="alert alert-warning">No tiene permisos para administrar áreas y puestos.</div>');
             return;
@@ -16,17 +18,28 @@ var AreasPuestosController = {
     loadView: function() {
         var self = this;
         var token = this.navigationToken;
-        $('#pageTitle').text('Áreas, Puestos y Jefes Inmediatos');
+        var config = this.getViewConfig();
+        $('#pageTitle').text(config.title);
         $('#contentContainer').empty();
 
-        $.get('modulos/frmAreasPuestos/view/areasPuestosView.html', function(html) {
+        $.get(config.path, function(html) {
             if (token && typeof window.isCurrentNavigationToken === 'function' && !window.isCurrentNavigationToken(token)) return;
             $('#contentContainer').html(html);
             self.bindEvents();
             self.render();
         }).fail(function() {
-            $('#contentContainer').html('<div class="alert alert-danger">Error al cargar el formulario de áreas y puestos.</div>');
+            $('#contentContainer').html('<div class="alert alert-danger">Error al cargar el formulario del catálogo.</div>');
         });
+    },
+
+    getViewConfig: function() {
+        var views = {
+            areas: { title: 'Catálogo de Áreas', path: 'modulos/frmAreasPuestos/view/areasView.html' },
+            puestos: { title: 'Catálogo de Puestos', path: 'modulos/frmAreasPuestos/view/puestosView.html' },
+            jefes: { title: 'Catálogo de Jefes Inmediatos', path: 'modulos/frmAreasPuestos/view/jefesInmediatosView.html' },
+            colaboradores: { title: 'Catálogo de Colaboradores', path: 'modulos/frmAreasPuestos/view/colaboradoresView.html' }
+        };
+        return views[this.tipoCatalogo] || views.areas;
     },
 
     bindEvents: function() {
