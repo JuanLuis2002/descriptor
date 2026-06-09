@@ -1906,7 +1906,7 @@ function generarHTMLVersionCorta(d, colaboradorReporte) {
 }
 
 // La versión extensa usa el formato integrado oficial con paginación dinámica.
-function generarHTMLVersionExtensa(d) {
+function generarHTMLVersionExtensa(d, colaboradorReporte) {
     var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
     var firmaJI  = firmasGuardadas['ji_'  + d.id] || d.firmaJI  || null;
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
