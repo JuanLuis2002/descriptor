@@ -1628,7 +1628,7 @@ function generarHTMLVersionExtensa(d, colaboradorReporte) {
 window.generarVersionExtensa = generarVersionExtensa;
 
 // Restauración: la versión corta mantiene su formato propio.
-function generarHTMLVersionCorta(d) {
+function generarHTMLVersionCorta(d, colaboradorReporte) {
     var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
     var firmaJI  = firmasGuardadas['ji_'  + d.id] || d.firmaJI  || null;
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
