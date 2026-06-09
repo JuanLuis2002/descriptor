@@ -380,7 +380,14 @@ window.initDescriptorList = function() {
             menu.style.width = '220px';
             menu.style.minWidth = '220px';
             menu.style.maxWidth = '220px';
-            menu.style.top = (buttonRect.bottom + 4) + 'px';
+            var menuHeight = menu.offsetHeight || 220;
+            var spaceBelow = window.innerHeight - buttonRect.bottom - 8;
+            var spaceAbove = buttonRect.top - 8;
+            var top = buttonRect.bottom + 4;
+            if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+                top = Math.max(8, buttonRect.top - menuHeight - 4);
+            }
+            menu.style.top = top + 'px';
             menu.style.left = Math.max(8, Math.min(buttonRect.left, window.innerWidth - 228)) + 'px';
             menu.style.zIndex = '5000';
         });
