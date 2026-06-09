@@ -136,15 +136,13 @@ function loadMenu() {
     } else if (currentUser.rol === 'TH_GENERALISTA') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoPuestos">Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas y Puestos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoJefes">Jefes Inmediatos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoColaboradores">Colaboradores</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoPuestos">Puestos</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoAreas">Áreas y Puestos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoJefes">Jefes Inmediatos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="catalogoColaboradores">Colaboradores</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
@@ -230,9 +228,6 @@ function cargarModulo(modulo) {
             break;
         case 'catalogoAreas':
             cargarAreasPuestos('areas');
-            break;
-        case 'catalogoPuestos':
-            cargarAreasPuestos('puestos');
             break;
         case 'catalogoJefes':
             cargarAreasPuestos('jefes');
