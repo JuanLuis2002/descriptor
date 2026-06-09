@@ -151,6 +151,23 @@ var AreasPuestosService = {
         return lista;
     },
 
+    getColaboradores: function() {
+        var usuarios = this.getUsuarios();
+        var lista = [
+            { usuario: 'juan.perez', nombre: 'Ing. Juan Pérez', puesto: 'Analista Programador' }
+        ];
+        Object.keys(usuarios).forEach(function(usuario) {
+            if (usuarios[usuario].rol === 'COLABORADOR') {
+                lista.push({
+                    usuario: usuario,
+                    nombre: usuarios[usuario].nombre,
+                    puesto: usuarios[usuario].area
+                });
+            }
+        });
+        return lista;
+    },
+
     crearJefeInmediato: function(usuario, nombre, password, area) {
         var usuarios = this.getUsuarios();
         if (usuarios[usuario]) return { ok: false, mensaje: 'Ya existe un usuario con ese nombre.' };
@@ -163,6 +180,20 @@ var AreasPuestosService = {
         };
         this.saveUsuarios(usuarios);
         this.actualizarJefeArea(area, usuario);
+        return { ok: true };
+    },
+
+    crearColaborador: function(usuario, nombre, password, puesto) {
+        var usuarios = this.getUsuarios();
+        if (usuarios[usuario]) return { ok: false, mensaje: 'Ya existe un usuario con ese nombre.' };
+        usuarios[usuario] = {
+            nombre: nombre,
+            password: password || '123456',
+            rol: 'COLABORADOR',
+            rolNombre: 'Colaborador',
+            area: puesto
+        };
+        this.saveUsuarios(usuarios);
         return { ok: true };
     }
 };

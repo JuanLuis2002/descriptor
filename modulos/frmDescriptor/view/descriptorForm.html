@@ -1293,6 +1293,7 @@
         var estados = {
             'BORRADOR': 'Borrador',
             'REVISION_JI_TH': 'Revisión inicial JI',
+            'REVISION_CAMBIOS_TH': 'Revisión de cambios TH',
             'ENVIADO_JF': 'Enviado a JIS',
             'OBSERVADO_JF': 'Observado por JIS',
             'APROBADO_POR_JF': 'Aprobado por JIS',
@@ -1587,23 +1588,41 @@
                     formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
                 }
                 
-                // Una edición no debe reiniciar el flujo de aprobación.
+                // Una edición no debe reiniciar el flujo, excepto la revisión inicial del JI.
                 formData.estado = existingDescriptor.estado || 'BORRADOR';
+                if (window._jiInitialReviewMode === true && existingDescriptor.estado === 'REVISION_JI_TH') {
+                    formData.estado = 'REVISION_CAMBIOS_TH';
+                    formData.vistoBuenoJI = {
+                        nombre: currentUser.nombre,
+                        rol: currentUser.rolNombre,
+                        fecha: new Date().toISOString(),
+                        tipo: 'VISTO_BUENO_REVISION'
+                    };
+                    formData.fechaVistoBuenoJI = new Date().toISOString();
+                }
                 
                 DescriptorService.update(window._editingId, formData);
                 DescriptorService.registrarEvento(window._editingId, {
-                    accion: 'ACTUALIZACIÓN DEL DESCRIPTOR',
+                    accion: window._jiInitialReviewMode === true ? 'VISTO BUENO DE REVISIÓN DEL JEFE INMEDIATO' : 'ACTUALIZACIÓN DEL DESCRIPTOR',
                     usuario: currentUser.nombre,
                     rol: currentUser.rolNombre,
-                    estado: formData.estado
+                    estadoNuevo: formData.estado,
+                    estado: formData.estado,
+                    observacion: window._jiInitialReviewMode === true ? 'El jefe inmediato revisó el descriptor y lo devolvió a Talento Humano para validar los cambios.' : ''
                 });
-                Swal.fire('Éxito', 'Descriptor actualizado correctamente', 'success').then(function() {
+                var mensajeExito = window._jiInitialReviewMode === true
+                    ? 'Visto bueno registrado. El descriptor fue enviado a Talento Humano para revisar los cambios.'
+                    : 'Descriptor actualizado correctamente';
+                Swal.fire('Éxito', mensajeExito, 'success').then(function() {
                     window._isEditing = false;
                     window._editingId = null;
                     limpiarActividadesGuardadas();
+                    window._jiInitialReviewMode = false;
                     var afterSaveModule = window._afterDescriptorSaveModule;
                     window._afterDescriptorSaveModule = null;
-                    if (afterSaveModule === 'TH' && typeof THController !== 'undefined') {
+                    if (afterSaveModule === 'JI_INITIAL' && typeof window.cargarMisDescriptores === 'function') {
+                        window.cargarMisDescriptores();
+                    } else if (afterSaveModule === 'TH' && typeof THController !== 'undefined') {
                         THController.loadView();
                     } else if (afterSaveModule === 'JTH' && typeof JTHController !== 'undefined') {
                         JTHController.loadView();

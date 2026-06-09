@@ -142,9 +142,8 @@ function loadMenu() {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Aprobaciones Pendientes</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Aprobación</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="descriptoresAsignados">Mis Descriptores</a>';
     }
 
     nav.append(`
@@ -218,13 +217,17 @@ function cargarModulo(modulo) {
             cargarRevisionTH();
             break;
         case 'firmasJTH':
-            cargarFirmasJTH();
+            $('#pageTitle').text('Flujo de validación');
+            $('#contentContainer').html('<div class="alert alert-info">El flujo de firmas fue reemplazado por el flujo de validación y asignación de colaboradores.</div>');
             break;
         case 'firmasCT':
-            cargarFirmasCT();
+            cargarDescriptoresAsignados();
             break;
         case 'areasPuestos':
             cargarAreasPuestos();
+            break;
+        case 'descriptoresAsignados':
+            cargarDescriptoresAsignados();
             break;
         default:
             loadDashboard();
@@ -238,6 +241,41 @@ function cargarAreasPuestos() {
     } else {
         $('#contentContainer').html('<div class="alert alert-danger">Error: No se pudo cargar el módulo de áreas y puestos.</div>');
     }
+}
+
+function cargarDescriptoresAsignados() {
+    beginNavigation();
+    $('#pageTitle').text('Mis Descriptores Asignados');
+    var descriptores = DescriptorService.getAll().filter(function(descriptor) {
+        return (descriptor.colaboradoresAsignados || []).some(function(colaborador) {
+            return colaborador.usuario === currentUser.usuario;
+        });
+    });
+    if (descriptores.length === 0) {
+        $('#contentContainer').html('<div class="workflow-table-card text-center py-5"><i class="fas fa-folder-open fa-3x text-muted mb-3"></i><h5>No tiene descriptores asignados</h5></div>');
+        return;
+    }
+    var html = '<div class="workflow-table-card"><div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr>' +
+        '<th>Código</th><th>Puesto</th><th>Área</th><th>Formato</th><th>Estado</th><th>Documento firmado</th><th>Reporte</th></tr></thead><tbody>';
+    for (var i = 0; i < descriptores.length; i++) {
+        var d = descriptores[i];
+        var asignacion = (d.colaboradoresAsignados || []).filter(function(colaborador) { return colaborador.usuario === currentUser.usuario; })[0] || {};
+        var formato = (d.tipoFormato || 'CORTA') === 'EXTENSA' ? 'Extensa' : 'Corta';
+        var reporteBtn = (d.tipoFormato || 'CORTA') === 'EXTENSA'
+            ? '<button class="btn btn-sm btn-outline-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-1"></i>Ver reporte</button>'
+            : '<button class="btn btn-sm btn-outline-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-1"></i>Ver reporte</button>';
+        html += '<tr>' +
+            '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
+            '<td>' + (d.puesto || '-') + '</td>' +
+            '<td>' + (d.area || '-') + '</td>' +
+            '<td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">' + formato + '</span></td>' +
+            '<td><span class="badge bg-success">' + (d.estado === 'ACTIVO' ? 'Activo' : d.estado) + '</span></td>' +
+            '<td>' + (asignacion.documentoFirmado ? '<span class="badge bg-success">Cargado</span>' : '<span class="badge bg-warning text-dark">Pendiente</span>') + '</td>' +
+            '<td>' + reporteBtn + '</td>' +
+            '</tr>';
+    }
+    html += '</tbody></table></div></div>';
+    $('#contentContainer').html(html);
 }
 
 // Cargar Dashboard
@@ -318,6 +356,7 @@ function getEstadoBadge(estado) {
     const badges = {
         'BORRADOR': 'bg-secondary',
         'REVISION_JI_TH': 'bg-info',
+        'REVISION_CAMBIOS_TH': 'bg-warning',
         'ENVIADO_TH': 'bg-info',
         'OBSERVADO': 'bg-warning',
         'ACTIVO': 'bg-success',
@@ -645,9 +684,69 @@ window.editarDescriptor = editarDescriptor;
 // Variable para la ruta del logo (configurable)
 var LOGO_PATH = 'logo/logo.png'; // Colocar aquí la ruta del logo
 
+function getColaboradorReporte(descriptor, usuarioColaborador) {
+    var asignados = descriptor && descriptor.colaboradoresAsignados ? descriptor.colaboradoresAsignados : [];
+    if (usuarioColaborador) {
+        for (var i = 0; i < asignados.length; i++) {
+            if (asignados[i].usuario === usuarioColaborador) return asignados[i];
+        }
+    }
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol === 'COLABORADOR') {
+        for (var j = 0; j < asignados.length; j++) {
+            if (asignados[j].usuario === currentUser.usuario) return asignados[j];
+        }
+    }
+    if (asignados.length === 1) return asignados[0];
+    if (descriptor && descriptor.titular) return { usuario: '', nombre: descriptor.titular };
+    return null;
+}
+
+function debeSeleccionarColaboradorReporte(descriptor, usuarioColaborador) {
+    if (usuarioColaborador) return false;
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol === 'COLABORADOR') return false;
+    return descriptor && descriptor.colaboradoresAsignados && descriptor.colaboradoresAsignados.length > 1;
+}
+
+function seleccionarColaboradorParaReporte(id, tipoReporte) {
+    var descriptor = DescriptorService.getById(id);
+    if (!descriptor) {
+        Swal.fire('Error', 'No se encontró el descriptor', 'error');
+        return;
+    }
+    var asignados = descriptor.colaboradoresAsignados || [];
+    if (asignados.length <= 1) {
+        if (tipoReporte === 'EXTENSA') generarVersionExtensa(id);
+        else generarVersionCorta(id);
+        return;
+    }
+    var options = {};
+    for (var i = 0; i < asignados.length; i++) {
+        options[asignados[i].usuario] = asignados[i].nombre;
+    }
+    Swal.fire({
+        title: 'Seleccionar colaborador',
+        text: 'Seleccione el colaborador que aparecerá como titular en el reporte.',
+        input: 'select',
+        inputOptions: options,
+        inputPlaceholder: 'Seleccione un colaborador',
+        showCancelButton: true,
+        confirmButtonText: 'Generar reporte',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#0d6efd',
+        inputValidator: function(value) {
+            if (!value) return 'Debe seleccionar un colaborador';
+            return null;
+        }
+    }).then(function(result) {
+        if (!result.isConfirmed || !result.value) return;
+        if (tipoReporte === 'EXTENSA') generarVersionExtensa(id, result.value);
+        else generarVersionCorta(id, result.value);
+    });
+}
+
 // Generar versión corta del descriptor
 // Generar versión corta del descriptor - Usando print en iframe oculto
-function generarVersionCorta(id) {
+function generarVersionCorta(id, usuarioColaboradorReporte) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) {
         Swal.fire('Error', 'No se encontró el descriptor', 'error');
@@ -657,9 +756,14 @@ function generarVersionCorta(id) {
         Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión extensa. Genere el reporte de versión extensa.', 'info');
         return;
     }
+    if (debeSeleccionarColaboradorReporte(descriptor, usuarioColaboradorReporte)) {
+        seleccionarColaboradorParaReporte(id, 'CORTA');
+        return;
+    }
+    var colaboradorReporte = getColaboradorReporte(descriptor, usuarioColaboradorReporte);
     
     // Generar el HTML para el PDF
-    var pdfHtml = generarHTMLVersionCorta(descriptor);
+    var pdfHtml = generarHTMLVersionCorta(descriptor, colaboradorReporte);
 
     function prepararHTMLImpresionCorta(html) {
         var printStyles = '<style id="print-version-corta-fix">' +
@@ -742,7 +846,7 @@ function generarVersionCorta(id) {
 }
 
 // Generar HTML para versión corta (formato EXACTAMENTE como en las imágenes)
-function generarHTMLVersionCorta(d) {
+function generarHTMLVersionCorta(d, colaboradorReporte) {
     var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
     var firmaJI  = firmasGuardadas['ji_'  + d.id] || d.firmaJI  || null;
     var firmaJTH = firmasGuardadas['jth_' + d.id] || d.firmaJTH || null;
@@ -1107,28 +1211,16 @@ function generarHTMLVersionCorta(d) {
   ${compCondRows}
 </td>
 
-<!-- FIRMAS CORREGIDAS -->
-<table class="firma-t mt10">
-  <tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr>
-  <tr>
-    <td class="firma-lbl">Nombre del Empleado:</td>
-    <td class="firma-val">Ing. Juan Pérez</td>
-    <td class="firma-lbl2">Fecha de aprobación:</td>
-    <td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td>
-  </tr>
-  <tr>
-    <td class="firma-lbl">Nombre de Jefatura:</td>
-    <td class="firma-val">${d.creador || '_________________'}</td>
-    <td class="firma-lbl2">Fecha de aprobación:</td>
-    <td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td>
-  </tr>
-  <tr>
-    <td class="firma-lbl">Jefe de Talento Humano:</td>
-    <td class="firma-val">Lic. Carlos Gómez</td>
-    <td class="firma-lbl2">Fecha de aprobación:</td>
-    <td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td>
-  </tr>
-</table>
+${(function() {
+    if (d.colaboradoresAsignados && d.colaboradoresAsignados.length > 0) {
+        var rows = '';
+        for (var i = 0; i < d.colaboradoresAsignados.length; i++) {
+            rows += '<tr><td class="firma-lbl">Colaborador:</td><td class="firma-val">' + (d.colaboradoresAsignados[i].nombre || '') + '</td><td class="firma-lbl2">Documento firmado:</td><td class="firma-val2">' + (d.colaboradoresAsignados[i].documentoFirmado ? 'Cargado' : 'Pendiente') + '</td></tr>';
+        }
+        return '<table class="firma-t mt10"><tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">COLABORADORES ASIGNADOS</td></tr>' + rows + '</table>';
+    }
+    return '<table class="firma-t mt10"><tr><td colspan="4" style="font-weight:bold;border:none;padding:4px 0;">FIRMAS</td></tr><tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">Ing. Juan Pérez</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + (d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________') + ' ' + getFirmaHtml(firmaCT) + '</td></tr><tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">' + (d.creador || '_________________') + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + (d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________') + ' ' + getFirmaHtml(firmaJI) + '</td></tr><tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + (d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________') + ' ' + getFirmaHtml(firmaJTH) + '</td></tr></table>';
+})()}
 
 <div class="footer">Departamento de Talento Humano | 2025</div>
 </div>
@@ -1142,7 +1234,7 @@ window.generarVersionCorta = generarVersionCorta;
 
 
 // Generar versión extensa del descriptor
-function generarVersionExtensa(id) {
+function generarVersionExtensa(id, usuarioColaboradorReporte) {
     var descriptor = DescriptorService.getById(id);
     if (!descriptor) {
         Swal.fire('Error', 'No se encontró el descriptor', 'error');
@@ -1152,9 +1244,14 @@ function generarVersionExtensa(id) {
         Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión corta. Genere el reporte de versión corta.', 'info');
         return;
     }
+    if (debeSeleccionarColaboradorReporte(descriptor, usuarioColaboradorReporte)) {
+        seleccionarColaboradorParaReporte(id, 'EXTENSA');
+        return;
+    }
+    var colaboradorReporte = getColaboradorReporte(descriptor, usuarioColaboradorReporte);
     
     // Generar el HTML para el PDF extenso
-    var pdfHtml = generarHTMLVersionExtensa(descriptor);
+    var pdfHtml = generarHTMLVersionExtensa(descriptor, colaboradorReporte);
     
     // Mostrar modal con previsualización
     Swal.fire({
@@ -1201,7 +1298,7 @@ function generarVersionExtensa(id) {
 }
 
 // Generar HTML para versión extensa
-function generarHTMLVersionExtensa(d) {
+function generarHTMLVersionExtensa(d, colaboradorReporte) {
     // Obtener firmas guardadas
     var firmasGuardadas = JSON.parse(localStorage.getItem('firmas') || '{}');
     var firmaJI = firmasGuardadas['ji_' + d.id] || d.firmaJI || null;
@@ -1681,7 +1778,7 @@ function generarHTMLVersionCorta(d) {
     var perfil = d.perfil || {};
     var responsabilidades = d.responsabilidades || {};
     var entrenamiento = d.entrenamiento || {};
-    var titularNombre = text(d.titular);
+    var titularNombre = colaboradorReporte && colaboradorReporte.nombre ? text(colaboradorReporte.nombre) : text(d.titular);
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
@@ -1694,7 +1791,16 @@ function generarHTMLVersionCorta(d) {
     if (!titularNombre && firmaCT) {
         titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
-    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? text(firmaJI.nombre) : text(d.creador);
+    var jefeInmediatoNombre = '';
+    if (d.vistoBuenoJI && d.vistoBuenoJI.nombre) {
+        jefeInmediatoNombre = text(d.vistoBuenoJI.nombre);
+    } else if (firmaJI && firmaJI.nombre) {
+        jefeInmediatoNombre = text(firmaJI.nombre);
+    } else if (d.rolCreador === 'JEFE_INMEDIATO' || !d.flujoCreadoPorTH) {
+        jefeInmediatoNombre = text(d.creador);
+    } else {
+        jefeInmediatoNombre = text(d.reportaA);
+    }
     var sexoDisplay = enumText(perfil.sexo);
     var edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ' - ' + text(perfil.edadMax) + ' años' : '');
     var induccionText = (hasText(entrenamiento.duracion) ? 'Duración: ' + text(entrenamiento.duracion) : '') +
@@ -1730,7 +1836,9 @@ function generarHTMLVersionCorta(d) {
       .firma-lbl  { width: 22%; font-size: 9.5pt; }
       .firma-val  { width: 28%; }
       .firma-lbl2 { width: 20%; font-size: 9.5pt; }
-      .firma-val2 { width: 30%; }
+      .firma-val2 { width: 30%; min-height: 26px; }
+      .firma-date { display: block; margin-bottom: 8px; }
+      .firma-blank { display: block; height: 14px; }
       .page-break { page-break-before: auto; break-before: auto; }
       .footer { text-align: right; font-size: 8pt; color: #444; margin-top: 12px; }
       .empty-cell { color: #777; font-style: italic; text-align: center; }
@@ -1788,9 +1896,9 @@ function generarHTMLVersionCorta(d) {
 <table class="t mt10"><tr><td colspan="2" class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
 <table class="firma-t mt10">
   <tr><td colspan="4" class="firma-title">FIRMAS</td></tr>
-  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaCT)}</td></tr>
-  <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${jefeInmediatoNombre}</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJI)}</td></tr>
-  <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">${d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________'} ${getFirmaHtml(firmaJTH)}</td></tr>
+  <tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${titularNombre}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2"><span class="firma-date">${fechaActual}</span><span class="firma-blank"></span></td></tr>
+  <tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${jefeInmediatoNombre}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2"><span class="firma-date">${fechaActual}</span><span class="firma-blank"></span></td></tr>
+  <tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2"><span class="firma-date">${fechaActual}</span><span class="firma-blank"></span></td></tr>
 </table>
 <div class="footer">Departamento de Talento Humano | 2025</div>
 </div>
@@ -1882,7 +1990,7 @@ function generarHTMLVersionExtensa(d) {
     var experiencia = filtrarObjetos(d.experiencia, ['requisito']);
     var competenciasTecnicas = filtrarObjetos(d.competenciasTecnicas, ['nombre', 'nivel']);
     var competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre', 'descripcion']);
-    var titularNombre = text(d.titular);
+    var titularNombre = colaboradorReporte && colaboradorReporte.nombre ? text(colaboradorReporte.nombre) : text(d.titular);
     var eventosAuditoria = (d.auditoria && d.auditoria.eventos) ? d.auditoria.eventos : [];
     if (!titularNombre) {
         for (var i = 0; i < eventosAuditoria.length; i++) {
@@ -1895,7 +2003,16 @@ function generarHTMLVersionExtensa(d) {
     if (!titularNombre && firmaCT) {
         titularNombre = firmaCT.nombre || 'Ing. Juan Pérez';
     }
-    var jefeInmediatoNombre = (firmaJI && firmaJI.nombre) ? text(firmaJI.nombre) : text(d.creador);
+    var jefeInmediatoNombre = '';
+    if (d.vistoBuenoJI && d.vistoBuenoJI.nombre) {
+        jefeInmediatoNombre = text(d.vistoBuenoJI.nombre);
+    } else if (firmaJI && firmaJI.nombre) {
+        jefeInmediatoNombre = text(firmaJI.nombre);
+    } else if (d.rolCreador === 'JEFE_INMEDIATO' || !d.flujoCreadoPorTH) {
+        jefeInmediatoNombre = text(d.creador);
+    } else {
+        jefeInmediatoNombre = text(d.reportaA);
+    }
 
     function getActividades(index) {
         var item = actividadesPorFuncion[index] || null;
@@ -2038,17 +2155,10 @@ function generarHTMLVersionExtensa(d) {
     }
 
     function renderFirmas() {
-        var jefeTHNombre = (firmaJTH && firmaJTH.nombre) ? text(firmaJTH.nombre) : 'Lic. Carlos Gómez';
-        var fechaCT = d.fechaFirmaCT ? new Date(d.fechaFirmaCT).toLocaleDateString('es-ES') : '_________';
-        var fechaJI = d.fechaFirmaJI ? new Date(d.fechaFirmaJI).toLocaleDateString('es-ES') : '_________';
-        var fechaJTH = d.fechaFirmaJTH ? new Date(d.fechaFirmaJTH).toLocaleDateString('es-ES') : '_________';
-
-        return '<table class="firmas flow-block">' +
-            '<tr><td colspan="4" class="firmas-title">FIRMAS</td></tr>' +
-            '<tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">' + titularNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaCT + '</td></tr>' +
-            '<tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">' + jefeInmediatoNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJI + '</td></tr>' +
-            '<tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">' + jefeTHNombre + '</td><td class="firma-lbl2">Fecha de aprobación:</td><td class="firma-val2">' + fechaJTH + '</td></tr>' +
-            '</table>';
+        return '<div class="firmas-extensas flow-block">' +
+            '<div class="firma-extensa-box"><div class="firma-extensa-title">Titular del Puesto</div><div><strong>Nombre:</strong> ' + titularNombre + '</div><div><strong>Fecha:</strong> ' + fechaActual + '</div><div class="firma-extensa-line"></div></div>' +
+            '<div class="firma-extensa-box"><div class="firma-extensa-title">Jefe Inmediato</div><div><strong>Nombre:</strong> ' + jefeInmediatoNombre + '</div><div><strong>Fecha:</strong> ' + fechaActual + '</div><div class="firma-extensa-line"></div></div>' +
+            '</div>';
     }
 
     var actividadesHtml = renderActividades(0, funciones.length);
@@ -2109,6 +2219,10 @@ function generarHTMLVersionExtensa(d) {
         .firma-val { width: 28%; }
         .firma-lbl2 { width: 22%; font-weight: 700; }
         .firma-val2 { width: 28%; }
+        .firmas-extensas { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75in; margin-top: 34px; break-inside: avoid; page-break-inside: avoid; }
+        .firma-extensa-box { min-height: 82px; text-align: left; }
+        .firma-extensa-title { text-align: center; font-weight: 700; margin-bottom: 10px; }
+        .firma-extensa-line { border-bottom: 0.8px solid #000; height: 28px; margin-top: 14px; }
         .page-footer { text-align: right; color: #0b2e6d; font-weight: 700; font-size: 8.2pt; padding-top: 8px; }
         @media print {
             * {

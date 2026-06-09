@@ -18,7 +18,7 @@ var DescriptorListService = {
                     ? jefeAsignado === user.usuario
                     : user.area === d.area;
                 return d.creador === user.nombre ||
-                    (d.flujoCreadoPorTH && perteneceAlAreaAsignada && ['REVISION_JI_TH', 'FIRMADO_CT', 'FIRMADO_JI', 'FIRMA_JTH', 'ACTIVO', 'INACTIVO'].indexOf(d.estado) !== -1);
+                    (d.flujoCreadoPorTH && perteneceAlAreaAsignada && ['REVISION_JI_TH', 'REVISION_CAMBIOS_TH', 'ACTIVO', 'INACTIVO'].indexOf(d.estado) !== -1);
             });
         }
         return todos.filter(function(d) { return d.creador === user.nombre; });
@@ -65,6 +65,7 @@ var DescriptorListService = {
             total: descriptores.length,
             borradores: descriptores.filter(function(d) { return d.estado === 'BORRADOR'; }).length,
             revisionJI: descriptores.filter(function(d) { return d.estado === 'REVISION_JI_TH'; }).length,
+            revisionCambiosTH: descriptores.filter(function(d) { return d.estado === 'REVISION_CAMBIOS_TH'; }).length,
             enviadosJF: descriptores.filter(function(d) { return d.estado === 'ENVIADO_JF'; }).length,
             observadosJF: descriptores.filter(function(d) { return d.estado === 'OBSERVADO_JF'; }).length,
             aprobadosJF: descriptores.filter(function(d) { return d.estado === 'APROBADO_POR_JF'; }).length,

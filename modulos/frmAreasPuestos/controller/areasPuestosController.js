@@ -75,6 +75,22 @@ var AreasPuestosController = {
             this.reset();
             self.render();
         });
+
+        $('#formColaborador').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            var usuario = $(this).find('[name="usuario"]').val().trim().toLowerCase();
+            var nombre = $(this).find('[name="nombre"]').val().trim();
+            var password = $(this).find('[name="password"]').val().trim();
+            var puesto = $(this).find('[name="puesto"]').val();
+            var result = AreasPuestosService.crearColaborador(usuario, nombre, password, puesto);
+            if (!result.ok) {
+                Swal.fire('Validación', result.mensaje, 'warning');
+                return;
+            }
+            Swal.fire('Guardado', 'Usuario colaborador creado correctamente.', 'success');
+            this.reset();
+            self.render();
+        });
     },
 
     render: function() {
@@ -91,6 +107,15 @@ var AreasPuestosController = {
         }
         $('.area-select').html(areaOptions);
 
+        var puestoOptions = '';
+        for (var a = 0; a < areas.length; a++) {
+            var puestos = areas[a].puestos || [];
+            for (var p = 0; p < puestos.length; p++) {
+                puestoOptions += '<option value="' + puestos[p].nombre + '">' + puestos[p].nombre + ' - ' + areas[a].nombre + '</option>';
+            }
+        }
+        $('.puesto-global-select').html(puestoOptions);
+
         var jefeOptions = '<option value="">Sin asignar</option>';
         for (var j = 0; j < jefes.length; j++) {
             jefeOptions += '<option value="' + jefes[j].usuario + '">' + jefes[j].nombre + ' - ' + jefes[j].area + '</option>';
@@ -101,6 +126,7 @@ var AreasPuestosController = {
     renderTable: function() {
         var areas = AreasPuestosService.getAreas();
         var jefes = AreasPuestosService.getJefesInmediatos();
+        var colaboradores = AreasPuestosService.getColaboradores();
         var jefesMap = {};
         for (var j = 0; j < jefes.length; j++) {
             jefesMap[jefes[j].usuario] = jefes[j].nombre;
@@ -112,10 +138,14 @@ var AreasPuestosController = {
             var puestos = (area.puestos || []).map(function(puesto) {
                 return '<span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle me-1 mb-1">' + puesto.nombre + '</span>';
             }).join('') || '<span class="text-muted">Sin puestos</span>';
+            var colaboradoresArea = colaboradores.filter(function(colaborador) {
+                return (area.puestos || []).some(function(puesto) { return puesto.nombre === colaborador.puesto; });
+            });
             html += '<tr>' +
                 '<td><strong>' + area.nombre + '</strong></td>' +
                 '<td>' + (jefesMap[area.jefeInmediatoUsuario] || '<span class="text-muted">Sin asignar</span>') + '</td>' +
                 '<td>' + puestos + '</td>' +
+                '<td><span class="badge bg-warning text-dark">' + colaboradoresArea.length + ' colaboradores</span></td>' +
                 '</tr>';
         }
         $('#areasPuestosTableBody').html(html);

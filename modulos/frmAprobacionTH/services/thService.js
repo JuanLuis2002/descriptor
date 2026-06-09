@@ -1,9 +1,9 @@
 // Servicio de Aprobación TH
 var THService = {
-    // Obtener descriptores pendientes de revisión por TH (estado ENVIADO_TH)
+    // Obtener descriptores pendientes de revisión por TH
     getPendientesRevision: function() {
         return DescriptorService.getAll().filter(function(d) {
-            return d.estado === 'ENVIADO_TH';
+            return d.estado === 'ENVIADO_TH' || d.estado === 'REVISION_CAMBIOS_TH';
         });
     },
     
@@ -13,6 +13,7 @@ var THService = {
             return eventos.some(function(ev) {
                 return ev.usuario === usuario && (
                     ev.accion === 'REVISADO POR GENERALISTA DE TH' ||
+                    ev.accion === 'VISTO BUENO DE VALIDACIÓN TH' ||
                     ev.accion === 'APROBACIÓN POR TH GENERALISTA' ||
                     ev.accion === 'OBSERVACIÓN POR TH GENERALISTA'
                 );
@@ -55,11 +56,11 @@ var THService = {
         return false;
     },
     
-    // Registrar revisión de TH y enviar a firmas
+    // Registrar revisión de TH y activar descriptor validado
     aprobar: function(id, comentarios) {
         var descriptor = DescriptorService.getById(id);
         if (descriptor) {
-            descriptor.estado = 'FIRMA_JTH';
+            descriptor.estado = 'ACTIVO';
             descriptor.comentariosTH = comentarios;
             descriptor.fechaAprobacionTH = new Date().toISOString();
             DescriptorService.update(id, descriptor);

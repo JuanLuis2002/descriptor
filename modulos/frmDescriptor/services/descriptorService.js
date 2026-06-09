@@ -220,6 +220,56 @@ var DescriptorService = {
         if (firmaCT) return 'FIRMADO_CT';
         return 'FIRMA_JTH';
     },
+
+    asignarColaboradores: function(id, colaboradores, usuario, rol) {
+        var descriptor = this.getById(id);
+        if (!descriptor) return false;
+        var actuales = descriptor.colaboradoresAsignados || [];
+        var docsPorUsuario = {};
+        for (var i = 0; i < actuales.length; i++) {
+            docsPorUsuario[actuales[i].usuario] = actuales[i].documentoFirmado || null;
+        }
+        descriptor.colaboradoresAsignados = colaboradores.map(function(colaborador) {
+            return {
+                usuario: colaborador.usuario,
+                nombre: colaborador.nombre,
+                puesto: colaborador.puesto || '',
+                fechaAsignacion: new Date().toISOString(),
+                documentoFirmado: docsPorUsuario[colaborador.usuario] || null
+            };
+        });
+        this.update(id, descriptor);
+        this.registrarEvento(id, {
+            accion: 'ASIGNACIÓN DE COLABORADORES',
+            usuario: usuario,
+            rol: rol,
+            estado: descriptor.estado,
+            observacion: 'Colaboradores asignados: ' + descriptor.colaboradoresAsignados.map(function(c) { return c.nombre; }).join(', ')
+        });
+        return true;
+    },
+
+    guardarDocumentoFirmadoColaborador: function(id, usuarioColaborador, documento, usuario, rol) {
+        var descriptor = this.getById(id);
+        if (!descriptor) return false;
+        descriptor.colaboradoresAsignados = descriptor.colaboradoresAsignados || [];
+        for (var i = 0; i < descriptor.colaboradoresAsignados.length; i++) {
+            if (descriptor.colaboradoresAsignados[i].usuario === usuarioColaborador) {
+                descriptor.colaboradoresAsignados[i].documentoFirmado = documento;
+                descriptor.colaboradoresAsignados[i].fechaDocumentoFirmado = new Date().toISOString();
+                break;
+            }
+        }
+        this.update(id, descriptor);
+        this.registrarEvento(id, {
+            accion: 'CARGA DE DOCUMENTO FIRMADO',
+            usuario: usuario,
+            rol: rol,
+            estado: descriptor.estado,
+            observacion: 'Documento firmado cargado para colaborador: ' + usuarioColaborador
+        });
+        return true;
+    },
     
     // Obtener auditoría completa
     getAuditoria: function(id) {

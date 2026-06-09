@@ -60,7 +60,7 @@
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statEnviadosTH">0</div><div class="stat-label">Enviados a TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statObservadosTH">0</div><div class="stat-label">Observados por TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statAprobadosTH">0</div><div class="stat-label">Aprobados por TH</div></div>
-        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statFirmasJTH">0</div><div class="stat-label">Pendientes de firmas</div></div>
+        <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statRevisionCambiosTH">0</div><div class="stat-label">Revisión cambios TH</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statActivos">0</div><div class="stat-label">Activos</div></div>
         <div class="col-6 col-md-2 stat-item"><div class="stat-number" id="statInactivos">0</div><div class="stat-label">Inactivos</div></div>
     </div>
@@ -73,11 +73,11 @@
             <option value="">Todos</option>
             <option value="BORRADOR">Borrador</option>
             <option value="REVISION_JI_TH">Revisión inicial JI</option>
+            <option value="REVISION_CAMBIOS_TH">Revisión de cambios TH</option>
             <option value="ENVIADO_JF">Enviado a JIS</option>
             <option value="OBSERVADO_JF">Observado por JIS</option>
             <option value="ENVIADO_TH">Enviado a TH</option>
             <option value="OBSERVADO_TH">Observado por TH</option>
-            <option value="FIRMA_JTH">Pendiente de firmas</option>
             <option value="ACTIVO">Activo</option>
             <option value="INACTIVO">Inactivo</option>
         </select></div>
@@ -123,7 +123,7 @@ window.initDescriptorList = function() {
             $('#statEnviadosTH').text(stats.enviadosTH || 0);
             $('#statObservadosTH').text(stats.observadosTH || 0);
             $('#statAprobadosTH').text(stats.aprobadosTH || 0);
-            $('#statFirmasJTH').text(stats.firmaJTH || 0);
+            $('#statRevisionCambiosTH').text(stats.revisionCambiosTH || 0);
             $('#statActivos').text(stats.activos);
             $('#statInactivos').text(stats.inactivos || 0);
         }
@@ -151,6 +151,7 @@ window.initDescriptorList = function() {
         var estados = {
             'BORRADOR': 'Borrador',
             'REVISION_JI_TH': 'Revisión inicial JI',
+            'REVISION_CAMBIOS_TH': 'Revisión de cambios TH',
             'ENVIADO_JF': 'Enviado a JIS',
             'OBSERVADO_JF': 'Observado por JIS',
             'APROBADO_POR_JF': 'Aprobado por JIS',
@@ -172,6 +173,7 @@ window.initDescriptorList = function() {
         var classes = {
             'BORRADOR': 'borrador',
             'REVISION_JI_TH': 'enviado_jf',
+            'REVISION_CAMBIOS_TH': 'enviado_th',
             'ENVIADO_JF': 'enviado_jf',
             'OBSERVADO_JF': 'observado_jf',
             'APROBADO_POR_JF': 'aprobado_jf',
@@ -227,17 +229,11 @@ window.initDescriptorList = function() {
             html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
         }
         if (d.flujoCreadoPorTH && d.estado === 'REVISION_JI_TH' && currentUser.rol === 'JEFE_INMEDIATO') {
-            html += '<li><button class="dropdown-item btn-visto-bueno-ji" data-id="' + d.id + '"><i class="fas fa-clipboard-check me-2 text-success"></i>Dar visto bueno</button></li>';
-        }
-        var estaEnFirmas = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(d.estado) !== -1;
-        if (estaEnFirmas) {
-            html += '<li><button class="dropdown-item btn-notificar-firma" data-id="' + d.id + '"><i class="fas fa-bell me-2 text-primary"></i>Notificar firmantes</button></li>';
-            if (d.estado === 'FIRMADO_CT' && d.firmaCT && !d.firmaJI) {
-                html += '<li><button class="dropdown-item btn-firmar-ji" data-id="' + d.id + '"><i class="fas fa-check me-2 text-primary"></i>Aprobar documento</button></li>';
-            }
+            html += '<li><button class="dropdown-item btn-visto-bueno-ji" data-id="' + d.id + '"><i class="fas fa-clipboard-check me-2 text-success"></i>Revisar y dar visto bueno</button></li>';
         }
         if (d.estado === 'ACTIVO') {
             html += '<li><hr class="dropdown-divider"></li>';
+            html += '<li><button class="dropdown-item btn-asignar-colaboradores" data-id="' + d.id + '"><i class="fas fa-users me-2 text-primary"></i>Asignar colaboradores</button></li>';
             if ((d.tipoFormato || 'CORTA') === 'EXTENSA') {
                 html += '<li><button class="dropdown-item btn-version-extensa" data-id="' + d.id + '"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>';
             } else {
@@ -332,9 +328,8 @@ window.initDescriptorList = function() {
         $('.btn-reenviar-jf').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorAJF($(this).data('id')); });
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
         $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorATH($(this).data('id')); });
-        $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirmantes($(this).data('id')); });
         $('.btn-visto-bueno-ji').off('click').on('click', function(e) { e.stopPropagation(); darVistoBuenoJI($(this).data('id')); });
-        $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
+        $('.btn-asignar-colaboradores').off('click').on('click', function(e) { e.stopPropagation(); abrirAsignacionColaboradores($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
         // Eventos para versión corta y extensa
@@ -627,39 +622,24 @@ window.initDescriptorList = function() {
             Swal.fire('No disponible', 'El visto bueno solo aplica a descriptores creados por Talento Humano pendientes de revisión inicial.', 'info');
             return;
         }
-
-        Swal.fire({
-            title: '¿Dar visto bueno de revisión?',
-            html: '<div class="text-start"><p>Se registrará únicamente un <strong>visto bueno de revisión</strong>. Esto no constituye aprobación formal del descriptor.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-check"></i> Dar visto bueno',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#198754'
-        }).then(function(result) {
-            if (!result.isConfirmed) return;
-            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-            DescriptorService.update(id, {
-                estado: 'FIRMA_JTH',
-                vistoBuenoJI: {
-                    nombre: currentUserGlobal.nombre,
-                    rol: currentUserGlobal.rolNombre,
-                    fecha: new Date().toISOString(),
-                    tipo: 'VISTO_BUENO_REVISION'
-                },
-                fechaVistoBuenoJI: new Date().toISOString()
-            });
-            DescriptorService.registrarEvento(id, {
-                accion: 'VISTO BUENO DE REVISIÓN DEL JEFE INMEDIATO',
-                usuario: currentUserGlobal.nombre,
-                rol: currentUserGlobal.rolNombre,
-                estadoNuevo: 'FIRMA_JTH',
-                estado: 'FIRMA_JTH'
-            });
-            Swal.fire('Visto bueno registrado', 'El descriptor fue enviado al colaborador/titular para su revisión y aprobación.', 'success').then(function() {
-                cargarDescriptores();
-            });
+        if (typeof DescriptorController === 'undefined') {
+            Swal.fire('Error', 'No se puede abrir el formulario del descriptor.', 'error');
+            return;
+        }
+        $('#pageTitle').text('Revisión inicial del descriptor');
+        var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : null;
+        DescriptorController.init(currentUser, id, {
+            navigationToken: token,
+            jiInitialReview: true,
+            afterSaveModule: 'JI_INITIAL'
         });
+        setTimeout(function() {
+            $('.descriptor-save-top').after(
+                '<div id="jiInitialReviewPanel" class="alert alert-info py-2 mb-3">' +
+                '<i class="fas fa-info-circle me-1"></i> Revise y edite el descriptor si es necesario. Al guardar, se registrará su visto bueno de revisión y el descriptor volverá a Talento Humano para validar los cambios.' +
+                '</div>'
+            );
+        }, 300);
     }
     
     function firmarDescriptorJI(id) {
@@ -707,6 +687,89 @@ window.initDescriptorList = function() {
                 Swal.fire('Aprobado', mensaje, 'success');
                 cargarDescriptores();
             }
+        });
+    }
+
+    function abrirAsignacionColaboradores(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        var colaboradores = typeof AreasPuestosService !== 'undefined' ? AreasPuestosService.getColaboradores() : [];
+        var asignados = descriptor.colaboradoresAsignados || [];
+        var asignadosMap = {};
+        for (var a = 0; a < asignados.length; a++) asignadosMap[asignados[a].usuario] = asignados[a];
+
+        var html = '<div class="text-start">';
+        html += '<div class="alert alert-info py-2"><strong>' + (descriptor.codigo || 'DES-' + id) + '</strong><br>' + (descriptor.puesto || '-') + '</div>';
+        html += '<label class="form-label fw-semibold">Colaboradores que podrán ver este descriptor</label>';
+        html += '<div style="max-height:210px;overflow:auto;border:1px solid #dee2e6;border-radius:10px;padding:10px;">';
+        if (colaboradores.length === 0) {
+            html += '<p class="text-muted mb-0">No hay colaboradores creados.</p>';
+        }
+        for (var i = 0; i < colaboradores.length; i++) {
+            var checked = asignadosMap[colaboradores[i].usuario] ? ' checked' : '';
+            html += '<div class="form-check mb-2">' +
+                '<input class="form-check-input colaborador-check" type="checkbox" value="' + colaboradores[i].usuario + '" id="colab_' + i + '"' + checked + '>' +
+                '<label class="form-check-label" for="colab_' + i + '"><strong>' + colaboradores[i].nombre + '</strong><br><small class="text-muted">' + colaboradores[i].puesto + ' | ' + colaboradores[i].usuario + '</small></label>' +
+                '</div>';
+        }
+        html += '</div>';
+        if (asignados.length > 0) {
+            html += '<hr><label class="form-label fw-semibold">Documentos firmados cargados</label>';
+            for (var d = 0; d < asignados.length; d++) {
+                var doc = asignados[d].documentoFirmado;
+                html += '<div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-2 mb-2 gap-2">' +
+                    '<div><strong>' + asignados[d].nombre + '</strong><br><small class="text-muted">' + (doc ? 'Documento cargado: ' + doc.nombre : 'Sin documento cargado') + '</small></div>' +
+                    '<input type="file" class="form-control form-control-sm documento-firmado-input" data-usuario="' + asignados[d].usuario + '" accept=".pdf,.png,.jpg,.jpeg" style="max-width:260px;">' +
+                    '</div>';
+            }
+        }
+        html += '</div>';
+
+        Swal.fire({
+            title: 'Asignar colaboradores',
+            html: html,
+            width: '760px',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar asignación',
+            cancelButtonText: 'Cerrar',
+            confirmButtonColor: '#0d6efd',
+            didOpen: function() {
+                $('.documento-firmado-input').off('change').on('change', function() {
+                    var input = this;
+                    var file = input.files && input.files[0];
+                    if (!file) return;
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                        DescriptorService.guardarDocumentoFirmadoColaborador(id, $(input).data('usuario'), {
+                            nombre: file.name,
+                            tipo: file.type,
+                            dataUrl: e.target.result,
+                            fecha: new Date().toISOString()
+                        }, currentUserGlobal.nombre, currentUserGlobal.rolNombre);
+                        Swal.fire('Documento cargado', 'Documento firmado guardado correctamente.', 'success').then(function() {
+                            abrirAsignacionColaboradores(id);
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+            preConfirm: function() {
+                var seleccionados = [];
+                $('.colaborador-check:checked').each(function() {
+                    var usuario = $(this).val();
+                    var colaborador = colaboradores.filter(function(c) { return c.usuario === usuario; })[0];
+                    if (colaborador) seleccionados.push(colaborador);
+                });
+                return seleccionados;
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            DescriptorService.asignarColaboradores(id, result.value || [], currentUserGlobal.nombre, currentUserGlobal.rolNombre);
+            Swal.fire('Guardado', 'Colaboradores asignados correctamente.', 'success').then(function() {
+                cargarDescriptores();
+            });
         });
     }
     

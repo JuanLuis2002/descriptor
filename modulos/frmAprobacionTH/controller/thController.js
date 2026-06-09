@@ -157,7 +157,8 @@ var THController = {
             'OBSERVADO_TH': 'Observado por TH',
             'REVISADO_GTH': 'Revisado por GTH',
             'APROBADO_TH': 'Revisado por GTH',
-            'FIRMA_JTH': 'Pendiente de firmas',
+            'REVISION_CAMBIOS_TH': 'Revisión de cambios TH',
+            'FIRMA_JTH': 'Pendiente de validación',
             'FIRMADO_JTH': 'Firmado por JTH',
             'FIRMADO_CT': 'Firmado por colaborador',
             'ACTIVO': 'Activo',
@@ -172,6 +173,7 @@ var THController = {
             'OBSERVADO_TH': 'bg-warning text-dark',
             'REVISADO_GTH': 'bg-success',
             'APROBADO_TH': 'bg-success',
+            'REVISION_CAMBIOS_TH': 'bg-warning text-dark',
             'FIRMA_JTH': 'bg-primary',
             'FIRMADO_JTH': 'bg-primary',
             'FIRMADO_CT': 'bg-primary',
@@ -245,6 +247,7 @@ var THController = {
         var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
         this.navigationToken = token;
         var puedeEditarDescriptor = descriptor.estado === 'ENVIADO_TH';
+        var esRevisionCambios = descriptor.estado === 'REVISION_CAMBIOS_TH';
         DescriptorController.init(this.currentUser, id, {
             readOnly: !puedeEditarDescriptor,
             thReview: true,
@@ -270,18 +273,21 @@ var THController = {
     renderPanelRevision: function(id, descriptor) {
         $('#revisionTHActions').remove();
 
-        var puedeGestionar = descriptor.estado === 'ENVIADO_TH';
+        var puedeGestionar = descriptor.estado === 'ENVIADO_TH' || descriptor.estado === 'REVISION_CAMBIOS_TH';
+        var esRevisionCambios = descriptor.estado === 'REVISION_CAMBIOS_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
         var complementosHtml = puedeGestionar
-            ? '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>'
-            : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor ya fue enviado a firmas. Solo puede consultarlo en modo lectura.</div>';
+            ? (esRevisionCambios
+                ? '<div class="alert alert-warning py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Revise los cambios realizados por el jefe inmediato. Si todo está correcto, valide para activar el descriptor.</div>'
+                : '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>')
+            : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor solo puede consultarse en modo lectura.</div>';
 
         var accionesHtml = puedeGestionar
             ? '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
                 '<button type="button" class="btn btn-warning" onclick="THController.observarDesdeFormulario(' + id + ')"><i class="fas fa-comment-dots me-1"></i> Observar</button>' +
-                '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> Revisar y enviar a firmas</button>' +
+                '<button type="button" class="btn btn-success" onclick="THController.aprobarDesdeFormulario(' + id + ')"><i class="fas fa-check me-1"></i> ' + (esRevisionCambios ? 'Validar cambios y activar' : 'Validar descriptor') + '</button>' +
               '</div>'
             : '<div class="d-flex flex-wrap gap-2 justify-content-end">' +
                 '<button type="button" class="btn btn-outline-secondary" onclick="THController.loadView()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
@@ -292,7 +298,7 @@ var THController = {
             '<div>' +
             '<h6 class="mb-1"><i class="fas fa-user-check me-1"></i> Revisión técnica de Talento Humano</h6>' +
             '<div class="small">Descriptor <strong>' + (descriptor.codigo || 'DES-' + id) + '</strong> | Formato: <strong>' + (esExtensa ? 'Versión extensa' : 'Versión corta') + '</strong> | Estado: <strong>' + estadoTexto + '</strong></div>' +
-            (puedeGestionar ? '<div class="small text-muted mt-1">Revise el descriptor y complete los apartados técnicos cuando aplique.</div>' : '<div class="small text-muted mt-1">Este descriptor no está pendiente de revisión técnica.</div>') +
+            (puedeGestionar ? '<div class="small text-muted mt-1">' + (esRevisionCambios ? 'Revise los cambios enviados por el jefe inmediato.' : 'Revise el descriptor y complete los apartados técnicos cuando aplique.') + '</div>' : '<div class="small text-muted mt-1">Este descriptor no está pendiente de revisión técnica.</div>') +
             '</div>' +
             accionesHtml +
             '</div>' +
@@ -343,28 +349,30 @@ var THController = {
     },
 
     aprobarDesdeFormulario: function(id) {
+        var descriptor = THService.getById(id);
+        var esRevisionCambios = descriptor && descriptor.estado === 'REVISION_CAMBIOS_TH';
         Swal.fire({
-            title: '¿Marcar como revisado?',
-            text: 'Se registrará la revisión de la Generalista de TH y el descriptor pasará al flujo de firmas.',
+            title: esRevisionCambios ? '¿Validar cambios y activar?' : '¿Validar descriptor?',
+            text: esRevisionCambios ? 'Se registrará el visto bueno de Talento Humano y el descriptor quedará activo.' : 'Se registrará la validación de Talento Humano y el descriptor quedará activo.',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Sí, marcar revisado',
+            confirmButtonText: esRevisionCambios ? 'Sí, activar' : 'Sí, validar',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#198754'
         }).then(function(result) {
             if (!result.isConfirmed) return;
 
-            THController.guardarComplementosDesdeFormulario(id, true);
+            if (!esRevisionCambios) THController.guardarComplementosDesdeFormulario(id, true);
             THService.aprobar(id);
             DescriptorService.registrarEvento(id, {
-                accion: 'REVISADO POR GENERALISTA DE TH',
+                accion: esRevisionCambios ? 'VISTO BUENO DE VALIDACIÓN TH' : 'VALIDACIÓN DE TALENTO HUMANO',
                 usuario: THController.currentUser.nombre,
                 rol: THController.currentUser.rolNombre,
-                estadoNuevo: 'REVISADO_GTH',
-                estado: 'FIRMA_JTH'
+                estadoNuevo: 'ACTIVO',
+                estado: 'ACTIVO'
             });
 
-            Swal.fire('Revisado', 'Descriptor revisado por Generalista de TH y enviado para firmas.', 'success').then(function() {
+            Swal.fire('Validado', 'Descriptor validado y activado correctamente.', 'success').then(function() {
                 THController.loadView();
             });
         });
