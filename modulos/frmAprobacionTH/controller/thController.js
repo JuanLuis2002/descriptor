@@ -246,7 +246,7 @@ var THController = {
         $('#pageTitle').text('Revisión Técnica TH');
         var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : this.navigationToken;
         this.navigationToken = token;
-        var puedeEditarDescriptor = descriptor.estado === 'ENVIADO_TH';
+        var puedeEditarDescriptor = descriptor.estado === 'ENVIADO_TH' || descriptor.estado === 'REVISION_CAMBIOS_TH';
         var esRevisionCambios = descriptor.estado === 'REVISION_CAMBIOS_TH';
         DescriptorController.init(this.currentUser, id, {
             readOnly: !puedeEditarDescriptor,
@@ -277,9 +277,22 @@ var THController = {
         var esRevisionCambios = descriptor.estado === 'REVISION_CAMBIOS_TH';
         var esExtensa = (descriptor.tipoFormato || 'CORTA') === 'EXTENSA';
         var estadoTexto = this.getEstadoTexto(descriptor.estado);
+        var seccionesEditadas = descriptor.ultimasSeccionesEditadasJI || [];
+        var ediciones = descriptor.edicionesRevisionJI || [];
+        var resumenCambiosHtml = '';
+        if (esRevisionCambios) {
+            resumenCambiosHtml = '<div class="alert alert-warning py-2 mt-3 mb-0">' +
+                '<div class="fw-semibold"><i class="fas fa-pen-to-square me-1"></i> Cambios enviados por Jefe Inmediato</div>' +
+                '<div class="small mt-1"><strong>Secciones modificadas:</strong> ' + (seccionesEditadas.length ? seccionesEditadas.join(', ') : 'Sin cambios detectados') + '</div>';
+            if (ediciones.length > 0) {
+                var ultima = ediciones[ediciones.length - 1];
+                resumenCambiosHtml += '<div class="small"><strong>Última edición:</strong> ' + (ultima.usuario || '-') + ' | ' + (ultima.fecha ? new Date(ultima.fecha).toLocaleString() : '-') + '</div>';
+            }
+            resumenCambiosHtml += '</div>';
+        }
         var complementosHtml = puedeGestionar
             ? (esRevisionCambios
-                ? '<div class="alert alert-warning py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Revise los cambios realizados por el jefe inmediato. Si todo está correcto, valide para activar el descriptor.</div>'
+                ? '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede revisar y seguir editando el descriptor. Si todo está correcto, valide para activarlo.</div>'
                 : '<div class="alert alert-info py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Puede editar el descriptor completo. <strong>Requerimientos Organizacionales</strong> e <strong>Impacto Económico</strong> son apartados exclusivos de TH/Jefe TH.</div>')
             : '<div class="alert alert-secondary py-2 mt-3 mb-0"><i class="fas fa-info-circle me-1"></i> Este descriptor solo puede consultarse en modo lectura.</div>';
 
@@ -302,6 +315,7 @@ var THController = {
             '</div>' +
             accionesHtml +
             '</div>' +
+            resumenCambiosHtml +
             complementosHtml +
             '</div>';
 

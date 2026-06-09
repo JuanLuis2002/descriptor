@@ -7,6 +7,9 @@ var DescriptorListService = {
     getByUsuario: function(user) {
         var todos = DescriptorService.getAll();
         if (!user) return [];
+        if (user.rol === 'TH_GENERALISTA' || user.rol === 'JEFE_TH') {
+            return todos;
+        }
         if (user.rol === 'JEFE_INMEDIATO') {
             return todos.filter(function(d) {
                 var jefeAsignado = '';

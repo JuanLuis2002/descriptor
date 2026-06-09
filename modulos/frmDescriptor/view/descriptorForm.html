@@ -1148,6 +1148,42 @@
         actividadFuncionActiva = null;
         actualizarContadoresActividades();
     }
+
+    function normalizarParaComparar(value) {
+        return JSON.stringify(value == null ? null : value);
+    }
+
+    function obtenerSeccionesModificadas(before, after) {
+        var secciones = [
+            { nombre: 'Generalidades', keys: ['puesto', 'area', 'reportaA', 'fechaEmision', 'tipoFormato'] },
+            { nombre: 'Objetivo', keys: ['objetivo'] },
+            { nombre: 'Funciones claves', keys: ['funcionesClaves', 'actividadesPorFuncion'] },
+            { nombre: 'Funciones secundarias', keys: ['funcionesSecundarias'] },
+            { nombre: 'Indicadores KPI', keys: ['kpis'] },
+            { nombre: 'Responsabilidades', keys: ['responsabilidades'] },
+            { nombre: 'Perfil del puesto', keys: ['perfil', 'educacion', 'experiencia'] },
+            { nombre: 'Competencias', keys: ['competenciasTecnicas', 'competenciasConductuales'] },
+            { nombre: 'Relaciones laborales', keys: ['relacionesLaborales'] },
+            { nombre: 'Requerimientos organizacionales', keys: ['requerimientosOrganizacionales'] },
+            { nombre: 'Riesgos físicos', keys: ['riesgosFisicos'] },
+            { nombre: 'Entrenamiento', keys: ['entrenamiento'] }
+        ];
+        var cambios = [];
+        before = before || {};
+        after = after || {};
+        for (var i = 0; i < secciones.length; i++) {
+            var cambioSeccion = false;
+            for (var k = 0; k < secciones[i].keys.length; k++) {
+                var key = secciones[i].keys[k];
+                if (normalizarParaComparar(before[key]) !== normalizarParaComparar(after[key])) {
+                    cambioSeccion = true;
+                    break;
+                }
+            }
+            if (cambioSeccion) cambios.push(secciones[i].nombre);
+        }
+        return cambios;
+    }
     
     function actualizarActividades() {
         guardarActividadesActuales();
@@ -1588,30 +1624,42 @@
                     formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
                 }
                 
-                // Una edición no debe reiniciar el flujo, excepto la revisión inicial del JI.
+                var seccionesEditadasJI = window._jiInitialReviewMode === true
+                    ? obtenerSeccionesModificadas(existingDescriptor, formData)
+                    : [];
+
+                // Una edición no debe reiniciar el flujo. El visto bueno del JI avanza con botón aparte.
                 formData.estado = existingDescriptor.estado || 'BORRADOR';
                 if (window._jiInitialReviewMode === true && existingDescriptor.estado === 'REVISION_JI_TH') {
-                    formData.estado = 'REVISION_CAMBIOS_TH';
-                    formData.vistoBuenoJI = {
+                    formData.estado = 'REVISION_JI_TH';
+                    formData.ultimoEditorRevisionJI = {
                         nombre: currentUser.nombre,
                         rol: currentUser.rolNombre,
-                        fecha: new Date().toISOString(),
-                        tipo: 'VISTO_BUENO_REVISION'
+                        fecha: new Date().toISOString()
                     };
-                    formData.fechaVistoBuenoJI = new Date().toISOString();
+                    formData.ultimasSeccionesEditadasJI = seccionesEditadasJI;
+                    formData.edicionesRevisionJI = existingDescriptor.edicionesRevisionJI || [];
+                    formData.edicionesRevisionJI.push({
+                        usuario: currentUser.nombre,
+                        rol: currentUser.rolNombre,
+                        fecha: new Date().toISOString(),
+                        secciones: seccionesEditadasJI
+                    });
                 }
                 
                 DescriptorService.update(window._editingId, formData);
                 DescriptorService.registrarEvento(window._editingId, {
-                    accion: window._jiInitialReviewMode === true ? 'VISTO BUENO DE REVISIÓN DEL JEFE INMEDIATO' : 'ACTUALIZACIÓN DEL DESCRIPTOR',
+                    accion: window._jiInitialReviewMode === true ? 'EDICIÓN DE REVISIÓN DEL JEFE INMEDIATO' : 'ACTUALIZACIÓN DEL DESCRIPTOR',
                     usuario: currentUser.nombre,
                     rol: currentUser.rolNombre,
                     estadoNuevo: formData.estado,
                     estado: formData.estado,
-                    observacion: window._jiInitialReviewMode === true ? 'El jefe inmediato revisó el descriptor y lo devolvió a Talento Humano para validar los cambios.' : ''
+                    observacion: window._jiInitialReviewMode === true
+                        ? (seccionesEditadasJI.length > 0 ? 'Secciones modificadas: ' + seccionesEditadasJI.join(', ') : 'El jefe inmediato guardó la revisión sin cambios detectados.')
+                        : ''
                 });
                 var mensajeExito = window._jiInitialReviewMode === true
-                    ? 'Visto bueno registrado. El descriptor fue enviado a Talento Humano para revisar los cambios.'
+                    ? 'Cambios guardados. El descriptor sigue pendiente de visto bueno; cuando esté listo use el botón "Dar visto bueno".'
                     : 'Descriptor actualizado correctamente';
                 Swal.fire('Éxito', mensajeExito, 'success').then(function() {
                     window._isEditing = false;

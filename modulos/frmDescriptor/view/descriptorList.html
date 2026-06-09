@@ -385,6 +385,7 @@ window.initDescriptorList = function() {
         var classes = {
             'BORRADOR': 'bg-secondary',
             'REVISION_JI_TH': 'bg-info',
+            'REVISION_CAMBIOS_TH': 'bg-warning text-dark',
             'ENVIADO_JF': 'bg-info',
             'OBSERVADO_JF': 'bg-warning',
             'APROBADO_POR_JF': 'bg-success',
@@ -636,11 +637,63 @@ window.initDescriptorList = function() {
         setTimeout(function() {
             $('.descriptor-save-top').after(
                 '<div id="jiInitialReviewPanel" class="alert alert-info py-2 mb-3">' +
-                '<i class="fas fa-info-circle me-1"></i> Revise y edite el descriptor si es necesario. Al guardar, se registrará su visto bueno de revisión y el descriptor volverá a Talento Humano para validar los cambios.' +
+                '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2">' +
+                '<div><i class="fas fa-info-circle me-1"></i> Puede actualizar el descriptor sin enviarlo a TH. Cuando finalice la revisión, presione <strong>Dar visto bueno</strong>.</div>' +
+                '<div class="d-flex gap-2">' +
+                '<button type="button" class="btn btn-outline-secondary btn-sm" onclick="cargarMisDescriptores()"><i class="fas fa-arrow-left me-1"></i> Volver</button>' +
+                '<button type="button" class="btn btn-success btn-sm" onclick="registrarVistoBuenoRevisionJI(' + id + ')"><i class="fas fa-check me-1"></i> Dar visto bueno</button>' +
+                '</div>' +
+                '</div>' +
                 '</div>'
             );
         }, 300);
     }
+
+    function registrarVistoBuenoRevisionJI(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || descriptor.estado !== 'REVISION_JI_TH' || !descriptor.flujoCreadoPorTH) {
+            Swal.fire('No disponible', 'El visto bueno solo aplica mientras el descriptor está en revisión inicial del jefe inmediato.', 'info');
+            return;
+        }
+        var secciones = descriptor.ultimasSeccionesEditadasJI || [];
+        Swal.fire({
+            title: '¿Dar visto bueno?',
+            html: '<div class="text-start"><p>Se enviará el descriptor a Talento Humano para revisar los cambios.</p>' +
+                '<p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p>' +
+                '<p><strong>Secciones modificadas:</strong> ' + (secciones.length ? secciones.join(', ') : 'Sin cambios detectados') + '</p></div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, dar visto bueno',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            DescriptorService.update(id, {
+                estado: 'REVISION_CAMBIOS_TH',
+                vistoBuenoJI: {
+                    nombre: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    fecha: new Date().toISOString(),
+                    tipo: 'VISTO_BUENO_REVISION'
+                },
+                fechaVistoBuenoJI: new Date().toISOString()
+            });
+            DescriptorService.registrarEvento(id, {
+                accion: 'VISTO BUENO DE REVISIÓN DEL JEFE INMEDIATO',
+                usuario: currentUserGlobal.nombre,
+                rol: currentUserGlobal.rolNombre,
+                estadoNuevo: 'REVISION_CAMBIOS_TH',
+                estado: 'REVISION_CAMBIOS_TH',
+                observacion: secciones.length ? 'Secciones modificadas para revisión TH: ' + secciones.join(', ') : 'Visto bueno enviado sin cambios detectados.'
+            });
+            Swal.fire('Enviado a TH', 'Talento Humano podrá revisar las ediciones y dar visto bueno.', 'success').then(function() {
+                cargarMisDescriptores();
+            });
+        });
+    }
+
+    window.registrarVistoBuenoRevisionJI = registrarVistoBuenoRevisionJI;
     
     function firmarDescriptorJI(id) {
         var descriptor = DescriptorService.getById(id);
