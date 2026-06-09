@@ -134,6 +134,54 @@ var DescriptorService = {
         }
         return ultimaVersion + 1;
     },
+
+    crearNuevaVersionDesdeInactivo: function(id, usuario) {
+        var origen = this.getById(id);
+        if (!origen) return { ok: false, mensaje: 'No se encontró el descriptor origen.' };
+        if (origen.estado !== 'INACTIVO') {
+            return { ok: false, mensaje: 'Solo se puede crear una nueva versión desde un descriptor inactivo.' };
+        }
+        var vigente = this.getDescriptorVigenteOEnProcesoByPuesto(origen.puesto, origen.id);
+        if (vigente) {
+            return {
+                ok: false,
+                mensaje: 'No es posible crear una nueva versión porque existe un descriptor activo o en proceso para este puesto.'
+            };
+        }
+
+        var copia = JSON.parse(JSON.stringify(origen));
+        var camposLimpiar = [
+            'id', 'codigo', 'auditoria', 'estado', 'fechaCreacion', 'fechaDesactivacion',
+            'colaboradoresAsignados', 'firmaCT', 'firmaJI', 'firmaJTH', 'fechaFirmaCT',
+            'fechaFirmaJI', 'fechaFirmaJTH', 'vistoBuenoJI', 'vistoBuenoTH',
+            'fechaVistoBuenoJI', 'fechaVistoBuenoTH', 'observaciones', 'observacionesJF',
+            'observacionesTH', 'comentariosAprobacion', 'comentariosTH',
+            'edicionesRevisionJI', 'edicionesRevisionTH', 'ultimasSeccionesEditadasJI',
+            'ultimasSeccionesEditadasTH', 'ultimoEditorRevisionJI', 'flujoCreadoPorTH',
+            'creadoPorTH', 'fechaEnvioRevisionJI'
+        ];
+        for (var c = 0; c < camposLimpiar.length; c++) {
+            delete copia[camposLimpiar[c]];
+        }
+
+        copia.estado = 'BORRADOR';
+        copia.version = this.getSiguienteVersionByPuesto(origen.puesto);
+        copia.creador = usuario && usuario.nombre ? usuario.nombre : origen.creador;
+        copia.rolCreador = usuario && usuario.rol ? usuario.rol : origen.rolCreador;
+        copia.fechaEmision = new Date().toISOString().split('T')[0];
+        copia.versionOrigenId = origen.id;
+        copia.codigoOrigen = origen.codigo;
+
+        var nuevo = this.save(copia);
+        this.registrarEvento(nuevo.id, {
+            accion: 'CREACIÓN DE NUEVA VERSIÓN DESDE DESCRIPTOR INACTIVO',
+            usuario: copia.creador,
+            rol: usuario && usuario.rolNombre ? usuario.rolNombre : copia.rolCreador,
+            estado: nuevo.estado,
+            observacion: 'Nueva versión creada a partir de ' + (origen.codigo || ('DES-' + origen.id)) + ' versión ' + (origen.version || 1)
+        });
+        return { ok: true, descriptor: nuevo };
+    },
     
     getVersionPosteriorVigenteOEnProceso: function(descriptor) {
         if (!descriptor) return null;

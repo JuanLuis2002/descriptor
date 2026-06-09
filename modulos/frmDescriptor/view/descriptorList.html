@@ -253,6 +253,7 @@ window.initDescriptorList = function() {
             html += '<li><button class="dropdown-item btn-desactivar" data-id="' + d.id + '"><i class="fas fa-ban me-2 text-danger"></i>Desactivar</button></li>';
         }
         if (d.estado === 'INACTIVO') {
+            html += '<li><button class="dropdown-item btn-nueva-version" data-id="' + d.id + '"><i class="fas fa-copy me-2 text-primary"></i>Crear nueva versión</button></li>';
             html += '<li><button class="dropdown-item btn-reactivar" data-id="' + d.id + '"><i class="fas fa-sync-alt me-2 text-success"></i>Reactivar</button></li>';
         }
         html += '</ul></div>';
@@ -345,6 +346,7 @@ window.initDescriptorList = function() {
         $('.btn-visto-bueno-th').off('click').on('click', function(e) { e.stopPropagation(); darVistoBuenoTH($(this).data('id')); });
         $('.btn-asignar-colaboradores').off('click').on('click', function(e) { e.stopPropagation(); abrirAsignacionColaboradores($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
+        $('.btn-nueva-version').off('click').on('click', function(e) { e.stopPropagation(); crearNuevaVersionDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
         // Eventos para versión corta y extensa
         $('.btn-version-corta').off('click').on('click', function(e) { 
@@ -954,6 +956,41 @@ window.initDescriptorList = function() {
             }
         }
         Swal.fire('No disponible', 'Este colaborador no tiene documento firmado cargado.', 'info');
+    }
+
+    function crearNuevaVersionDescriptor(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        if (descriptor.estado !== 'INACTIVO') {
+            Swal.fire('No disponible', 'Solo puede crear una nueva versión desde un descriptor inactivo.', 'info');
+            return;
+        }
+        var siguienteVersion = DescriptorService.getSiguienteVersionByPuesto(descriptor.puesto);
+        Swal.fire({
+            title: '¿Crear nueva versión?',
+            html: '<div class="text-start">' +
+                '<p>Se creará una copia editable del descriptor en estado <strong>Borrador</strong>.</p>' +
+                '<p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p>' +
+                '<p><strong>Versión origen:</strong> ' + (descriptor.version || 1) + '</p>' +
+                '<p><strong>Nueva versión:</strong> ' + siguienteVersion + '</p>' +
+                '<p class="small text-muted mb-0">No se copiarán colaboradores asignados, documentos firmados ni firmas históricas.</p>' +
+                '</div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, crear versión',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            var resultado = DescriptorService.crearNuevaVersionDesdeInactivo(id, currentUser);
+            if (!resultado.ok) {
+                Swal.fire('Validación', resultado.mensaje, 'warning');
+                return;
+            }
+            Swal.fire('Nueva versión creada', 'Se creó el descriptor ' + resultado.descriptor.codigo + ' versión ' + resultado.descriptor.version + '.', 'success').then(function() {
+                editarDescriptor(resultado.descriptor.id);
+            });
+        });
     }
     
     function desactivarDescriptor(id) {
