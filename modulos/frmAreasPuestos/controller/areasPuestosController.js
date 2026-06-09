@@ -139,11 +139,13 @@ var AreasPuestosController = {
 
         $(document).off('click.verPuestosArea').on('click.verPuestosArea', '.btn-ver-puestos-area', function() {
             self.areaSeleccionada = $(this).data('area');
+            self.jefeSeleccionado = $(this).data('jefe') || null;
             self.render();
         });
 
         $(document).off('click.volverAreas').on('click.volverAreas', '#btnVolverAreas', function() {
             self.areaSeleccionada = null;
+            self.jefeSeleccionado = null;
             self.render();
         });
     },
@@ -151,7 +153,11 @@ var AreasPuestosController = {
     render: function() {
         this.renderSelects();
         if (this.tipoCatalogo === 'jefes') {
-            this.renderJefesTable();
+            if (this.areaSeleccionada) {
+                this.renderPuestosArea();
+            } else {
+                this.renderJefesTable();
+            }
         } else if (this.tipoCatalogo === 'colaboradores') {
             this.renderColaboradoresTable();
         } else {
@@ -234,9 +240,13 @@ var AreasPuestosController = {
             this.renderAreasTable();
             return;
         }
-        $('#areaListPanel').addClass('d-none');
+        $('#areaListPanel, #jefesListPanel').addClass('d-none');
         $('#puestosAreaPanel').removeClass('d-none');
-        $('#puestosAreaTitle').text('Puestos de ' + area.nombre);
+        $('#puestosAreaTitle').text(this.jefeSeleccionado ? 'Puestos asignados al jefe inmediato' : 'Puestos del área');
+        var contexto = this.jefeSeleccionado
+            ? '<strong>Jefe inmediato:</strong> ' + this.jefeSeleccionado + ' &nbsp; | &nbsp; <strong>Área:</strong> ' + area.nombre
+            : '<strong>Área:</strong> ' + area.nombre;
+        $('#puestosAreaContext').html(contexto);
         $('#formPuesto [name="areaPuesto"]').val(area.nombre);
         var puestos = area.puestos || [];
         var html = '';
@@ -266,6 +276,8 @@ var AreasPuestosController = {
     },
 
     renderJefesTable: function() {
+        $('#jefesListPanel').removeClass('d-none');
+        $('#puestosAreaPanel').addClass('d-none');
         var jefes = AreasPuestosService.getJefesInmediatos();
         var html = '';
         for (var i = 0; i < jefes.length; i++) {
@@ -274,7 +286,7 @@ var AreasPuestosController = {
             html += '<tr>' +
                 '<td><strong>' + jefes[i].nombre + '</strong><br><small class="text-muted">' + jefes[i].usuario + '</small></td>' +
                 '<td>' + (jefes[i].area || '-') + '</td>' +
-                '<td><span class="badge bg-primary">' + puestos + ' puestos asignados al área</span></td>' +
+                '<td><button type="button" class="btn btn-sm btn-outline-primary btn-ver-puestos-area" data-area="' + (jefes[i].area || '') + '" data-jefe="' + jefes[i].nombre + '"><i class="fas fa-briefcase me-1"></i>' + puestos + ' puestos</button></td>' +
                 '</tr>';
         }
         $('#jefesTableBody').html(html || '<tr><td colspan="3" class="text-center text-muted py-4">No hay jefes inmediatos registrados.</td></tr>');
