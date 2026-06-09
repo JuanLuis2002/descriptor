@@ -36,11 +36,11 @@ var DescriptorService = {
 
         if (descriptor.flujoCreadoPorTH) {
             this.registrarEventoInterno(descriptor, {
-                accion: 'ENVÍO A REVISIÓN DEL JEFE INMEDIATO',
+                accion: 'CREACIÓN DE BORRADOR POR TALENTO HUMANO',
                 usuario: descriptor.creador,
                 rol: descriptor.rolCreador || 'Talento Humano',
                 estado: descriptor.estado,
-                descripcion: 'Descriptor creado por Talento Humano y enviado a revisión inicial del Jefe Inmediato'
+                descripcion: 'Descriptor creado por Talento Humano en estado borrador'
             });
         }
         

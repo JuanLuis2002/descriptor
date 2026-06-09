@@ -222,6 +222,9 @@ window.initDescriptorList = function() {
         if (d.estado === 'BORRADOR' && esJefeInmediato && esCreador) {
             html += '<li><button class="dropdown-item btn-enviar" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-primary"></i>Enviar a JIS</button></li>';
         }
+        if (d.estado === 'BORRADOR' && d.flujoCreadoPorTH && esCreador && (currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH')) {
+            html += '<li><button class="dropdown-item btn-enviar-revision-ji" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-primary"></i>Enviar a Jefe Inmediato</button></li>';
+        }
         if (d.estado === 'OBSERVADO_JF' && esJefeInmediato) {
             html += '<li><button class="dropdown-item btn-reenviar-jf" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-warning"></i>Reenviar a JIS</button></li>';
         }
@@ -337,6 +340,7 @@ window.initDescriptorList = function() {
         $('.btn-auditoria').off('click').on('click', function(e) { e.stopPropagation(); verAuditoria($(this).data('id')); });
         $('.btn-editar').off('click').on('click', function(e) { e.stopPropagation(); editarDescriptor($(this).data('id')); });
         $('.btn-enviar').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptor($(this).data('id')); });
+        $('.btn-enviar-revision-ji').off('click').on('click', function(e) { e.stopPropagation(); enviarRevisionInicialJI($(this).data('id')); });
         $('.btn-reenviar-jf').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorAJF($(this).data('id')); });
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
         $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorATH($(this).data('id')); });
@@ -526,6 +530,39 @@ window.initDescriptorList = function() {
                     cargarDescriptores();
                 }
             });
+    }
+
+    function enviarRevisionInicialJI(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || descriptor.estado !== 'BORRADOR' || !descriptor.flujoCreadoPorTH) {
+            Swal.fire('No disponible', 'Solo se pueden enviar borradores creados por Talento Humano.', 'info');
+            return;
+        }
+        Swal.fire({
+            title: '¿Enviar a Jefe Inmediato?',
+            text: 'El jefe inmediato del área podrá revisar, editar y dar visto bueno.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, enviar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            DescriptorService.update(id, {
+                estado: 'REVISION_JI_TH',
+                fechaEnvioRevisionJI: new Date().toISOString()
+            });
+            DescriptorService.registrarEvento(id, {
+                accion: 'ENVÍO A REVISIÓN DEL JEFE INMEDIATO',
+                usuario: currentUser.nombre,
+                rol: currentUser.rolNombre,
+                estadoNuevo: 'REVISION_JI_TH',
+                estado: 'REVISION_JI_TH'
+            });
+            Swal.fire('Enviado', 'Descriptor enviado al Jefe Inmediato para revisión inicial.', 'success').then(function() {
+                cargarDescriptores();
+            });
+        });
     }
     
     function reenviarDescriptorAJF(id) {

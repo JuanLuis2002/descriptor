@@ -1652,9 +1652,7 @@
         };
         if (!window._isEditing && (currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH')) {
             formData.flujoCreadoPorTH = true;
-            formData.estado = 'REVISION_JI_TH';
             formData.creadoPorTH = currentUser.nombre;
-            formData.fechaEnvioRevisionJI = new Date().toISOString();
         }
         if (tipoFormato === 'CORTA') {
             formData.relacionesLaborales = { internas: [], externas: [] };
