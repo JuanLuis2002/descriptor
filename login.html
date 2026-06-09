@@ -209,6 +209,11 @@
             'juan.perez': { nombre: 'Ing. Juan Pérez', password: '123456', rol: 'COLABORADOR', rolNombre: 'Colaborador', area: 'Analista Programador' }
         };
 
+        function getAllUsers() {
+            const dynamicUsers = JSON.parse(localStorage.getItem('usuariosSistema') || '{}');
+            return { ...users, ...dynamicUsers };
+        }
+
         $('#togglePassword').click(function() {
             const passwordInput = $('#password');
             const icon = $(this).find('i');
@@ -244,20 +249,22 @@
                 return;
             }
 
-            if (!users[username]) {
+            const allUsers = getAllUsers();
+
+            if (!allUsers[username]) {
                 showLoginWarning('Usuario incorrecto', 'El usuario ingresado no existe.');
                 $('#username').focus();
                 return;
             }
 
-            if (users[username].password !== password) {
+            if (allUsers[username].password !== password) {
                 showLoginWarning('Contraseña incorrecta', 'La contraseña ingresada no es correcta.');
                 $('#password').focus();
                 return;
             }
 
-            if (users[username] && users[username].password === password) {
-                sessionStorage.setItem('currentUser', JSON.stringify({ ...users[username], usuario: username }));
+            if (allUsers[username] && allUsers[username].password === password) {
+                sessionStorage.setItem('currentUser', JSON.stringify({ ...allUsers[username], usuario: username }));
                 window.location.href = 'index.html';
             }
         });

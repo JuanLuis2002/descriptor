@@ -136,10 +136,12 @@ function loadMenu() {
     } else if (currentUser.rol === 'TH_GENERALISTA') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="revisionTH">Revisión Técnica</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
+        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasJTH">Aprobaciones Pendientes</a>';
     } else if (currentUser.rol === 'COLABORADOR') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="firmasCT">Mi Aprobación</a>';
@@ -221,8 +223,20 @@ function cargarModulo(modulo) {
         case 'firmasCT':
             cargarFirmasCT();
             break;
+        case 'areasPuestos':
+            cargarAreasPuestos();
+            break;
         default:
             loadDashboard();
+    }
+}
+
+function cargarAreasPuestos() {
+    const token = beginNavigation();
+    if (typeof AreasPuestosController !== 'undefined' && AreasPuestosController.init) {
+        AreasPuestosController.init(currentUser, { navigationToken: token });
+    } else {
+        $('#contentContainer').html('<div class="alert alert-danger">Error: No se pudo cargar el módulo de áreas y puestos.</div>');
     }
 }
 

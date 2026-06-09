@@ -562,9 +562,46 @@
         'Cumplir con las competencias requeridas para el cargo'
     ];
 
+    function getCatalogoAreasDescriptor() {
+        if (typeof AreasPuestosService !== 'undefined') {
+            return AreasPuestosService.getAreas();
+        }
+        return Object.keys(puestosPorArea).map(function(nombreArea, index) {
+            return {
+                id: index + 1,
+                nombre: nombreArea,
+                jefeInmediatoUsuario: '',
+                puestos: (puestosPorArea[nombreArea] || []).map(function(nombrePuesto, puestoIndex) {
+                    return {
+                        id: puestoIndex + 1,
+                        nombre: nombrePuesto,
+                        reportaA: (responsablesPorPuesto[nombrePuesto] || [''])[0]
+                    };
+                })
+            };
+        });
+    }
+
+    function getAreaCatalogo(nombreArea) {
+        var areas = getCatalogoAreasDescriptor();
+        for (var i = 0; i < areas.length; i++) {
+            if (areas[i].nombre === nombreArea) return areas[i];
+        }
+        return null;
+    }
+
     function actualizarResponsablesPorPuesto(valorActual) {
         var puesto = $('select[name="puesto"]').val();
-        var responsables = responsablesPorPuesto[puesto] || [];
+        var area = getAreaCatalogo($('[name="area"]').val());
+        var responsables = [];
+        if (area && area.puestos) {
+            for (var p = 0; p < area.puestos.length; p++) {
+                if (area.puestos[p].nombre === puesto && area.puestos[p].reportaA) {
+                    responsables.push(area.puestos[p].reportaA);
+                }
+            }
+        }
+        if (responsables.length === 0) responsables = responsablesPorPuesto[puesto] || [];
         var $reporta = $('#reportaASelect');
         var preservarValorGuardado = arguments.length > 0;
         var valorPrevio = preservarValorGuardado ? (valorActual || '') : '';
@@ -601,9 +638,8 @@
 
     function cargarPuestosPorArea(puestoActual) {
         var area = $('[name="area"]').val() || currentUser.area || 'Subgerencia TI';
-        var puestos = puedeCrearCualquierArea()
-            ? (puestosPorArea[area] || [])
-            : (puestosPorArea[currentUser.area] || puestosPorArea['Subgerencia TI']);
+        var areaCatalogo = getAreaCatalogo(puedeCrearCualquierArea() ? area : currentUser.area);
+        var puestos = areaCatalogo && areaCatalogo.puestos ? areaCatalogo.puestos.map(function(puesto) { return puesto.nombre; }) : (puestosPorArea['Subgerencia TI'] || []);
         var $puesto = $('select[name="puesto"]');
         var preservarPuesto = arguments.length > 0;
         var valorPrevio = preservarPuesto ? (puestoActual || '') : '';
@@ -623,7 +659,9 @@
         var area = areaActual || currentUser.area || 'Subgerencia TI';
         if (puedeCrearCualquierArea()) {
             var opciones = '';
-            Object.keys(puestosPorArea).forEach(function(nombreArea) {
+            var areas = getCatalogoAreasDescriptor();
+            areas.forEach(function(areaItem) {
+                var nombreArea = areaItem.nombre;
                 opciones += '<option value="' + nombreArea + '"' + (nombreArea === area ? ' selected' : '') + '>' + nombreArea + '</option>';
             });
             $('#areaUsuario').replaceWith('<select class="form-select" name="area" id="areaUsuario">' + opciones + '</select>');

@@ -9,8 +9,16 @@ var DescriptorListService = {
         if (!user) return [];
         if (user.rol === 'JEFE_INMEDIATO') {
             return todos.filter(function(d) {
+                var jefeAsignado = '';
+                if (typeof AreasPuestosService !== 'undefined') {
+                    var area = AreasPuestosService.getAreaByNombre(d.area);
+                    jefeAsignado = area ? area.jefeInmediatoUsuario : '';
+                }
+                var perteneceAlAreaAsignada = jefeAsignado
+                    ? jefeAsignado === user.usuario
+                    : user.area === d.area;
                 return d.creador === user.nombre ||
-                    (d.flujoCreadoPorTH && ['REVISION_JI_TH', 'FIRMADO_CT', 'FIRMADO_JI', 'FIRMA_JTH', 'ACTIVO', 'INACTIVO'].indexOf(d.estado) !== -1);
+                    (d.flujoCreadoPorTH && perteneceAlAreaAsignada && ['REVISION_JI_TH', 'FIRMADO_CT', 'FIRMADO_JI', 'FIRMA_JTH', 'ACTIVO', 'INACTIVO'].indexOf(d.estado) !== -1);
             });
         }
         return todos.filter(function(d) { return d.creador === user.nombre; });
