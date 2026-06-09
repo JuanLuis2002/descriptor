@@ -231,9 +231,17 @@ window.initDescriptorList = function() {
         if (d.flujoCreadoPorTH && d.estado === 'REVISION_JI_TH' && currentUser.rol === 'JEFE_INMEDIATO') {
             html += '<li><button class="dropdown-item btn-visto-bueno-ji" data-id="' + d.id + '"><i class="fas fa-clipboard-check me-2 text-success"></i>Revisar y dar visto bueno</button></li>';
         }
+        if ((currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH') && (d.estado === 'ENVIADO_TH' || d.estado === 'REVISION_CAMBIOS_TH')) {
+            html += '<li><hr class="dropdown-divider"></li>';
+            html += '<li><button class="dropdown-item btn-editar-th" data-id="' + d.id + '"><i class="fas fa-edit me-2 text-warning"></i>Editar revisión</button></li>';
+            html += '<li><button class="dropdown-item btn-observar-th" data-id="' + d.id + '"><i class="fas fa-comment-dots me-2 text-danger"></i>Observar</button></li>';
+            html += '<li><button class="dropdown-item btn-visto-bueno-th" data-id="' + d.id + '"><i class="fas fa-check-circle me-2 text-success"></i>Dar visto bueno</button></li>';
+        }
         if (d.estado === 'ACTIVO') {
             html += '<li><hr class="dropdown-divider"></li>';
-            html += '<li><button class="dropdown-item btn-asignar-colaboradores" data-id="' + d.id + '"><i class="fas fa-users me-2 text-primary"></i>Asignar colaboradores</button></li>';
+            if (currentUser.rol === 'JEFE_INMEDIATO' || currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH') {
+                html += '<li><button class="dropdown-item btn-asignar-colaboradores" data-id="' + d.id + '"><i class="fas fa-users me-2 text-primary"></i>Asignar colaboradores</button></li>';
+            }
             if ((d.tipoFormato || 'CORTA') === 'EXTENSA') {
                 html += '<li><button class="dropdown-item btn-version-extensa" data-id="' + d.id + '"><i class="fas fa-file-pdf me-2 text-secondary"></i>Versión Extensa</button></li>';
             } else {
@@ -329,6 +337,9 @@ window.initDescriptorList = function() {
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
         $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorATH($(this).data('id')); });
         $('.btn-visto-bueno-ji').off('click').on('click', function(e) { e.stopPropagation(); darVistoBuenoJI($(this).data('id')); });
+        $('.btn-editar-th').off('click').on('click', function(e) { e.stopPropagation(); editarRevisionTH($(this).data('id')); });
+        $('.btn-observar-th').off('click').on('click', function(e) { e.stopPropagation(); observarRevisionTH($(this).data('id')); });
+        $('.btn-visto-bueno-th').off('click').on('click', function(e) { e.stopPropagation(); darVistoBuenoTH($(this).data('id')); });
         $('.btn-asignar-colaboradores').off('click').on('click', function(e) { e.stopPropagation(); abrirAsignacionColaboradores($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
@@ -586,6 +597,106 @@ window.initDescriptorList = function() {
             }
         });
     }
+
+    function editarRevisionTH(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || (descriptor.estado !== 'ENVIADO_TH' && descriptor.estado !== 'REVISION_CAMBIOS_TH')) {
+            Swal.fire('No disponible', 'Solo se puede editar mientras el descriptor está en revisión de Talento Humano.', 'info');
+            return;
+        }
+        var token = typeof window.beginNavigation === 'function' ? window.beginNavigation() : null;
+        $('#pageTitle').text('Revisión de Talento Humano');
+        $('.nav-link').removeClass('active');
+        $('.nav-link[data-modulo="misDescriptores"]').addClass('active');
+        DescriptorController.init(currentUser, id, {
+            readOnly: false,
+            thReview: true,
+            canEditThComplements: true,
+            navigationToken: token,
+            afterSaveModule: currentUser.rol === 'JEFE_TH' ? 'JTH' : 'TH',
+            returnToDescriptorList: true
+        });
+    }
+
+    function observarRevisionTH(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || (descriptor.estado !== 'ENVIADO_TH' && descriptor.estado !== 'REVISION_CAMBIOS_TH')) {
+            Swal.fire('No disponible', 'Solo se puede observar mientras el descriptor está en revisión de Talento Humano.', 'info');
+            return;
+        }
+        Swal.fire({
+            title: 'Observaciones de Talento Humano',
+            html: '<textarea id="observacionesTHList" class="form-control" rows="5" placeholder="Detalle las observaciones para el Jefe Inmediato..."></textarea>',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar observación',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545',
+            preConfirm: function() {
+                var value = document.getElementById('observacionesTHList').value;
+                if (!value || !value.trim()) {
+                    Swal.showValidationMessage('Debe ingresar observaciones');
+                    return false;
+                }
+                return value.trim();
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed || !result.value) return;
+            DescriptorService.update(id, {
+                estado: 'OBSERVADO_TH',
+                observacionesTH: result.value,
+                fechaObservacionTH: new Date().toISOString()
+            });
+            DescriptorService.registrarEvento(id, {
+                accion: 'OBSERVACIÓN POR TALENTO HUMANO',
+                usuario: currentUser.nombre,
+                rol: currentUser.rolNombre,
+                estadoNuevo: 'OBSERVADO_TH',
+                estado: 'OBSERVADO_TH',
+                observacion: result.value
+            });
+            Swal.fire('Observado', 'El descriptor fue devuelto al Jefe Inmediato con observaciones.', 'warning').then(function() {
+                cargarDescriptores();
+            });
+        });
+    }
+
+    function darVistoBuenoTH(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || (descriptor.estado !== 'ENVIADO_TH' && descriptor.estado !== 'REVISION_CAMBIOS_TH')) {
+            Swal.fire('No disponible', 'Solo se puede dar visto bueno mientras el descriptor está en revisión de Talento Humano.', 'info');
+            return;
+        }
+        Swal.fire({
+            title: '¿Dar visto bueno final?',
+            html: '<div class="text-start"><p>El descriptor quedará en estado <strong>Activo</strong>.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, activar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            DescriptorService.update(id, {
+                estado: 'ACTIVO',
+                vistoBuenoTH: {
+                    nombre: currentUser.nombre,
+                    rol: currentUser.rolNombre,
+                    fecha: new Date().toISOString()
+                },
+                fechaVistoBuenoTH: new Date().toISOString()
+            });
+            DescriptorService.registrarEvento(id, {
+                accion: currentUser.rol === 'JEFE_TH' ? 'VISTO BUENO DEL JEFE DE TALENTO HUMANO' : 'VISTO BUENO DE GENERALISTA DE TH',
+                usuario: currentUser.nombre,
+                rol: currentUser.rolNombre,
+                estadoNuevo: 'ACTIVO',
+                estado: 'ACTIVO'
+            });
+            Swal.fire('Activo', 'Descriptor validado y activado correctamente.', 'success').then(function() {
+                cargarDescriptores();
+            });
+        });
+    }
     
     function notificarFirmantes(id) {
         var descriptor = DescriptorService.getById(id);
@@ -772,7 +883,10 @@ window.initDescriptorList = function() {
                 var doc = asignados[d].documentoFirmado;
                 html += '<div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-2 mb-2 gap-2">' +
                     '<div><strong>' + asignados[d].nombre + '</strong><br><small class="text-muted">' + (doc ? 'Documento cargado: ' + doc.nombre : 'Sin documento cargado') + '</small></div>' +
+                    '<div class="d-flex flex-wrap gap-2">' +
+                    (doc ? '<button type="button" class="btn btn-sm btn-outline-success descargar-documento-firmado" data-usuario="' + asignados[d].usuario + '"><i class="fas fa-download me-1"></i>Descargar</button>' : '') +
                     '<input type="file" class="form-control form-control-sm documento-firmado-input" data-usuario="' + asignados[d].usuario + '" accept=".pdf,.png,.jpg,.jpeg" style="max-width:260px;">' +
+                    '</div>' +
                     '</div>';
             }
         }
@@ -787,6 +901,9 @@ window.initDescriptorList = function() {
             cancelButtonText: 'Cerrar',
             confirmButtonColor: '#0d6efd',
             didOpen: function() {
+                $('.descargar-documento-firmado').off('click').on('click', function() {
+                    descargarDocumentoFirmadoColaborador(id, $(this).data('usuario'));
+                });
                 $('.documento-firmado-input').off('change').on('change', function() {
                     var input = this;
                     var file = input.files && input.files[0];
@@ -824,6 +941,32 @@ window.initDescriptorList = function() {
                 cargarDescriptores();
             });
         });
+    }
+
+    function descargarDocumentoFirmadoColaborador(id, usuarioColaborador) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor) return;
+        var asignados = descriptor.colaboradoresAsignados || [];
+        for (var i = 0; i < asignados.length; i++) {
+            if (asignados[i].usuario === usuarioColaborador && asignados[i].documentoFirmado) {
+                var doc = asignados[i].documentoFirmado;
+                var link = document.createElement('a');
+                link.href = doc.dataUrl;
+                link.download = doc.nombre || ('documento-firmado-' + usuarioColaborador);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                DescriptorService.registrarEvento(id, {
+                    accion: 'DESCARGA DE DOCUMENTO FIRMADO',
+                    usuario: currentUser.nombre,
+                    rol: currentUser.rolNombre,
+                    estado: descriptor.estado,
+                    observacion: 'Documento descargado para colaborador: ' + usuarioColaborador
+                });
+                return;
+            }
+        }
+        Swal.fire('No disponible', 'Este colaborador no tiene documento firmado cargado.', 'info');
     }
     
     function desactivarDescriptor(id) {

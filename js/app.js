@@ -264,19 +264,49 @@ function cargarDescriptoresAsignados() {
         var reporteBtn = (d.tipoFormato || 'CORTA') === 'EXTENSA'
             ? '<button class="btn btn-sm btn-outline-secondary" onclick="generarVersionExtensa(' + d.id + ')"><i class="fas fa-file-pdf me-1"></i>Ver reporte</button>'
             : '<button class="btn btn-sm btn-outline-success" onclick="generarVersionCorta(' + d.id + ')"><i class="fas fa-file-pdf me-1"></i>Ver reporte</button>';
+        var documentoHtml = asignacion.documentoFirmado
+            ? '<button class="btn btn-sm btn-outline-success" onclick="descargarDocumentoAsignado(' + d.id + ')"><i class="fas fa-download me-1"></i>Descargar</button>'
+            : '<span class="badge bg-warning text-dark">Pendiente</span>';
         html += '<tr>' +
             '<td><strong>' + (d.codigo || 'DES-' + d.id) + '</strong></td>' +
             '<td>' + (d.puesto || '-') + '</td>' +
             '<td>' + (d.area || '-') + '</td>' +
             '<td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">' + formato + '</span></td>' +
             '<td><span class="badge bg-success">' + (d.estado === 'ACTIVO' ? 'Activo' : d.estado) + '</span></td>' +
-            '<td>' + (asignacion.documentoFirmado ? '<span class="badge bg-success">Cargado</span>' : '<span class="badge bg-warning text-dark">Pendiente</span>') + '</td>' +
+            '<td>' + documentoHtml + '</td>' +
             '<td>' + reporteBtn + '</td>' +
             '</tr>';
     }
     html += '</tbody></table></div></div>';
     $('#contentContainer').html(html);
 }
+
+function descargarDocumentoAsignado(id) {
+    var descriptor = DescriptorService.getById(id);
+    if (!descriptor) return;
+    var asignacion = (descriptor.colaboradoresAsignados || []).filter(function(colaborador) {
+        return colaborador.usuario === currentUser.usuario;
+    })[0];
+    if (!asignacion || !asignacion.documentoFirmado) {
+        Swal.fire('No disponible', 'No hay documento firmado cargado para su usuario.', 'info');
+        return;
+    }
+    var link = document.createElement('a');
+    link.href = asignacion.documentoFirmado.dataUrl;
+    link.download = asignacion.documentoFirmado.nombre || ('documento-firmado-' + currentUser.usuario);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    DescriptorService.registrarEvento(id, {
+        accion: 'DESCARGA DE DOCUMENTO FIRMADO',
+        usuario: currentUser.nombre,
+        rol: currentUser.rolNombre,
+        estado: descriptor.estado,
+        observacion: 'Colaborador descargó su documento firmado.'
+    });
+}
+
+window.descargarDocumentoAsignado = descargarDocumentoAsignado;
 
 // Cargar Dashboard
 function loadDashboard() {

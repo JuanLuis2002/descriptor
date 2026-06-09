@@ -21,6 +21,7 @@ var DescriptorController = {
         window._descriptorWorkflowEditor = (this.afterSaveModule === 'TH' || this.afterSaveModule === 'JTH') && this.canEditThComplements;
         window._jiInitialReviewMode = !!(options && options.jiInitialReview);
         window._afterDescriptorSaveModule = this.afterSaveModule;
+        window._returnToDescriptorListAfterSave = !!(options && options.returnToDescriptorList);
         if (!this.descriptorIdToEdit) {
             this.resetFormState();
         }
@@ -39,6 +40,7 @@ var DescriptorController = {
         window._descriptorWorkflowEditor = false;
         window._jiInitialReviewMode = false;
         window._afterDescriptorSaveModule = null;
+        window._returnToDescriptorListAfterSave = false;
     },
     
     loadForm: function() {
