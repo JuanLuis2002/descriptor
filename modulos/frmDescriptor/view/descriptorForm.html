@@ -1624,7 +1624,8 @@
                     formData.version = DescriptorService.getSiguienteVersionByPuesto(formData.puesto);
                 }
                 
-                var registrarEdicionWorkflow = window._jiInitialReviewMode === true || window._descriptorWorkflowEditor === true;
+                var esEdicionRespuestaJI = currentUser.rol === 'JEFE_INMEDIATO' && ['OBSERVADO_JF', 'OBSERVADO_TH', 'REVISION_JI_TH'].indexOf(existingDescriptor.estado) !== -1;
+                var registrarEdicionWorkflow = window._jiInitialReviewMode === true || window._descriptorWorkflowEditor === true || esEdicionRespuestaJI;
                 var seccionesEditadasWorkflow = registrarEdicionWorkflow
                     ? obtenerSeccionesModificadas(existingDescriptor, formData)
                     : [];
@@ -1647,6 +1648,17 @@
                         secciones: seccionesEditadasWorkflow
                     });
                 }
+                if (esEdicionRespuestaJI && window._jiInitialReviewMode !== true) {
+                    formData.ultimasSeccionesEditadasJI = seccionesEditadasWorkflow;
+                    formData.edicionesRevisionJI = existingDescriptor.edicionesRevisionJI || [];
+                    formData.edicionesRevisionJI.push({
+                        usuario: currentUser.nombre,
+                        rol: currentUser.rolNombre,
+                        fecha: new Date().toISOString(),
+                        estadoOrigen: existingDescriptor.estado,
+                        secciones: seccionesEditadasWorkflow
+                    });
+                }
                 if (window._descriptorWorkflowEditor === true && !window._jiInitialReviewMode) {
                     formData.ultimasSeccionesEditadasTH = seccionesEditadasWorkflow;
                     formData.edicionesRevisionTH = existingDescriptor.edicionesRevisionTH || [];
@@ -1660,7 +1672,7 @@
                 
                 DescriptorService.update(window._editingId, formData);
                 DescriptorService.registrarEvento(window._editingId, {
-                    accion: window._jiInitialReviewMode === true ? 'EDICIÓN DE REVISIÓN DEL JEFE INMEDIATO' : (window._descriptorWorkflowEditor === true ? 'EDICIÓN DE REVISIÓN DE TALENTO HUMANO' : 'ACTUALIZACIÓN DEL DESCRIPTOR'),
+                    accion: window._jiInitialReviewMode === true || esEdicionRespuestaJI ? 'EDICIÓN DEL JEFE INMEDIATO' : (window._descriptorWorkflowEditor === true ? 'EDICIÓN DE REVISIÓN DE TALENTO HUMANO' : 'ACTUALIZACIÓN DEL DESCRIPTOR'),
                     usuario: currentUser.nombre,
                     rol: currentUser.rolNombre,
                     estadoNuevo: formData.estado,

@@ -137,7 +137,6 @@ function loadMenu() {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="areasPuestos">Áreas y Puestos</a>';
-        opciones += '<a href="#" class="submenu-link nav-link" data-modulo="revisionTH">Revisión Técnica</a>';
     } else if (currentUser.rol === 'JEFE_TH') {
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="nuevoDescriptor">Nuevo Descriptor</a>';
         opciones += '<a href="#" class="submenu-link nav-link" data-modulo="misDescriptores">Mis Descriptores</a>';
@@ -212,9 +211,6 @@ function cargarModulo(modulo) {
             break;
         case 'pendientesAprobar':
             cargarPendientesAprobar();
-            break;
-        case 'revisionTH':
-            cargarRevisionTH();
             break;
         case 'firmasJTH':
             $('#pageTitle').text('Flujo de validación');
@@ -459,29 +455,6 @@ function cargarPendientesAprobar() {
                         if (!isCurrentNavigationToken(token)) return;
                         if (typeof AprobacionController !== 'undefined') {
                             AprobacionController.init(currentUser, { navigationToken: token });
-                        }
-                    });
-            });
-    }
-}
-
-// Cargar revisión TH (TH Generalista)
-function cargarRevisionTH() {
-    const token = beginNavigation();
-    $('#pageTitle').text('Revisión Técnica - TH');
-    
-    if (typeof THController !== 'undefined' && THController.init) {
-        THController.init(currentUser, { navigationToken: token });
-    } else {
-        // Cargar scripts del módulo
-        $.getScript('modulos/frmAprobacionTH/services/thService.js')
-            .done(function() {
-                if (!isCurrentNavigationToken(token)) return;
-                $.getScript('modulos/frmAprobacionTH/controller/thController.js')
-                    .done(function() {
-                        if (!isCurrentNavigationToken(token)) return;
-                        if (typeof THController !== 'undefined') {
-                            THController.init(currentUser, { navigationToken: token });
                         }
                     });
             });
