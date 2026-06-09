@@ -11,17 +11,17 @@ var DescriptorService = {
         descriptor.codigo = 'DES-' + (descriptors.length + 1).toString().padStart(4, '0');
         descriptor.version = this.getSiguienteVersionByPuesto(descriptor.puesto);
         descriptor.tipoFormato = descriptor.tipoFormato || 'CORTA';
-        descriptor.estado = 'BORRADOR';
+        descriptor.estado = descriptor.estado || 'BORRADOR';
         descriptor.fechaCreacion = new Date().toISOString();
         
         // Inicializar auditoría
         descriptor.auditoria = {
             eventos: [],
             estadoActual: {
-                estado: 'BORRADOR',
+                estado: descriptor.estado,
                 fecha: new Date().toISOString(),
                 usuario: descriptor.creador,
-                rol: 'JEFE_INMEDIATO'
+                rol: descriptor.rolCreador || 'JEFE_INMEDIATO'
             }
         };
         
@@ -29,10 +29,20 @@ var DescriptorService = {
         this.registrarEventoInterno(descriptor, {
             accion: 'CREACIÓN DEL DESCRIPTOR',
             usuario: descriptor.creador,
-            rol: 'JEFE_INMEDIATO',
-            estado: 'BORRADOR',
+            rol: descriptor.rolCreador || 'JEFE_INMEDIATO',
+            estado: descriptor.estado,
             descripcion: 'Descriptor creado'
         });
+
+        if (descriptor.flujoCreadoPorTH) {
+            this.registrarEventoInterno(descriptor, {
+                accion: 'ENVÍO A REVISIÓN DEL JEFE INMEDIATO',
+                usuario: descriptor.creador,
+                rol: descriptor.rolCreador || 'Talento Humano',
+                estado: descriptor.estado,
+                descripcion: 'Descriptor creado por Talento Humano y enviado a revisión inicial del Jefe Inmediato'
+            });
+        }
         
         descriptors.push(descriptor);
         localStorage.setItem('descriptores', JSON.stringify(descriptors));

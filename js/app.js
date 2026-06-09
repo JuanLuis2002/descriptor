@@ -303,6 +303,7 @@ function cargarMisDescriptores() {
 function getEstadoBadge(estado) {
     const badges = {
         'BORRADOR': 'bg-secondary',
+        'REVISION_JI_TH': 'bg-info',
         'ENVIADO_TH': 'bg-info',
         'OBSERVADO': 'bg-warning',
         'ACTIVO': 'bg-success',

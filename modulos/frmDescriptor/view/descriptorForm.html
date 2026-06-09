@@ -1254,6 +1254,7 @@
     function getEstadoTextoBitacora(estado) {
         var estados = {
             'BORRADOR': 'Borrador',
+            'REVISION_JI_TH': 'Revisión inicial JI',
             'ENVIADO_JF': 'Enviado a JIS',
             'OBSERVADO_JF': 'Observado por JIS',
             'APROBADO_POR_JF': 'Aprobado por JIS',
@@ -1498,8 +1499,15 @@
                 puestosResponsables: $('input[name="puestosResponsables"]').val()
             },
             creador: currentUser.nombre,
+            rolCreador: currentUser.rolNombre,
             estado: 'BORRADOR'
         };
+        if (!window._isEditing && (currentUser.rol === 'TH_GENERALISTA' || currentUser.rol === 'JEFE_TH')) {
+            formData.flujoCreadoPorTH = true;
+            formData.estado = 'REVISION_JI_TH';
+            formData.creadoPorTH = currentUser.nombre;
+            formData.fechaEnvioRevisionJI = new Date().toISOString();
+        }
         if (tipoFormato === 'CORTA') {
             formData.relacionesLaborales = { internas: [], externas: [] };
             formData.riesgosFisicos = { esfuerzo: '', condiciones: '', riesgos: [] };

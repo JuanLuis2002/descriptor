@@ -3,6 +3,18 @@ var DescriptorListService = {
     getByCreador: function(creador) {
         return DescriptorService.getAll().filter(d => d.creador === creador);
     },
+
+    getByUsuario: function(user) {
+        var todos = DescriptorService.getAll();
+        if (!user) return [];
+        if (user.rol === 'JEFE_INMEDIATO') {
+            return todos.filter(function(d) {
+                return d.creador === user.nombre ||
+                    (d.flujoCreadoPorTH && ['REVISION_JI_TH', 'FIRMADO_CT', 'FIRMADO_JI', 'FIRMA_JTH', 'ACTIVO', 'INACTIVO'].indexOf(d.estado) !== -1);
+            });
+        }
+        return todos.filter(function(d) { return d.creador === user.nombre; });
+    },
     
     getByEstado: function(estado) {
         return DescriptorService.getAll().filter(d => d.estado === estado);
@@ -39,10 +51,12 @@ var DescriptorListService = {
     },
     
     getEstadisticas: function(creador) {
-        var descriptores = this.getByCreador(creador);
+        var user = typeof creador === 'object' ? creador : { nombre: creador };
+        var descriptores = this.getByUsuario(user);
         return {
             total: descriptores.length,
             borradores: descriptores.filter(function(d) { return d.estado === 'BORRADOR'; }).length,
+            revisionJI: descriptores.filter(function(d) { return d.estado === 'REVISION_JI_TH'; }).length,
             enviadosJF: descriptores.filter(function(d) { return d.estado === 'ENVIADO_JF'; }).length,
             observadosJF: descriptores.filter(function(d) { return d.estado === 'OBSERVADO_JF'; }).length,
             aprobadosJF: descriptores.filter(function(d) { return d.estado === 'APROBADO_POR_JF'; }).length,

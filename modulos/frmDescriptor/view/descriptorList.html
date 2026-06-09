@@ -72,6 +72,7 @@
         <div class="col-md-3"><label class="form-label small">Estado</label><select class="form-select" id="estadoFilter">
             <option value="">Todos</option>
             <option value="BORRADOR">Borrador</option>
+            <option value="REVISION_JI_TH">Revisión inicial JI</option>
             <option value="ENVIADO_JF">Enviado a JIS</option>
             <option value="OBSERVADO_JF">Observado por JIS</option>
             <option value="ENVIADO_TH">Enviado a TH</option>
@@ -103,7 +104,7 @@ window.initDescriptorList = function() {
     
     function cargarDescriptores() {
         if (typeof DescriptorListService !== 'undefined') {
-            allDescriptors = DescriptorListService.getByCreador(currentUser.nombre);
+            allDescriptors = DescriptorListService.getByUsuario(currentUser);
             actualizarEstadisticas();
             filtrarYMostrar();
         } else {
@@ -113,7 +114,7 @@ window.initDescriptorList = function() {
     
     function actualizarEstadisticas() {
         if (typeof DescriptorListService !== 'undefined') {
-            var stats = DescriptorListService.getEstadisticas(currentUser.nombre);
+            var stats = DescriptorListService.getEstadisticas(currentUser);
             $('#statTotal').text(stats.total);
             $('#statBorradores').text(stats.borradores);
             $('#statEnviadosJF').text(stats.enviadosJF || 0);
@@ -149,6 +150,7 @@ window.initDescriptorList = function() {
     function getEstadoTexto(estado) {
         var estados = {
             'BORRADOR': 'Borrador',
+            'REVISION_JI_TH': 'Revisión inicial JI',
             'ENVIADO_JF': 'Enviado a JIS',
             'OBSERVADO_JF': 'Observado por JIS',
             'APROBADO_POR_JF': 'Aprobado por JIS',
@@ -169,6 +171,7 @@ window.initDescriptorList = function() {
     function getEstadoClass(estado) {
         var classes = {
             'BORRADOR': 'borrador',
+            'REVISION_JI_TH': 'enviado_jf',
             'ENVIADO_JF': 'enviado_jf',
             'OBSERVADO_JF': 'observado_jf',
             'APROBADO_POR_JF': 'aprobado_jf',
@@ -222,6 +225,9 @@ window.initDescriptorList = function() {
         }
         if (d.estado === 'APROBADO_POR_JF') {
             html += '<li><button class="dropdown-item btn-enviar-th" data-id="' + d.id + '"><i class="fas fa-paper-plane me-2 text-success"></i>Enviar a TH</button></li>';
+        }
+        if (d.flujoCreadoPorTH && d.estado === 'REVISION_JI_TH' && currentUser.rol === 'JEFE_INMEDIATO') {
+            html += '<li><button class="dropdown-item btn-visto-bueno-ji" data-id="' + d.id + '"><i class="fas fa-clipboard-check me-2 text-success"></i>Dar visto bueno</button></li>';
         }
         var estaEnFirmas = ['FIRMA_JTH', 'FIRMADO_CT', 'FIRMADO_JI'].indexOf(d.estado) !== -1;
         if (estaEnFirmas) {
@@ -327,6 +333,7 @@ window.initDescriptorList = function() {
         $('.btn-enviar-th').off('click').on('click', function(e) { e.stopPropagation(); enviarDescriptorATH($(this).data('id')); });
         $('.btn-enviar-th-directo').off('click').on('click', function(e) { e.stopPropagation(); reenviarDescriptorATH($(this).data('id')); });
         $('.btn-notificar-firma').off('click').on('click', function(e) { e.stopPropagation(); notificarFirmantes($(this).data('id')); });
+        $('.btn-visto-bueno-ji').off('click').on('click', function(e) { e.stopPropagation(); darVistoBuenoJI($(this).data('id')); });
         $('.btn-firmar-ji').off('click').on('click', function(e) { e.stopPropagation(); firmarDescriptorJI($(this).data('id')); });
         $('.btn-desactivar').off('click').on('click', function(e) { e.stopPropagation(); desactivarDescriptor($(this).data('id')); });
         $('.btn-reactivar').off('click').on('click', function(e) { e.stopPropagation(); reactivarDescriptor($(this).data('id')); });
@@ -382,6 +389,7 @@ window.initDescriptorList = function() {
     function getEstadoBadgeClass(estado) {
         var classes = {
             'BORRADOR': 'bg-secondary',
+            'REVISION_JI_TH': 'bg-info',
             'ENVIADO_JF': 'bg-info',
             'OBSERVADO_JF': 'bg-warning',
             'APROBADO_POR_JF': 'bg-success',
@@ -612,14 +620,59 @@ window.initDescriptorList = function() {
         
         cargarDescriptores();
     }
+
+    function darVistoBuenoJI(id) {
+        var descriptor = DescriptorService.getById(id);
+        if (!descriptor || descriptor.estado !== 'REVISION_JI_TH' || !descriptor.flujoCreadoPorTH) {
+            Swal.fire('No disponible', 'El visto bueno solo aplica a descriptores creados por Talento Humano pendientes de revisión inicial.', 'info');
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Dar visto bueno de revisión?',
+            html: '<div class="text-start"><p>Se registrará únicamente un <strong>visto bueno de revisión</strong>. Esto no constituye aprobación formal del descriptor.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-check"></i> Dar visto bueno',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            var currentUserGlobal = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            DescriptorService.update(id, {
+                estado: 'FIRMA_JTH',
+                vistoBuenoJI: {
+                    nombre: currentUserGlobal.nombre,
+                    rol: currentUserGlobal.rolNombre,
+                    fecha: new Date().toISOString(),
+                    tipo: 'VISTO_BUENO_REVISION'
+                },
+                fechaVistoBuenoJI: new Date().toISOString()
+            });
+            DescriptorService.registrarEvento(id, {
+                accion: 'VISTO BUENO DE REVISIÓN DEL JEFE INMEDIATO',
+                usuario: currentUserGlobal.nombre,
+                rol: currentUserGlobal.rolNombre,
+                estadoNuevo: 'FIRMA_JTH',
+                estado: 'FIRMA_JTH'
+            });
+            Swal.fire('Visto bueno registrado', 'El descriptor fue enviado al colaborador/titular para su revisión y aprobación.', 'success').then(function() {
+                cargarDescriptores();
+            });
+        });
+    }
     
     function firmarDescriptorJI(id) {
         var descriptor = DescriptorService.getById(id);
         if (!descriptor) return;
+        if (descriptor.estado !== 'FIRMADO_CT' || !descriptor.firmaCT || descriptor.firmaJI) {
+            Swal.fire('Fuera de turno', 'El jefe inmediato solo puede emitir la aprobación formal después de la aprobación del colaborador/titular.', 'info');
+            return;
+        }
         
         Swal.fire({
             title: '¿Aprobar descriptor?',
-            html: '<div class="text-start"><p>Se registrará la aprobación simple del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
+            html: '<div class="text-start"><p>Se registrará la aprobación formal del Jefe Inmediato.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
