@@ -662,6 +662,10 @@ window.initDescriptorList = function() {
             Swal.fire('No disponible', 'Solo se puede dar visto bueno mientras el descriptor está en revisión de Talento Humano.', 'info');
             return;
         }
+        if (typeof AreasPuestosService !== 'undefined' && !AreasPuestosService.puestoAprobado(descriptor.area, descriptor.puesto)) {
+            Swal.fire('Puesto pendiente de aprobación', 'Antes de dar visto bueno al descriptor, el Jefe de TH debe aprobar el puesto de trabajo seleccionado.', 'warning');
+            return;
+        }
         Swal.fire({
             title: '¿Dar visto bueno final?',
             html: '<div class="text-start"><p>El descriptor quedará en estado <strong>Activo</strong>.</p><p><strong>Descriptor:</strong> ' + (descriptor.codigo || 'DES-' + id) + '</p><p><strong>Puesto:</strong> ' + (descriptor.puesto || '-') + '</p></div>',

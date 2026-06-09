@@ -10,11 +10,11 @@ var AreasPuestosService = {
                 nombre: 'Subgerencia TI',
                 jefeInmediatoUsuario: 'juan.hercules',
                 puestos: [
-                    { id: 1, nombre: 'Analista Programador', reportaA: 'Ing. Mauricio Rivas' },
-                    { id: 2, nombre: 'Desarrollador de Software', reportaA: 'Ing. Carlos Menjívar' },
-                    { id: 3, nombre: 'Administrador de Sistemas', reportaA: 'Ing. Ricardo Molina' },
-                    { id: 4, nombre: 'Especialista en Soporte Técnico', reportaA: 'Ing. Fernando Aguilar' },
-                    { id: 5, nombre: 'Coordinador de Infraestructura TI', reportaA: 'Ing. Esteban Figueroa' }
+                    { id: 1, nombre: 'Analista Programador', reportaA: 'Ing. Mauricio Rivas', activo: true, aprobado: true },
+                    { id: 2, nombre: 'Desarrollador de Software', reportaA: 'Ing. Carlos Menjívar', activo: true, aprobado: true },
+                    { id: 3, nombre: 'Administrador de Sistemas', reportaA: 'Ing. Ricardo Molina', activo: true, aprobado: true },
+                    { id: 4, nombre: 'Especialista en Soporte Técnico', reportaA: 'Ing. Fernando Aguilar', activo: true, aprobado: true },
+                    { id: 5, nombre: 'Coordinador de Infraestructura TI', reportaA: 'Ing. Esteban Figueroa', activo: true, aprobado: true }
                 ]
             },
             {
@@ -22,8 +22,8 @@ var AreasPuestosService = {
                 nombre: 'Talento Humano',
                 jefeInmediatoUsuario: '',
                 puestos: [
-                    { id: 1, nombre: 'Analista de Recursos Humanos', reportaA: 'Licda. Patricia Méndez' },
-                    { id: 2, nombre: 'Generalista de Talento Humano', reportaA: 'Lic. Roberto Salinas' }
+                    { id: 1, nombre: 'Analista de Recursos Humanos', reportaA: 'Licda. Patricia Méndez', activo: true, aprobado: true },
+                    { id: 2, nombre: 'Generalista de Talento Humano', reportaA: 'Lic. Roberto Salinas', activo: true, aprobado: true }
                 ]
             },
             {
@@ -31,8 +31,8 @@ var AreasPuestosService = {
                 nombre: 'Finanzas',
                 jefeInmediatoUsuario: '',
                 puestos: [
-                    { id: 1, nombre: 'Analista Financiero', reportaA: 'Lic. Karla Pineda' },
-                    { id: 2, nombre: 'Contador General', reportaA: 'Lic. Mario Escobar' }
+                    { id: 1, nombre: 'Analista Financiero', reportaA: 'Lic. Karla Pineda', activo: true, aprobado: true },
+                    { id: 2, nombre: 'Contador General', reportaA: 'Lic. Mario Escobar', activo: true, aprobado: true }
                 ]
             },
             {
@@ -40,8 +40,8 @@ var AreasPuestosService = {
                 nombre: 'Administración',
                 jefeInmediatoUsuario: '',
                 puestos: [
-                    { id: 1, nombre: 'Asistente Administrativo', reportaA: 'Licda. Mónica Castillo' },
-                    { id: 2, nombre: 'Coordinador Administrativo', reportaA: 'Lic. Ernesto Varela' }
+                    { id: 1, nombre: 'Asistente Administrativo', reportaA: 'Licda. Mónica Castillo', activo: true, aprobado: true },
+                    { id: 2, nombre: 'Coordinador Administrativo', reportaA: 'Lic. Ernesto Varela', activo: true, aprobado: true }
                 ]
             },
             {
@@ -49,8 +49,8 @@ var AreasPuestosService = {
                 nombre: 'Mercadeo y Comunicaciones',
                 jefeInmediatoUsuario: '',
                 puestos: [
-                    { id: 1, nombre: 'Analista de Mercadeo', reportaA: 'Licda. Sofía Aguiluz' },
-                    { id: 2, nombre: 'Coordinador de Comunicaciones', reportaA: 'Lic. Daniel Fuentes' }
+                    { id: 1, nombre: 'Analista de Mercadeo', reportaA: 'Licda. Sofía Aguiluz', activo: true, aprobado: true },
+                    { id: 2, nombre: 'Coordinador de Comunicaciones', reportaA: 'Lic. Daniel Fuentes', activo: true, aprobado: true }
                 ]
             }
         ]
@@ -62,7 +62,22 @@ var AreasPuestosService = {
             localStorage.setItem(this.storageKey, JSON.stringify(this.defaults));
             return JSON.parse(JSON.stringify(this.defaults));
         }
-        return JSON.parse(data);
+        var catalogo = JSON.parse(data);
+        var changed = false;
+        (catalogo.areas || []).forEach(function(area) {
+            (area.puestos || []).forEach(function(puesto) {
+                if (typeof puesto.activo === 'undefined') {
+                    puesto.activo = true;
+                    changed = true;
+                }
+                if (typeof puesto.aprobado === 'undefined') {
+                    puesto.aprobado = true;
+                    changed = true;
+                }
+            });
+        });
+        if (changed) this.saveCatalogo(catalogo);
+        return catalogo;
     },
 
     saveCatalogo: function(catalogo) {
@@ -108,20 +123,67 @@ var AreasPuestosService = {
         return true;
     },
 
-    crearPuesto: function(nombreArea, nombrePuesto, reportaA) {
+    crearPuesto: function(nombreArea, nombrePuesto, reportaA, usuarioCreador) {
         var catalogo = this.getCatalogo();
         var area = catalogo.areas.filter(function(item) { return item.nombre === nombreArea; })[0];
         if (!area) return { ok: false, mensaje: 'Seleccione un área válida.' };
         area.puestos = area.puestos || [];
         var existe = area.puestos.some(function(puesto) { return puesto.nombre.toLowerCase() === nombrePuesto.toLowerCase(); });
         if (existe) return { ok: false, mensaje: 'Ya existe un puesto con ese nombre en el área seleccionada.' };
+        var aprobado = usuarioCreador && usuarioCreador.rol === 'JEFE_TH';
         area.puestos.push({
             id: Date.now(),
             nombre: nombrePuesto,
-            reportaA: reportaA || ''
+            reportaA: reportaA || '',
+            activo: true,
+            aprobado: aprobado,
+            creadoPor: usuarioCreador ? usuarioCreador.nombre : '',
+            rolCreador: usuarioCreador ? usuarioCreador.rol : '',
+            fechaCreacion: new Date().toISOString(),
+            fechaAprobacion: aprobado ? new Date().toISOString() : null,
+            aprobadoPor: aprobado && usuarioCreador ? usuarioCreador.nombre : ''
         });
         this.saveCatalogo(catalogo);
         return { ok: true };
+    },
+
+    getPuesto: function(nombreArea, nombrePuesto) {
+        var area = this.getAreaByNombre(nombreArea);
+        if (!area) return null;
+        return (area.puestos || []).filter(function(puesto) {
+            return puesto.nombre === nombrePuesto;
+        })[0] || null;
+    },
+
+    aprobarPuesto: function(nombreArea, nombrePuesto, usuario) {
+        var catalogo = this.getCatalogo();
+        var area = catalogo.areas.filter(function(item) { return item.nombre === nombreArea; })[0];
+        if (!area) return { ok: false, mensaje: 'Área no encontrada.' };
+        var puesto = (area.puestos || []).filter(function(item) { return item.nombre === nombrePuesto; })[0];
+        if (!puesto) return { ok: false, mensaje: 'Puesto no encontrado.' };
+        puesto.aprobado = true;
+        puesto.activo = true;
+        puesto.fechaAprobacion = new Date().toISOString();
+        puesto.aprobadoPor = usuario ? usuario.nombre : '';
+        this.saveCatalogo(catalogo);
+        return { ok: true };
+    },
+
+    cambiarEstadoPuesto: function(nombreArea, nombrePuesto, activo) {
+        var catalogo = this.getCatalogo();
+        var area = catalogo.areas.filter(function(item) { return item.nombre === nombreArea; })[0];
+        if (!area) return { ok: false, mensaje: 'Área no encontrada.' };
+        var puesto = (area.puestos || []).filter(function(item) { return item.nombre === nombrePuesto; })[0];
+        if (!puesto) return { ok: false, mensaje: 'Puesto no encontrado.' };
+        puesto.activo = !!activo;
+        this.saveCatalogo(catalogo);
+        return { ok: true };
+    },
+
+    puestoAprobado: function(nombreArea, nombrePuesto) {
+        var puesto = this.getPuesto(nombreArea, nombrePuesto);
+        if (!puesto) return true;
+        return !!(puesto.activo && puesto.aprobado);
     },
 
     getUsuarios: function() {

@@ -50,12 +50,15 @@ var AreasPuestosController = {
             var area = $(this).find('[name="areaPuesto"]').val();
             var puesto = $(this).find('[name="nombrePuesto"]').val().trim();
             var reportaA = $(this).find('[name="reportaA"]').val().trim();
-            var result = AreasPuestosService.crearPuesto(area, puesto, reportaA);
+            var result = AreasPuestosService.crearPuesto(area, puesto, reportaA, self.currentUser);
             if (!result.ok) {
                 Swal.fire('Validación', result.mensaje, 'warning');
                 return;
             }
-            Swal.fire('Guardado', 'Puesto creado correctamente.', 'success');
+            var mensaje = self.currentUser.rol === 'JEFE_TH'
+                ? 'Puesto creado activo y aprobado correctamente.'
+                : 'Puesto creado activo y pendiente de aprobación por Jefe de TH.';
+            Swal.fire('Guardado', mensaje, 'success');
             this.reset();
             self.render();
         });
@@ -91,6 +94,35 @@ var AreasPuestosController = {
             this.reset();
             self.render();
         });
+
+        $(document).off('click.aprobarPuesto').on('click.aprobarPuesto', '.btn-aprobar-puesto', function() {
+            if (self.currentUser.rol !== 'JEFE_TH') {
+                Swal.fire('No disponible', 'Solo el Jefe de TH puede aprobar puestos.', 'info');
+                return;
+            }
+            var area = $(this).data('area');
+            var puesto = $(this).data('puesto');
+            var result = AreasPuestosService.aprobarPuesto(area, puesto, self.currentUser);
+            if (!result.ok) {
+                Swal.fire('Validación', result.mensaje, 'warning');
+                return;
+            }
+            Swal.fire('Aprobado', 'Puesto aprobado correctamente.', 'success');
+            self.render();
+        });
+
+        $(document).off('click.estadoPuesto').on('click.estadoPuesto', '.btn-estado-puesto', function() {
+            var area = $(this).data('area');
+            var puesto = $(this).data('puesto');
+            var activo = String($(this).data('activo')) === 'true';
+            var result = AreasPuestosService.cambiarEstadoPuesto(area, puesto, activo);
+            if (!result.ok) {
+                Swal.fire('Validación', result.mensaje, 'warning');
+                return;
+            }
+            Swal.fire('Actualizado', activo ? 'Puesto activado.' : 'Puesto inactivado.', 'success');
+            self.render();
+        });
     },
 
     render: function() {
@@ -111,7 +143,9 @@ var AreasPuestosController = {
         for (var a = 0; a < areas.length; a++) {
             var puestos = areas[a].puestos || [];
             for (var p = 0; p < puestos.length; p++) {
-                puestoOptions += '<option value="' + puestos[p].nombre + '">' + puestos[p].nombre + ' - ' + areas[a].nombre + '</option>';
+                if (puestos[p].activo !== false) {
+                    puestoOptions += '<option value="' + puestos[p].nombre + '">' + puestos[p].nombre + ' - ' + areas[a].nombre + '</option>';
+                }
             }
         }
         $('.puesto-global-select').html(puestoOptions);
@@ -136,7 +170,18 @@ var AreasPuestosController = {
         for (var i = 0; i < areas.length; i++) {
             var area = areas[i];
             var puestos = (area.puestos || []).map(function(puesto) {
-                return '<span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle me-1 mb-1">' + puesto.nombre + '</span>';
+                var activo = puesto.activo !== false;
+                var aprobado = puesto.aprobado === true;
+                var estadoBadge = activo ? '<span class="badge bg-success ms-1">Activo</span>' : '<span class="badge bg-secondary ms-1">Inactivo</span>';
+                var aprobacionBadge = aprobado ? '<span class="badge bg-primary ms-1">Aprobado</span>' : '<span class="badge bg-warning text-dark ms-1">Pendiente</span>';
+                var acciones = '';
+                if (!aprobado && AreasPuestosController.currentUser.rol === 'JEFE_TH') {
+                    acciones += '<button type="button" class="btn btn-sm btn-outline-success ms-1 btn-aprobar-puesto" data-area="' + area.nombre + '" data-puesto="' + puesto.nombre + '">Aprobar</button>';
+                }
+                acciones += activo
+                    ? '<button type="button" class="btn btn-sm btn-outline-danger ms-1 btn-estado-puesto" data-area="' + area.nombre + '" data-puesto="' + puesto.nombre + '" data-activo="false">Inactivar</button>'
+                    : '<button type="button" class="btn btn-sm btn-outline-primary ms-1 btn-estado-puesto" data-area="' + area.nombre + '" data-puesto="' + puesto.nombre + '" data-activo="true">Activar</button>';
+                return '<div class="mb-2"><span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle">' + puesto.nombre + '</span>' + estadoBadge + aprobacionBadge + acciones + '</div>';
             }).join('') || '<span class="text-muted">Sin puestos</span>';
             var colaboradoresArea = colaboradores.filter(function(colaborador) {
                 return (area.puestos || []).some(function(puesto) { return puesto.nombre === colaborador.puesto; });

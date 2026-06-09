@@ -747,6 +747,13 @@ function seleccionarColaboradorParaReporte(id, tipoReporte) {
     });
 }
 
+function validarPuestoAprobadoParaReporte(descriptor) {
+    if (typeof AreasPuestosService === 'undefined') return true;
+    if (AreasPuestosService.puestoAprobado(descriptor.area, descriptor.puesto)) return true;
+    Swal.fire('Puesto pendiente de aprobación', 'No se puede generar el reporte hasta que el Jefe de TH apruebe el puesto de trabajo seleccionado.', 'warning');
+    return false;
+}
+
 // Generar versión corta del descriptor
 // Generar versión corta del descriptor - Usando print en iframe oculto
 function generarVersionCorta(id, usuarioColaboradorReporte) {
@@ -759,6 +766,7 @@ function generarVersionCorta(id, usuarioColaboradorReporte) {
         Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión extensa. Genere el reporte de versión extensa.', 'info');
         return;
     }
+    if (!validarPuestoAprobadoParaReporte(descriptor)) return;
     if (debeSeleccionarColaboradorReporte(descriptor, usuarioColaboradorReporte)) {
         seleccionarColaboradorParaReporte(id, 'CORTA');
         return;
@@ -1247,6 +1255,7 @@ function generarVersionExtensa(id, usuarioColaboradorReporte) {
         Swal.fire('Formato no disponible', 'Este descriptor fue creado como versión corta. Genere el reporte de versión corta.', 'info');
         return;
     }
+    if (!validarPuestoAprobadoParaReporte(descriptor)) return;
     if (debeSeleccionarColaboradorReporte(descriptor, usuarioColaboradorReporte)) {
         seleccionarColaboradorParaReporte(id, 'EXTENSA');
         return;

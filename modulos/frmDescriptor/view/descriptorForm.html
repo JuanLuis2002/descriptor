@@ -318,7 +318,7 @@
             <h5 class="mb-4"><i class="fas fa-building me-2 text-primary"></i>Generalidades</h5>
             <div class="row">
                 <div class="col-md-6 mb-3"><label class="form-label">Tipo de formato *</label><select class="form-select" name="tipoFormato" id="tipoFormato" required><option value="CORTA">Versión corta</option><option value="EXTENSA">Versión extensa</option></select><small class="text-muted">Define los campos que se llenarán y el reporte que se generará.</small></div>
-                <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Desarrollador de Software">Desarrollador de Software</option><option value="Administrador de Sistemas">Administrador de Sistemas</option><option value="Especialista en Soporte Técnico">Especialista en Soporte Técnico</option><option value="Coordinador de Infraestructura TI">Coordinador de Infraestructura TI</option></select></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Título del Puesto *</label><div class="input-group"><select class="form-select" name="puesto" required><option value="">Seleccione...</option><option value="Analista Programador">Analista Programador</option><option value="Desarrollador de Software">Desarrollador de Software</option><option value="Administrador de Sistemas">Administrador de Sistemas</option><option value="Especialista en Soporte Técnico">Especialista en Soporte Técnico</option><option value="Coordinador de Infraestructura TI">Coordinador de Infraestructura TI</option></select><button type="button" class="btn btn-outline-primary" id="btnCrearPuestoDescriptor" title="Crear puesto para el área seleccionada"><i class="fas fa-plus"></i></button></div><small class="text-muted" id="puestoEstadoInfo"></small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Área</label><input type="text" class="form-control" name="area" id="areaUsuario" readonly></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Reporta a *</label><select class="form-select" name="reportaA" id="reportaASelect" required><option value="">Seleccione un puesto primero...</option></select><small class="text-muted">Se carga según el puesto seleccionado.</small></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Fecha Emisión</label><input type="date" class="form-control" name="fechaEmision" id="fechaEmision"></div>
@@ -639,20 +639,92 @@
     function cargarPuestosPorArea(puestoActual) {
         var area = $('[name="area"]').val() || currentUser.area || 'Subgerencia TI';
         var areaCatalogo = getAreaCatalogo(puedeCrearCualquierArea() ? area : currentUser.area);
-        var puestos = areaCatalogo && areaCatalogo.puestos ? areaCatalogo.puestos.map(function(puesto) { return puesto.nombre; }) : (puestosPorArea['Subgerencia TI'] || []);
+        var puestos = areaCatalogo && areaCatalogo.puestos ? areaCatalogo.puestos.filter(function(puesto) {
+            return puesto.activo !== false;
+        }) : (puestosPorArea['Subgerencia TI'] || []).map(function(nombre) { return { nombre: nombre, activo: true, aprobado: true }; });
         var $puesto = $('select[name="puesto"]');
         var preservarPuesto = arguments.length > 0;
         var valorPrevio = preservarPuesto ? (puestoActual || '') : '';
 
         $puesto.empty().append('<option value="">Seleccione...</option>');
         for (var i = 0; i < puestos.length; i++) {
-            $puesto.append('<option value="' + puestos[i] + '">' + puestos[i] + '</option>');
+            var label = puestos[i].nombre + (puestos[i].aprobado === false ? ' (pendiente de aprobación)' : '');
+            $puesto.append('<option value="' + puestos[i].nombre + '" data-aprobado="' + (puestos[i].aprobado === true) + '">' + label + '</option>');
         }
-        if (preservarPuesto && valorPrevio && puestos.indexOf(valorPrevio) === -1 && puedeCrearCualquierArea()) {
+        var nombres = puestos.map(function(puesto) { return puesto.nombre; });
+        if (preservarPuesto && valorPrevio && nombres.indexOf(valorPrevio) === -1 && puedeCrearCualquierArea()) {
             $puesto.append('<option value="' + valorPrevio + '">' + valorPrevio + '</option>');
         }
         if (valorPrevio) $puesto.val(valorPrevio);
         actualizarResponsablesPorPuesto();
+        actualizarEstadoPuestoSeleccionado();
+    }
+
+    function actualizarEstadoPuestoSeleccionado() {
+        var area = $('[name="area"]').val();
+        var puesto = $('select[name="puesto"]').val();
+        var puestoCatalogo = typeof AreasPuestosService !== 'undefined' ? AreasPuestosService.getPuesto(area, puesto) : null;
+        var $info = $('#puestoEstadoInfo');
+        if (!$info.length || !puesto) {
+            $info.text('');
+            return;
+        }
+        if (!puestoCatalogo) {
+            $info.text('');
+            return;
+        }
+        if (puestoCatalogo.activo === false) {
+            $info.html('<span class="text-danger">Puesto inactivo.</span>');
+        } else if (puestoCatalogo.aprobado === false) {
+            $info.html('<span class="text-warning">Puesto activo pendiente de aprobación por Jefe de TH.</span>');
+        } else {
+            $info.html('<span class="text-success">Puesto activo y aprobado.</span>');
+        }
+    }
+
+    function configurarBotonCrearPuestoDescriptor() {
+        $('#btnCrearPuestoDescriptor').toggle(puedeCrearCualquierArea());
+    }
+
+    function crearPuestoDesdeDescriptor() {
+        if (!puedeCrearCualquierArea()) return;
+        var area = $('[name="area"]').val();
+        if (!area) {
+            Swal.fire('Seleccione área', 'Debe seleccionar un área antes de crear el puesto.', 'warning');
+            return;
+        }
+        Swal.fire({
+            title: 'Crear puesto para ' + area,
+            html: '<div class="text-start">' +
+                '<label class="form-label fw-semibold">Título del puesto</label>' +
+                '<input id="nuevoPuestoDescriptorNombre" class="form-control mb-3" placeholder="Ej. Analista de Datos">' +
+                '<label class="form-label fw-semibold">Reporta a</label>' +
+                '<input id="nuevoPuestoDescriptorReporta" class="form-control" placeholder="Nombre del responsable">' +
+                '<div class="alert alert-info py-2 mt-3 mb-0 small">Si lo crea Generalista TH quedará activo pendiente de aprobación. Si lo crea Jefe TH quedará activo y aprobado.</div>' +
+                '</div>',
+            showCancelButton: true,
+            confirmButtonText: 'Crear puesto',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+            preConfirm: function() {
+                var nombre = $('#nuevoPuestoDescriptorNombre').val().trim();
+                var reporta = $('#nuevoPuestoDescriptorReporta').val().trim();
+                if (!nombre) {
+                    Swal.showValidationMessage('Debe ingresar el título del puesto.');
+                    return false;
+                }
+                return { nombre: nombre, reportaA: reporta };
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed || !result.value) return;
+            var response = AreasPuestosService.crearPuesto(area, result.value.nombre, result.value.reportaA, currentUser);
+            if (!response.ok) {
+                Swal.fire('Validación', response.mensaje, 'warning');
+                return;
+            }
+            cargarPuestosPorArea(result.value.nombre);
+            Swal.fire('Puesto creado', currentUser.rol === 'JEFE_TH' ? 'Puesto activo y aprobado.' : 'Puesto activo pendiente de aprobación por Jefe de TH.', 'success');
+        });
     }
 
     function configurarCatalogoAreaPuesto(areaActual, puestoActual) {
@@ -670,6 +742,7 @@
             $('#areaUsuario').val(area);
         }
         cargarPuestosPorArea(puestoActual);
+        configurarBotonCrearPuestoDescriptor();
     }
 
     window.configurarCatalogoAreaPuesto = configurarCatalogoAreaPuesto;
@@ -1766,7 +1839,9 @@
     });
     $('select[name="puesto"]').off('change.responsable').on('change.responsable', function() {
         actualizarResponsablesPorPuesto();
+        actualizarEstadoPuestoSeleccionado();
     });
+    $('#btnCrearPuestoDescriptor').off('click').on('click', crearPuestoDesdeDescriptor);
     $(document).off('change.areaPuesto', '#areaUsuario').on('change.areaPuesto', '#areaUsuario', function() {
         cargarPuestosPorArea();
     });
@@ -1785,7 +1860,9 @@
         guardarActividadesActuales();
     });
     
+    configurarBotonCrearPuestoDescriptor();
     actualizarResponsablesPorPuesto();
+    actualizarEstadoPuestoSeleccionado();
     updateStepDisplay();
 })();
 </script>
