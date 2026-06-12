@@ -284,12 +284,21 @@ async function getDescriptorCompleto(corrEmpresa, corrDescriptorPuesto) {
 async function getDescriptoresResumen(corrEmpresa) {
   return query(
     `SELECT
+       d.CORR_EMPRESA,
        d.CORR_DESCRIPTOR_PUESTO,
+       d.CORR_PUESTO,
        d.FORMATO,
        d.VERSION,
        d.ESTADO,
+       d.FECHA_EMISION,
        p.NOMBRE_PUESTO,
-       u.NOMBRE_UNIDAD
+       u.NOMBRE_UNIDAD,
+       (
+         SELECT COUNT(1)
+         FROM SC_BITACORA_DESCRIPTOR b
+         WHERE b.CORR_EMPRESA = d.CORR_EMPRESA
+           AND b.CORR_DESCRIPTOR_PUESTO = d.CORR_DESCRIPTOR_PUESTO
+       ) AS TOTAL_EVENTOS
      FROM SC_DESCRIPTOR_PUESTO d
      INNER JOIN PLA_PUESTO p
        ON p.CORR_EMPRESA = d.CORR_EMPRESA
@@ -298,12 +307,619 @@ async function getDescriptoresResumen(corrEmpresa) {
        ON u.CORR_EMPRESA = d.CORR_EMPRESA
       AND u.CORR_UNIDAD = d.CORR_UNIDAD
      WHERE d.CORR_EMPRESA = :corrEmpresa
-     ORDER BY d.CORR_DESCRIPTOR_PUESTO`,
+     ORDER BY d.CORR_PUESTO, TRY_CONVERT(INT, d.VERSION), d.CORR_DESCRIPTOR_PUESTO`,
     { corrEmpresa }
   );
 }
 
+async function getDescriptorEstado(corrEmpresa, corrDescriptorPuesto) {
+  const rows = await query(
+    `SELECT
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_PUESTO,
+       ESTADO,
+       VERSION
+     FROM SC_DESCRIPTOR_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto`,
+    { corrEmpresa, corrDescriptorPuesto }
+  );
+  return rows[0] || null;
+}
+
+async function existeOtroDescriptorVigente(corrEmpresa, corrDescriptorPuesto, corrPuesto) {
+  const rows = await query(
+    `SELECT TOP 1
+       CORR_DESCRIPTOR_PUESTO,
+       VERSION,
+       ESTADO
+     FROM SC_DESCRIPTOR_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_PUESTO = :corrPuesto
+       AND CORR_DESCRIPTOR_PUESTO <> :corrDescriptorPuesto
+       AND ESTADO <> 'INACTIVO'
+     ORDER BY TRY_CONVERT(INT, VERSION) DESC, CORR_DESCRIPTOR_PUESTO DESC`,
+    { corrEmpresa, corrDescriptorPuesto, corrPuesto }
+  );
+  return rows[0] || null;
+}
+
+async function getSiguienteBitacoraId(corrEmpresa, corrDescriptorPuesto) {
+  const rows = await query(
+    `SELECT ISNULL(MAX(CORR_BITACORA_DESCRIPTOR), 0) + 1 AS SIGUIENTE
+     FROM SC_BITACORA_DESCRIPTOR
+     WHERE CORR_EMPRESA = :corrEmpresa`,
+    { corrEmpresa, corrDescriptorPuesto }
+  );
+  return rows[0] ? rows[0].SIGUIENTE : 1;
+}
+
+async function registrarBitacora(corrEmpresa, corrDescriptorPuesto, evento) {
+  const corrBitacoraDescriptor = await getSiguienteBitacoraId(corrEmpresa, corrDescriptorPuesto);
+  await query(
+    `INSERT INTO SC_BITACORA_DESCRIPTOR
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_BITACORA_DESCRIPTOR,
+       ACCION,
+       ESTADO_ANTERIOR,
+       ESTADO_NUEVO,
+       OBSERVACION,
+       USUARIO,
+       ROL_USUARIO,
+       FECHA_ACCION
+     )
+     VALUES
+     (
+       :corrEmpresa,
+       :corrDescriptorPuesto,
+       :corrBitacoraDescriptor,
+       :accion,
+       :estadoAnterior,
+       :estadoNuevo,
+       :observacion,
+       :usuario,
+       :rolUsuario,
+       GETDATE()
+     )`,
+    {
+      corrEmpresa,
+      corrDescriptorPuesto,
+      corrBitacoraDescriptor,
+      accion: evento.accion,
+      estadoAnterior: evento.estadoAnterior || null,
+      estadoNuevo: evento.estadoNuevo || null,
+      observacion: evento.observacion || null,
+      usuario: evento.usuario || 'demo',
+      rolUsuario: evento.rolUsuario || 'Usuario demo'
+    }
+  );
+}
+
+async function cambiarEstadoDescriptor(corrEmpresa, corrDescriptorPuesto, nuevoEstado, options) {
+  const estadosPermitidos = ['ENVIADO', 'REVISADO', 'ACTIVO', 'INACTIVO'];
+  if (!estadosPermitidos.includes(nuevoEstado)) {
+    return { ok: false, message: 'Estado no permitido para el descriptor.' };
+  }
+
+  const descriptor = await getDescriptorEstado(corrEmpresa, corrDescriptorPuesto);
+  if (!descriptor) {
+    return { ok: false, message: 'Descriptor no encontrado.' };
+  }
+
+  if (nuevoEstado === 'ACTIVO') {
+    const vigente = await existeOtroDescriptorVigente(corrEmpresa, corrDescriptorPuesto, descriptor.CORR_PUESTO);
+    if (vigente) {
+      return {
+        ok: false,
+        message: `No se puede activar porque existe otro descriptor vigente o en proceso para el mismo puesto: DES-${vigente.CORR_DESCRIPTOR_PUESTO}, versión ${vigente.VERSION}, estado ${vigente.ESTADO}.`
+      };
+    }
+  }
+
+  await query(
+    `UPDATE SC_DESCRIPTOR_PUESTO
+     SET ESTADO = :nuevoEstado,
+         USUARIO_ACTU = :usuario,
+         FECHA_ACTU = GETDATE(),
+         ESTACION_ACTU = :estacion
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto`,
+    {
+      corrEmpresa,
+      corrDescriptorPuesto,
+      nuevoEstado,
+      usuario: options.usuario || 'demo',
+      estacion: options.estacion || 'WEB'
+    }
+  );
+
+  const accion = nuevoEstado === 'ACTIVO'
+    ? 'ACTIVACION_DESCRIPTOR'
+    : nuevoEstado === 'INACTIVO'
+      ? 'DESACTIVACION_DESCRIPTOR'
+      : 'CAMBIO_ESTADO_DESCRIPTOR';
+
+  await registrarBitacora(corrEmpresa, corrDescriptorPuesto, {
+    accion,
+    estadoAnterior: descriptor.ESTADO,
+    estadoNuevo: nuevoEstado,
+    observacion: options.observacion || `Cambio de estado de ${descriptor.ESTADO} a ${nuevoEstado}.`,
+    usuario: options.usuario || 'demo',
+    rolUsuario: options.rolUsuario || 'Usuario demo'
+  });
+
+  return { ok: true };
+}
+
+async function crearNuevaVersionDescriptor(corrEmpresa, corrDescriptorPuesto, options) {
+  const origen = await getDescriptorEstado(corrEmpresa, corrDescriptorPuesto);
+  if (!origen) {
+    return { ok: false, message: 'Descriptor origen no encontrado.' };
+  }
+
+  if (origen.ESTADO !== 'INACTIVO') {
+    return { ok: false, message: 'Solo se puede crear una nueva versión desde un descriptor inactivo.' };
+  }
+
+  const vigente = await existeOtroDescriptorVigente(corrEmpresa, corrDescriptorPuesto, origen.CORR_PUESTO);
+  if (vigente) {
+    return {
+      ok: false,
+      message: `No se puede crear nueva versión porque existe otro descriptor vigente o en proceso para el mismo puesto: DES-${vigente.CORR_DESCRIPTOR_PUESTO}, versión ${vigente.VERSION}, estado ${vigente.ESTADO}.`
+    };
+  }
+
+  const rows = await query(
+    `SET XACT_ABORT ON;
+     BEGIN TRANSACTION;
+
+     DECLARE @NuevoDescriptor INT;
+     DECLARE @NuevaVersion VARCHAR(50);
+     DECLARE @BaseFuncion INT;
+     DECLARE @BaseActividad INT;
+     DECLARE @BaseKpi INT;
+     DECLARE @BaseRelacion INT;
+     DECLARE @BaseRiesgo INT;
+     DECLARE @BasePerfil INT;
+     DECLARE @BaseEducacion INT;
+     DECLARE @BaseExperiencia INT;
+     DECLARE @BaseCompetenciaTecnica INT;
+     DECLARE @BaseCompetenciaConductual INT;
+
+     SELECT @NuevoDescriptor = ISNULL(MAX(CORR_DESCRIPTOR_PUESTO), 0) + 1
+     FROM SC_DESCRIPTOR_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     SELECT @NuevaVersion = CONVERT(VARCHAR(50), ISNULL(MAX(TRY_CONVERT(INT, VERSION)), 0) + 1)
+     FROM SC_DESCRIPTOR_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_PUESTO = :corrPuesto;
+
+     INSERT INTO SC_DESCRIPTOR_PUESTO
+     (
+       CORR_EMPRESA,
+       CORR_PUESTO,
+       CORR_UNIDAD,
+       CORR_EQUIPO,
+       CORR_ENTRENAMIENTO,
+       CORR_DESCRIPTOR_PUESTO,
+       FECHA_EMISION,
+       PUESTO_REPORTA,
+       FECHA_REVISION,
+       NUM_PERSONAL_CARGO,
+       OBJETIVO_PUESTO,
+       RESP_FONDOS,
+       RESP_DOCUMENTOS,
+       TOMA_DECISIONES,
+       RESP_PERSONAL,
+       IMPACTO_ECONOMICO,
+       ESFUERZO_FISICO,
+       CONDICION_AMBIENTAL,
+       PUESTOS_RESPONSABLES,
+       FORMATO,
+       VERSION,
+       ESTADO,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       CORR_EMPRESA,
+       CORR_PUESTO,
+       CORR_UNIDAD,
+       CORR_EQUIPO,
+       CORR_ENTRENAMIENTO,
+       @NuevoDescriptor,
+       CONVERT(DATE, GETDATE()),
+       PUESTO_REPORTA,
+       NULL,
+       NUM_PERSONAL_CARGO,
+       OBJETIVO_PUESTO,
+       RESP_FONDOS,
+       RESP_DOCUMENTOS,
+       TOMA_DECISIONES,
+       RESP_PERSONAL,
+       IMPACTO_ECONOMICO,
+       ESFUERZO_FISICO,
+       CONDICION_AMBIENTAL,
+       PUESTOS_RESPONSABLES,
+       FORMATO,
+       @NuevaVersion,
+       'ENVIADO',
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_DESCRIPTOR_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     DECLARE @FuncionMap TABLE (OLD_FUNCION INT NOT NULL, NEW_FUNCION INT NOT NULL);
+     SELECT @BaseFuncion = ISNULL(MAX(CORR_FUNCION), 0)
+     FROM SC_FUNCION
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO @FuncionMap (OLD_FUNCION, NEW_FUNCION)
+     SELECT CORR_FUNCION, @BaseFuncion + ROW_NUMBER() OVER (ORDER BY CORR_FUNCION)
+     FROM SC_FUNCION
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     INSERT INTO SC_FUNCION
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_FUNCION,
+       NOMBRE_FUNCION,
+       TIPO_FUNCION,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       f.CORR_EMPRESA,
+       @NuevoDescriptor,
+       m.NEW_FUNCION,
+       f.NOMBRE_FUNCION,
+       f.TIPO_FUNCION,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_FUNCION f
+     INNER JOIN @FuncionMap m
+       ON m.OLD_FUNCION = f.CORR_FUNCION
+     WHERE f.CORR_EMPRESA = :corrEmpresa
+       AND f.CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     SELECT @BaseActividad = ISNULL(MAX(CORR_ACTIVIDAD), 0)
+     FROM SC_ACTIVIDAD
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_ACTIVIDAD
+     (
+       CORR_EMPRESA,
+       CORR_FUNCION,
+       CORR_ACTIVIDAD,
+       NOMBRE_ACTIVIDAD,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       a.CORR_EMPRESA,
+       m.NEW_FUNCION,
+       @BaseActividad + ROW_NUMBER() OVER (ORDER BY a.CORR_ACTIVIDAD),
+       a.NOMBRE_ACTIVIDAD,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_ACTIVIDAD a
+     INNER JOIN @FuncionMap m
+       ON m.OLD_FUNCION = a.CORR_FUNCION
+     WHERE a.CORR_EMPRESA = :corrEmpresa;
+
+     SELECT @BaseKpi = ISNULL(MAX(CORR_KPI_FUNCION), 0)
+     FROM SC_KPI_FUNCION
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_KPI_FUNCION
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_FRECUENCIA,
+       CORR_KPI_FUNCION,
+       INDICADOR,
+       META,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       CORR_EMPRESA,
+       @NuevoDescriptor,
+       CORR_FRECUENCIA,
+       @BaseKpi + ROW_NUMBER() OVER (ORDER BY CORR_KPI_FUNCION),
+       INDICADOR,
+       META,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_KPI_FUNCION
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     SELECT @BaseRelacion = ISNULL(MAX(CORR_RELACION_LABORAL), 0)
+     FROM SC_RELACION_LABORAL
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_RELACION_LABORAL
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_RELACION_LABORAL,
+       TIPO_RELACION,
+       PUESTO_AREA,
+       MOTIVO_RELACION,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       CORR_EMPRESA,
+       @NuevoDescriptor,
+       @BaseRelacion + ROW_NUMBER() OVER (ORDER BY CORR_RELACION_LABORAL),
+       TIPO_RELACION,
+       PUESTO_AREA,
+       MOTIVO_RELACION,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_RELACION_LABORAL
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     SELECT @BaseRiesgo = ISNULL(MAX(CORR_RIESGO_PROFESIONAL), 0)
+     FROM SC_RIESGO_PROFESIONAL
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_RIESGO_PROFESIONAL
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_RIESGO_PROFESIONAL,
+       NOMBRE_RIESGO_PROFESIONAL,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       CORR_EMPRESA,
+       @NuevoDescriptor,
+       @BaseRiesgo + ROW_NUMBER() OVER (ORDER BY CORR_RIESGO_PROFESIONAL),
+       NOMBRE_RIESGO_PROFESIONAL,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_RIESGO_PROFESIONAL
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     DECLARE @PerfilMap TABLE (OLD_PERFIL INT NOT NULL, NEW_PERFIL INT NOT NULL);
+     SELECT @BasePerfil = ISNULL(MAX(CORR_PERFIL_PUESTO), 0)
+     FROM SC_PERFIL_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO @PerfilMap (OLD_PERFIL, NEW_PERFIL)
+     SELECT CORR_PERFIL_PUESTO, @BasePerfil + ROW_NUMBER() OVER (ORDER BY CORR_PERFIL_PUESTO)
+     FROM SC_PERFIL_PUESTO
+     WHERE CORR_EMPRESA = :corrEmpresa
+       AND CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     INSERT INTO SC_PERFIL_PUESTO
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_DISPONIBILIDAD_HORARIO,
+       CORR_TIPO_MODALIDAD,
+       CORR_PERFIL_PUESTO,
+       EDAD_MINIMA,
+       EDAD_MAXIMA,
+       SEXO,
+       ESTADO_FAMILIAR,
+       DISP_VEHICULO,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       p.CORR_EMPRESA,
+       @NuevoDescriptor,
+       p.CORR_DISPONIBILIDAD_HORARIO,
+       p.CORR_TIPO_MODALIDAD,
+       m.NEW_PERFIL,
+       p.EDAD_MINIMA,
+       p.EDAD_MAXIMA,
+       p.SEXO,
+       p.ESTADO_FAMILIAR,
+       p.DISP_VEHICULO,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_PERFIL_PUESTO p
+     INNER JOIN @PerfilMap m
+       ON m.OLD_PERFIL = p.CORR_PERFIL_PUESTO
+     WHERE p.CORR_EMPRESA = :corrEmpresa
+       AND p.CORR_DESCRIPTOR_PUESTO = :corrDescriptorPuesto;
+
+     SELECT @BaseEducacion = ISNULL(MAX(CORR_EDUCACION), 0)
+     FROM SC_EDUCACION
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_EDUCACION
+     (
+       CORR_EMPRESA,
+       CORR_PERFIL_PUESTO,
+       CORR_EDUCACION,
+       REQUISITO,
+       ESPECIFICACIONES,
+       REQUERIDO,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       e.CORR_EMPRESA,
+       m.NEW_PERFIL,
+       @BaseEducacion + ROW_NUMBER() OVER (ORDER BY e.CORR_EDUCACION),
+       e.REQUISITO,
+       e.ESPECIFICACIONES,
+       e.REQUERIDO,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_EDUCACION e
+     INNER JOIN @PerfilMap m
+       ON m.OLD_PERFIL = e.CORR_PERFIL_PUESTO
+     WHERE e.CORR_EMPRESA = :corrEmpresa;
+
+     SELECT @BaseExperiencia = ISNULL(MAX(CORR_EXPERIENCIA), 0)
+     FROM SC_EXPERIENCIA
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_EXPERIENCIA
+     (
+       CORR_EMPRESA,
+       CORR_PERFIL_PUESTO,
+       CORR_EXPERIENCIA,
+       REQUISITO,
+       REQUERIDO,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       e.CORR_EMPRESA,
+       m.NEW_PERFIL,
+       @BaseExperiencia + ROW_NUMBER() OVER (ORDER BY e.CORR_EXPERIENCIA),
+       e.REQUISITO,
+       e.REQUERIDO,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_EXPERIENCIA e
+     INNER JOIN @PerfilMap m
+       ON m.OLD_PERFIL = e.CORR_PERFIL_PUESTO
+     WHERE e.CORR_EMPRESA = :corrEmpresa;
+
+     SELECT @BaseCompetenciaTecnica = ISNULL(MAX(CORR_COMPETENCIAS_TECNICAS), 0)
+     FROM SC_COMPETENCIAS_TECNICAS
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_COMPETENCIAS_TECNICAS
+     (
+       CORR_EMPRESA,
+       CORR_PERFIL_PUESTO,
+       CORR_COMPETENCIAS_TECNICAS,
+       NOMBRE_COMPETENCIAS_TECNICAS,
+       NIVEL_DOMINIO,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       c.CORR_EMPRESA,
+       m.NEW_PERFIL,
+       @BaseCompetenciaTecnica + ROW_NUMBER() OVER (ORDER BY c.CORR_COMPETENCIAS_TECNICAS),
+       c.NOMBRE_COMPETENCIAS_TECNICAS,
+       c.NIVEL_DOMINIO,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_COMPETENCIAS_TECNICAS c
+     INNER JOIN @PerfilMap m
+       ON m.OLD_PERFIL = c.CORR_PERFIL_PUESTO
+     WHERE c.CORR_EMPRESA = :corrEmpresa;
+
+     SELECT @BaseCompetenciaConductual = ISNULL(MAX(CORR_COMPETENCIAS_CONDUCTUALES), 0)
+     FROM SC_COMPETENCIAS_CONDUCTUALES
+     WHERE CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_COMPETENCIAS_CONDUCTUALES
+     (
+       CORR_EMPRESA,
+       CORR_PERFIL_PUESTO,
+       CORR_COMPETENCIAS_CONDUCTUALES,
+       NOMBRE_COMPETENCIAS_CONDUCTUALES,
+       DESCRIPCION,
+       USUARIO_CREA,
+       FECHA_CREA,
+       ESTACION_CREA
+     )
+     SELECT
+       c.CORR_EMPRESA,
+       m.NEW_PERFIL,
+       @BaseCompetenciaConductual + ROW_NUMBER() OVER (ORDER BY c.CORR_COMPETENCIAS_CONDUCTUALES),
+       c.NOMBRE_COMPETENCIAS_CONDUCTUALES,
+       c.DESCRIPCION,
+       :usuario,
+       GETDATE(),
+       :estacion
+     FROM SC_COMPETENCIAS_CONDUCTUALES c
+     INNER JOIN @PerfilMap m
+       ON m.OLD_PERFIL = c.CORR_PERFIL_PUESTO
+     WHERE c.CORR_EMPRESA = :corrEmpresa;
+
+     INSERT INTO SC_BITACORA_DESCRIPTOR
+     (
+       CORR_EMPRESA,
+       CORR_DESCRIPTOR_PUESTO,
+       CORR_BITACORA_DESCRIPTOR,
+       ACCION,
+       ESTADO_ANTERIOR,
+       ESTADO_NUEVO,
+       OBSERVACION,
+       USUARIO,
+       ROL_USUARIO,
+       FECHA_ACCION
+     )
+     VALUES
+     (
+       :corrEmpresa,
+       @NuevoDescriptor,
+       (SELECT ISNULL(MAX(CORR_BITACORA_DESCRIPTOR), 0) + 1 FROM SC_BITACORA_DESCRIPTOR WHERE CORR_EMPRESA = :corrEmpresa),
+       'CREACION_NUEVA_VERSION',
+       NULL,
+       'ENVIADO',
+       CONCAT('Nueva versión creada desde DES-', :corrDescriptorPuesto, ', versión ', :versionOrigen, '.'),
+       :usuario,
+       :rolUsuario,
+       GETDATE()
+     );
+
+     COMMIT TRANSACTION;
+
+     SELECT @NuevoDescriptor AS CORR_DESCRIPTOR_PUESTO, @NuevaVersion AS VERSION;`,
+    {
+      corrEmpresa,
+      corrDescriptorPuesto,
+      corrPuesto: origen.CORR_PUESTO,
+      versionOrigen: origen.VERSION,
+      usuario: options.usuario || 'demo',
+      rolUsuario: options.rolUsuario || 'Usuario demo',
+      estacion: options.estacion || 'WEB'
+    }
+  );
+
+  return {
+    ok: true,
+    descriptor: rows[0]
+  };
+}
+
 module.exports = {
   getDescriptorCompleto,
-  getDescriptoresResumen
+  getDescriptoresResumen,
+  cambiarEstadoDescriptor,
+  crearNuevaVersionDescriptor
 };

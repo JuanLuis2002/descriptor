@@ -48,6 +48,72 @@ app.get('/api/descriptores/:id', async (req, res) => {
   }
 });
 
+app.patch('/api/descriptores/:id/estado', async (req, res) => {
+  try {
+    const corrEmpresa = Number(req.query.empresa || 1);
+    const corrDescriptorPuesto = Number(req.params.id);
+    const { estado, observacion, usuario, rolUsuario, estacion } = req.body || {};
+
+    if (!estado) {
+      res.status(400).json({ ok: false, message: 'Debe indicar el nuevo estado.' });
+      return;
+    }
+
+    const result = await descriptorDao.cambiarEstadoDescriptor(corrEmpresa, corrDescriptorPuesto, estado, {
+      observacion,
+      usuario,
+      rolUsuario,
+      estacion
+    });
+
+    if (!result.ok) {
+      res.status(400).json(result);
+      return;
+    }
+
+    res.json({ ok: true, message: 'Estado actualizado y bitácora registrada.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      message: 'No se pudo actualizar el estado del descriptor.',
+      detail: error.message
+    });
+  }
+});
+
+app.post('/api/descriptores/:id/nueva-version', async (req, res) => {
+  try {
+    const corrEmpresa = Number(req.query.empresa || 1);
+    const corrDescriptorPuesto = Number(req.params.id);
+    const { usuario, rolUsuario, estacion } = req.body || {};
+
+    const result = await descriptorDao.crearNuevaVersionDescriptor(corrEmpresa, corrDescriptorPuesto, {
+      usuario,
+      rolUsuario,
+      estacion
+    });
+
+    if (!result.ok) {
+      res.status(400).json(result);
+      return;
+    }
+
+    res.json({
+      ok: true,
+      message: `Nueva versión creada: DES-${result.descriptor.CORR_DESCRIPTOR_PUESTO}, versión ${result.descriptor.VERSION}.`,
+      data: result.descriptor
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      message: 'No se pudo crear la nueva versión del descriptor.',
+      detail: error.message
+    });
+  }
+});
+
 app.get('/prueba', (req, res) => {
   res.sendFile(path.join(__dirname, 'prueba.html'));
 });

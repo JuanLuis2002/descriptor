@@ -89,6 +89,120 @@
       margin-bottom: 22px;
     }
 
+    .descriptor-panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(31, 41, 55, 0.06);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .descriptor-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .descriptor-panel h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .descriptor-table-wrap {
+      overflow-x: auto;
+    }
+
+    .descriptor-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 940px;
+    }
+
+    .descriptor-table th,
+    .descriptor-table td {
+      border: 0;
+      border-bottom: 1px solid #eef2f7;
+      padding: 10px 12px;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    .descriptor-table th {
+      background: #f8fafc;
+      color: #344054;
+      font-weight: 700;
+    }
+
+    .descriptor-table tr:hover td {
+      background: #fbfdff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background: #ecfdf3;
+      color: #027a48;
+      border-color: #abefc6;
+    }
+
+    .badge-danger {
+      background: #fef3f2;
+      color: #b42318;
+      border-color: #fecdca;
+    }
+
+    .badge-info {
+      background: #eff8ff;
+      color: #175cd3;
+      border-color: #b2ddff;
+    }
+
+    .badge-warning {
+      background: #fffaeb;
+      color: #b54708;
+      border-color: #fedf89;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-small {
+      padding: 7px 9px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+    }
+
+    .btn-danger {
+      background: #d92d20;
+    }
+
+    .btn-success {
+      background: #039855;
+    }
+
     .report-actions {
       display: flex;
       gap: 10px;
@@ -205,6 +319,7 @@
       }
 
       .toolbar,
+      .descriptor-panel,
       .report-actions {
         display: none !important;
       }
@@ -237,8 +352,22 @@
         <div id="status" class="status">Esperando consulta...</div>
       </div>
       <div>
+        <button type="button" onclick="cargarPanelDescriptores()">Cargar lista</button>
         <button type="button" onclick="cargarReportes()">Cargar reportes demo</button>
         <button type="button" class="secondary" onclick="window.print()">Imprimir todo</button>
+      </div>
+    </div>
+
+    <div class="descriptor-panel">
+      <div class="descriptor-panel-header">
+        <div>
+          <h2>Mis Descriptores desde Base de Datos</h2>
+          <p class="subtitle">Versionamiento, estado, activación/inactivación y eventos de bitácora.</p>
+        </div>
+        <button type="button" class="secondary" onclick="cargarPanelDescriptores()">Actualizar tabla</button>
+      </div>
+      <div id="descriptorListContainer" class="descriptor-table-wrap">
+        <p class="empty">Cargando descriptores...</p>
       </div>
     </div>
 
@@ -626,9 +755,200 @@
       `;
     }
 
+    function estadoBadge(estado) {
+      const estadoNormalizado = String(estado || '').toUpperCase();
+      if (estadoNormalizado === 'ACTIVO') return '<span class="badge badge-success">Activo</span>';
+      if (estadoNormalizado === 'INACTIVO') return '<span class="badge badge-danger">Inactivo</span>';
+      if (estadoNormalizado === 'REVISADO') return '<span class="badge badge-info">Revisado</span>';
+      return `<span class="badge badge-warning">${text(estado || 'Pendiente')}</span>`;
+    }
+
+    function formatoBadge(formato) {
+      return String(formato || '').toUpperCase() === 'EXTENSO'
+        ? '<span class="badge badge-info">Extenso</span>'
+        : '<span class="badge badge-success">Corto</span>';
+    }
+
+    function renderDescriptorRows(descriptores) {
+      if (!descriptores || descriptores.length === 0) {
+        return '<p class="empty">No hay descriptores registrados.</p>';
+      }
+
+      const rows = descriptores.map((descriptor) => {
+        const id = descriptor.CORR_DESCRIPTOR_PUESTO;
+        const estado = String(descriptor.ESTADO || '').toUpperCase();
+        const puedeActivar = estado === 'INACTIVO' || estado === 'REVISADO' || estado === 'ENVIADO';
+        const puedeInactivar = estado === 'ACTIVO';
+        const puedeCrearVersion = estado === 'INACTIVO';
+        const accionEstado = puedeInactivar
+          ? `<button type="button" class="btn-small btn-danger" onclick="cambiarEstadoDescriptor(${id}, 'INACTIVO')">Inactivar</button>`
+          : puedeActivar
+            ? `<button type="button" class="btn-small btn-success" onclick="cambiarEstadoDescriptor(${id}, 'ACTIVO')">Activar</button>`
+            : '';
+        const accionVersion = puedeCrearVersion
+          ? `<button type="button" class="btn-small btn-outline" onclick="crearNuevaVersionDescriptor(${id})">Crear versión</button>`
+          : '';
+
+        return `
+          <tr>
+            <td><strong>DES-${text(id)}</strong></td>
+            <td>${text(descriptor.NOMBRE_PUESTO)}</td>
+            <td>${text(descriptor.NOMBRE_UNIDAD)}</td>
+            <td>${formatoBadge(descriptor.FORMATO)}</td>
+            <td><span class="badge badge-info">Versión ${text(descriptor.VERSION)}</span></td>
+            <td>${estadoBadge(descriptor.ESTADO)}</td>
+            <td>${formatDate(descriptor.FECHA_EMISION)}</td>
+            <td><span class="badge badge-warning">${text(descriptor.TOTAL_EVENTOS || 0)} eventos</span></td>
+            <td>
+              <div class="actions-cell">
+                <button type="button" class="btn-small btn-outline" onclick="verReporteDescriptor(${id})">Ver reporte</button>
+                ${accionEstado}
+                ${accionVersion}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <table class="descriptor-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Puesto</th>
+              <th>Unidad organizativa</th>
+              <th>Formato</th>
+              <th>Versión</th>
+              <th>Estado</th>
+              <th>Emisión</th>
+              <th>Bitácora</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    async function fetchDescriptoresResumen() {
+      const response = await fetch(`${API_BASE_URL}/api/descriptores?empresa=${EMPRESA}`);
+      const payload = await readJsonResponse(response);
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.message || 'No se pudo cargar la lista de descriptores');
+      }
+      return payload.data;
+    }
+
+    async function readJsonResponse(response) {
+      const contentType = response.headers.get('content-type') || '';
+      const rawBody = await response.text();
+      if (!contentType.includes('application/json')) {
+        throw new Error(rawBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || 'La API no devolvió JSON.');
+      }
+      return JSON.parse(rawBody);
+    }
+
+    async function cargarPanelDescriptores() {
+      const container = document.getElementById('descriptorListContainer');
+      const status = document.getElementById('status');
+      container.innerHTML = '<p class="empty">Consultando descriptores...</p>';
+      try {
+        const descriptores = await fetchDescriptoresResumen();
+        container.innerHTML = renderDescriptorRows(descriptores);
+        status.textContent = 'Lista de descriptores actualizada.';
+      } catch (error) {
+        container.innerHTML = `<p class="empty">Error: ${text(error.message)}</p>`;
+        status.textContent = `Error cargando lista: ${error.message}`;
+      }
+    }
+
+    async function verReporteDescriptor(id) {
+      const status = document.getElementById('status');
+      const reports = document.getElementById('reports');
+      status.textContent = `Consultando descriptor DES-${id}...`;
+      try {
+        const descriptor = await fetchDescriptor(id);
+        reports.innerHTML = renderReporte(descriptor);
+        status.textContent = `Reporte DES-${id} cargado correctamente.`;
+        reports.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+      }
+    }
+
+    async function cambiarEstadoDescriptor(id, nuevoEstado) {
+      const accionTexto = nuevoEstado === 'INACTIVO' ? 'inactivar' : 'activar';
+      const observacion = window.prompt(`Motivo para ${accionTexto} el descriptor DES-${id}:`);
+      if (observacion === null) return;
+      if (!observacion.trim()) {
+        alert('Debe ingresar una observación o motivo.');
+        return;
+      }
+
+      const status = document.getElementById('status');
+      status.textContent = `Actualizando estado de DES-${id}...`;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/descriptores/${id}/estado?empresa=${EMPRESA}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            estado: nuevoEstado,
+            observacion,
+            usuario: 'demo.web',
+            rolUsuario: 'Usuario demo',
+            estacion: 'PRUEBA_HTML'
+          })
+        });
+        const payload = await readJsonResponse(response);
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message || 'No se pudo cambiar el estado.');
+        }
+        status.textContent = payload.message;
+        await cargarPanelDescriptores();
+        await verReporteDescriptor(id);
+      } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+        alert(error.message);
+      }
+    }
+
+    async function crearNuevaVersionDescriptor(id) {
+      const confirmar = window.confirm(`Se creará una copia del descriptor DES-${id} como nueva versión. ¿Desea continuar?`);
+      if (!confirmar) return;
+
+      const status = document.getElementById('status');
+      status.textContent = `Creando nueva versión de DES-${id}...`;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/descriptores/${id}/nueva-version?empresa=${EMPRESA}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario: 'demo.web',
+            rolUsuario: 'Usuario demo',
+            estacion: 'PRUEBA_HTML'
+          })
+        });
+        const payload = await readJsonResponse(response);
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message || 'No se pudo crear la nueva versión.');
+        }
+
+        status.textContent = payload.message;
+        await cargarPanelDescriptores();
+        if (payload.data && payload.data.CORR_DESCRIPTOR_PUESTO) {
+          await verReporteDescriptor(payload.data.CORR_DESCRIPTOR_PUESTO);
+        }
+      } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+        alert(error.message);
+      }
+    }
+
     async function fetchDescriptor(id) {
       const response = await fetch(`${API_BASE_URL}/api/descriptores/${id}?empresa=${EMPRESA}`);
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok || !payload.ok) {
         throw new Error(payload.message || `No se pudo cargar descriptor ${id}`);
       }
@@ -683,6 +1003,7 @@
     }
 
     cargarReportes();
+    cargarPanelDescriptores();
   </script>
 </body>
 </html>
