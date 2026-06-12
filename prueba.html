@@ -249,6 +249,7 @@
     const API_BASE_URL = 'http://localhost:3000';
     const EMPRESA = 1;
     const DESCRIPTORES_DEMO = [1001, 1002];
+    const LOGO_PATH = 'logo/logo.png';
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -259,286 +260,366 @@
         .replace(/'/g, '&#039;');
     }
 
+    function hasText(value) {
+      return value !== null && value !== undefined && String(value).trim() !== '';
+    }
+
+    function text(value) {
+      return hasText(value) ? escapeHtml(value) : '';
+    }
+
+    function enumText(value) {
+      if (!hasText(value)) return '';
+      return String(value).toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+    }
+
     function formatDate(value) {
-      if (!value) return '-';
+      if (!value) return '';
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return escapeHtml(value);
-      return date.toLocaleDateString('es-SV');
+      return date.toLocaleDateString('es-ES');
     }
 
-    function list(items, mapFn) {
-      if (!items || items.length === 0) return '<span class="empty">Sin información registrada</span>';
-      return `<ul class="plain-list">${items.map((item) => `<li>${mapFn(item)}</li>`).join('')}</ul>`;
+    function isFilledObject(item, keys) {
+      if (!item) return false;
+      return keys.some((key) => hasText(item[key]));
     }
 
-    function rows(items, columns) {
-      if (!items || items.length === 0) {
-        return `<tr><td colspan="${columns.length}" class="empty">Sin información registrada</td></tr>`;
-      }
-      return items.map((item) => {
-        return `<tr>${columns.map((column) => `<td>${column.render(item)}</td>`).join('')}</tr>`;
-      }).join('');
+    function filtrarObjetos(items, keys) {
+      return (items || []).filter((item) => isFilledObject(item, keys));
     }
 
-    function filtrarFunciones(descriptor, tipo) {
-      return (descriptor.FUNCIONES || []).filter((funcion) => funcion.TIPO_FUNCION === tipo);
+    function filtrarTextos(items) {
+      return (items || []).filter((item) => hasText(item));
     }
 
-    function renderHeader(descriptor) {
-      return `
-        <div class="report-header">
-          <div class="logo-box">LOGO<br>INSTITUCIONAL</div>
-          <div class="header-title">
-            DEPARTAMENTO DE TALENTO HUMANO<br>
-            DESCRIPTOR Y PERFIL DE PUESTO<br>
-            <span>${escapeHtml(descriptor.FORMATO)}</span>
-          </div>
-          <div class="header-meta">
-            <strong>Código:</strong> DES-${escapeHtml(descriptor.CORR_DESCRIPTOR_PUESTO)}<br>
-            <strong>Versión:</strong> ${escapeHtml(descriptor.VERSION)}<br>
-            <strong>Fecha emisión:</strong> ${formatDate(descriptor.FECHA_EMISION)}<br>
-            <strong>Estado:</strong> ${escapeHtml(descriptor.ESTADO)}
-          </div>
-        </div>
-      `;
+    function emptyRow(colspan) {
+      return `<tr><td colspan="${colspan}" class="empty-cell">Sin información registrada</td></tr>`;
     }
 
-    function renderGeneralidades(descriptor) {
-      return `
-        <div class="section-title">I. GENERALIDADES DEL PUESTO</div>
-        <table>
-          <tr>
-            <th>Unidad organizativa</th>
-            <td>${escapeHtml(descriptor.NOMBRE_UNIDAD)}</td>
-            <th>Puesto</th>
-            <td>${escapeHtml(descriptor.NOMBRE_PUESTO)}</td>
-          </tr>
-          <tr>
-            <th>Reporta a</th>
-            <td>${escapeHtml(descriptor.PUESTO_REPORTA)}</td>
-            <th>Personal a cargo</th>
-            <td>${escapeHtml(descriptor.NUM_PERSONAL_CARGO)}</td>
-          </tr>
-        </table>
-        <div class="section-title">II. OBJETIVO DEL PUESTO</div>
-        <table>
-          <tr><td>${escapeHtml(descriptor.OBJETIVO_PUESTO)}</td></tr>
-        </table>
-      `;
-    }
+    function normalizeDescriptor(row) {
+      const funciones = row.FUNCIONES || [];
+      const perfil = row.PERFIL || {};
+      const relaciones = row.RELACIONES_LABORALES || [];
+      const bitacora = row.BITACORA || [];
+      const funcionesClave = funciones.filter((item) => item.TIPO_FUNCION === 'Clave');
 
-    function renderFuncionesCorto(descriptor) {
-      const claves = filtrarFunciones(descriptor, 'Clave');
-      const secundarias = filtrarFunciones(descriptor, 'Secundaria');
-      return `
-        <div class="section-title">III. FUNCIONES CLAVES</div>
-        <table>
-          ${rows(claves, [{ render: (item) => escapeHtml(item.NOMBRE_FUNCION) }])}
-        </table>
-        <div class="section-title">IV. FUNCIONES SECUNDARIAS</div>
-        <table>
-          ${rows(secundarias, [{ render: (item) => escapeHtml(item.NOMBRE_FUNCION) }])}
-        </table>
-        <div class="section-title">V. INDICADORES DE DESEMPEÑO</div>
-        <table>
-          <thead><tr><th>Indicador</th><th>Frecuencia</th><th>Meta</th></tr></thead>
-          <tbody>
-            ${rows(descriptor.KPIS, [
-              { render: (item) => escapeHtml(item.INDICADOR) },
-              { render: (item) => escapeHtml(item.NOMBRE_FRECUENCIA) },
-              { render: (item) => `${escapeHtml(item.META)}%` }
-            ])}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function renderFuncionesExtenso(descriptor) {
-      const claves = filtrarFunciones(descriptor, 'Clave');
-      return `
-        <div class="section-title">III. FUNCIONES CLAVES Y ACTIVIDADES</div>
-        <table>
-          <thead><tr><th>Función clave</th><th>Actividades</th></tr></thead>
-          <tbody>
-            ${rows(claves, [
-              { render: (item) => escapeHtml(item.NOMBRE_FUNCION) },
-              { render: (item) => list(item.ACTIVIDADES, (actividad) => escapeHtml(actividad.NOMBRE_ACTIVIDAD)) }
-            ])}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function renderPerfil(descriptor) {
-      const perfil = descriptor.PERFIL || {};
-      return `
-        <div class="section-title">PERFIL DEL PUESTO</div>
-        <table>
-          <tr>
-            <th>Edad mínima</th>
-            <td>${escapeHtml(perfil.EDAD_MINIMA)}</td>
-            <th>Edad máxima</th>
-            <td>${escapeHtml(perfil.EDAD_MAXIMA)}</td>
-          </tr>
-          <tr>
-            <th>Sexo</th>
-            <td>${escapeHtml(perfil.SEXO)}</td>
-            <th>Estado familiar</th>
-            <td>${escapeHtml(perfil.ESTADO_FAMILIAR)}</td>
-          </tr>
-          <tr>
-            <th>Disponibilidad</th>
-            <td>${escapeHtml(perfil.NOMBRE_DISPONIBILIDAD_HORARIO)}</td>
-            <th>Modalidad</th>
-            <td>${escapeHtml(perfil.NOMBRE_TIPO_MODALIDAD)}</td>
-          </tr>
-        </table>
-        <div class="two-col">
-          <div>
-            <div class="section-title">EDUCACIÓN</div>
-            <table>
-              <thead><tr><th>Requisito</th><th>Especificaciones</th><th>Requerido</th></tr></thead>
-              <tbody>
-                ${rows(perfil.EDUCACION, [
-                  { render: (item) => escapeHtml(item.REQUISITO) },
-                  { render: (item) => escapeHtml(item.ESPECIFICACIONES) },
-                  { render: (item) => item.REQUERIDO ? 'Sí' : 'No' }
-                ])}
-              </tbody>
-            </table>
-          </div>
-          <div>
-            <div class="section-title">EXPERIENCIA</div>
-            <table>
-              <thead><tr><th>Requisito</th><th>Requerido</th></tr></thead>
-              <tbody>
-                ${rows(perfil.EXPERIENCIA, [
-                  { render: (item) => escapeHtml(item.REQUISITO) },
-                  { render: (item) => item.REQUERIDO ? 'Sí' : 'No' }
-                ])}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderCompetencias(descriptor) {
-      const perfil = descriptor.PERFIL || {};
-      return `
-        <div class="two-col">
-          <div>
-            <div class="section-title">COMPETENCIAS TÉCNICAS</div>
-            <table>
-              <thead><tr><th>Competencia</th><th>Nivel</th></tr></thead>
-              <tbody>
-                ${rows(perfil.COMPETENCIAS_TECNICAS, [
-                  { render: (item) => escapeHtml(item.NOMBRE_COMPETENCIAS_TECNICAS) },
-                  { render: (item) => escapeHtml(item.NIVEL_DOMINIO) }
-                ])}
-              </tbody>
-            </table>
-          </div>
-          <div>
-            <div class="section-title">COMPETENCIAS CONDUCTUALES</div>
-            <table>
-              <thead><tr><th>Competencia</th><th>Descripción</th></tr></thead>
-              <tbody>
-                ${rows(perfil.COMPETENCIAS_CONDUCTUALES, [
-                  { render: (item) => escapeHtml(item.NOMBRE_COMPETENCIAS_CONDUCTUALES) },
-                  { render: (item) => descriptor.FORMATO === 'EXTENSO' ? escapeHtml(item.DESCRIPCION) : 'Listado' }
-                ])}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderExtensoExtra(descriptor) {
-      if (descriptor.FORMATO !== 'EXTENSO') return '';
-      const internas = (descriptor.RELACIONES_LABORALES || []).filter((item) => item.TIPO_RELACION === 'I');
-      const externas = (descriptor.RELACIONES_LABORALES || []).filter((item) => item.TIPO_RELACION === 'E');
-      return `
-        <div class="two-col">
-          <div>
-            <div class="section-title">RELACIONES INTERNAS</div>
-            <table>
-              ${rows(internas, [{ render: (item) => `<strong>${escapeHtml(item.PUESTO_AREA)}</strong><br>${escapeHtml(item.MOTIVO_RELACION)}` }])}
-            </table>
-          </div>
-          <div>
-            <div class="section-title">RELACIONES EXTERNAS</div>
-            <table>
-              ${rows(externas, [{ render: (item) => `<strong>${escapeHtml(item.PUESTO_AREA)}</strong><br>${escapeHtml(item.MOTIVO_RELACION)}` }])}
-            </table>
-          </div>
-        </div>
-        <div class="section-title">RIESGOS FÍSICOS DEL PUESTO</div>
-        <table>
-          <tr><th>Esfuerzo físico</th><td>${escapeHtml(descriptor.ESFUERZO_FISICO)}</td></tr>
-          <tr><th>Condición ambiental</th><td>${escapeHtml(descriptor.CONDICION_AMBIENTAL)}</td></tr>
-          <tr><th>Riesgos profesionales</th><td>${list(descriptor.RIESGOS_PROFESIONALES, (item) => escapeHtml(item.NOMBRE_RIESGO_PROFESIONAL))}</td></tr>
-        </table>
-      `;
-    }
-
-    function renderResponsabilidades(descriptor) {
-      return `
-        <div class="section-title">RESPONSABILIDADES Y ENTRENAMIENTO</div>
-        <table>
-          <tr><th>Equipo</th><td>${escapeHtml(descriptor.NOMBRE_EQUIPO)}</td></tr>
-          <tr><th>Descripción equipo</th><td>${escapeHtml(descriptor.DESCRIPCION_EQUIPO)}</td></tr>
-          <tr><th>Fondos</th><td>${escapeHtml(descriptor.RESP_FONDOS)}</td></tr>
-          <tr><th>Documentos</th><td>${escapeHtml(descriptor.RESP_DOCUMENTOS)}</td></tr>
-          <tr><th>Toma decisiones</th><td>${escapeHtml(descriptor.TOMA_DECISIONES)}</td></tr>
-          <tr><th>Personal</th><td>${escapeHtml(descriptor.RESP_PERSONAL)}</td></tr>
-          <tr><th>Impacto económico</th><td>${escapeHtml(descriptor.IMPACTO_ECONOMICO)}</td></tr>
-          <tr><th>Entrenamiento</th><td>${escapeHtml(descriptor.NOMBRE_ENTRENAMIENTO)} (${escapeHtml(descriptor.SEMANAS_INDUCCION)} semanas)</td></tr>
-          <tr><th>Puestos responsables</th><td>${escapeHtml(descriptor.PUESTOS_RESPONSABLES)}</td></tr>
-        </table>
-        <div class="section-title">REQUERIMIENTOS ORGANIZACIONALES</div>
-        <table>
-          ${rows(descriptor.REQUERIMIENTOS_ORGANIZACIONALES, [{ render: (item) => escapeHtml(item.DESCRIPCION) }])}
-        </table>
-      `;
+      return {
+        id: row.CORR_DESCRIPTOR_PUESTO,
+        codigo: `DES-${row.CORR_DESCRIPTOR_PUESTO}`,
+        puesto: row.NOMBRE_PUESTO,
+        area: row.NOMBRE_UNIDAD,
+        reportaA: row.PUESTO_REPORTA,
+        fechaEmision: formatDate(row.FECHA_EMISION),
+        objetivo: row.OBJETIVO_PUESTO,
+        tipoFormato: row.FORMATO === 'EXTENSO' ? 'EXTENSA' : 'CORTA',
+        version: row.VERSION,
+        estado: row.ESTADO,
+        creador: row.USUARIO_CREA,
+        titular: row.NOMBRE_PUESTO,
+        funcionesClaves: funcionesClave.map((item, index) => ({
+          codigo: String(index + 1),
+          nombre: item.NOMBRE_FUNCION
+        })),
+        actividadesPorFuncion: funcionesClave.map((item) => ({
+          funcionNombre: item.NOMBRE_FUNCION,
+          actividades: (item.ACTIVIDADES || []).map((actividad) => actividad.NOMBRE_ACTIVIDAD)
+        })),
+        funcionesSecundarias: funciones
+          .filter((item) => item.TIPO_FUNCION === 'Secundaria')
+          .map((item) => item.NOMBRE_FUNCION),
+        kpis: (row.KPIS || []).map((item) => ({
+          indicador: item.INDICADOR,
+          frecuencia: item.NOMBRE_FRECUENCIA,
+          meta: item.META
+        })),
+        perfil: {
+          edadMin: perfil.EDAD_MINIMA,
+          edadMax: perfil.EDAD_MAXIMA,
+          sexo: perfil.SEXO,
+          estadoFamiliar: perfil.ESTADO_FAMILIAR,
+          disponibilidadHorario: perfil.NOMBRE_DISPONIBILIDAD_HORARIO,
+          modalidadTrabajo: perfil.NOMBRE_TIPO_MODALIDAD,
+          poseerLicencia: perfil.DISP_VEHICULO
+        },
+        educacion: (perfil.EDUCACION || []).map((item) => ({
+          requisito: item.REQUISITO,
+          especificaciones: item.ESPECIFICACIONES,
+          requerido: item.REQUERIDO
+        })),
+        experiencia: (perfil.EXPERIENCIA || []).map((item) => ({
+          requisito: item.REQUISITO,
+          requerido: item.REQUERIDO
+        })),
+        competenciasTecnicas: (perfil.COMPETENCIAS_TECNICAS || []).map((item) => ({
+          nombre: item.NOMBRE_COMPETENCIAS_TECNICAS,
+          nivel: item.NIVEL_DOMINIO
+        })),
+        competenciasConductuales: (perfil.COMPETENCIAS_CONDUCTUALES || []).map((item) => ({
+          nombre: item.NOMBRE_COMPETENCIAS_CONDUCTUALES,
+          descripcion: item.DESCRIPCION
+        })),
+        relacionesLaborales: {
+          internas: relaciones.filter((item) => item.TIPO_RELACION === 'I').map((item) => ({
+            puesto: item.PUESTO_AREA,
+            razon: item.MOTIVO_RELACION
+          })),
+          externas: relaciones.filter((item) => item.TIPO_RELACION === 'E').map((item) => ({
+            entidad: item.PUESTO_AREA,
+            razon: item.MOTIVO_RELACION
+          }))
+        },
+        requerimientosOrganizacionales: (row.REQUERIMIENTOS_ORGANIZACIONALES || []).map((item) => item.DESCRIPCION),
+        riesgosFisicos: {
+          esfuerzo: row.ESFUERZO_FISICO,
+          condiciones: row.CONDICION_AMBIENTAL,
+          riesgos: (row.RIESGOS_PROFESIONALES || []).map((item) => item.NOMBRE_RIESGO_PROFESIONAL)
+        },
+        responsabilidades: {
+          equipo: row.NOMBRE_EQUIPO,
+          fondos: row.RESP_FONDOS,
+          documentos: row.RESP_DOCUMENTOS,
+          tomaDecisiones: row.TOMA_DECISIONES,
+          personal: row.RESP_PERSONAL,
+          impactoEconomico: row.IMPACTO_ECONOMICO
+        },
+        entrenamiento: {
+          personalCargo: row.NUM_PERSONAL_CARGO,
+          tipoEntrenamiento: row.NOMBRE_ENTRENAMIENTO,
+          duracion: row.SEMANAS_INDUCCION ? `${row.SEMANAS_INDUCCION} semanas` : '',
+          puestosResponsables: row.PUESTOS_RESPONSABLES
+        },
+        auditoria: {
+          eventos: bitacora.map((item) => ({
+            fecha: item.FECHA_ACCION,
+            accion: item.ACCION,
+            usuario: item.USUARIO,
+            rol: item.ROL_USUARIO,
+            estadoAnterior: item.ESTADO_ANTERIOR,
+            estadoNuevo: item.ESTADO_NUEVO,
+            observacion: item.OBSERVACION
+          }))
+        }
+      };
     }
 
     function renderBitacora(descriptor) {
-      const eventos = descriptor.BITACORA || [];
+      const eventos = descriptor.auditoria.eventos || [];
       return `
         <div class="bitacora">
           <h3>Bitácora del Descriptor</h3>
           ${eventos.length === 0 ? '<p class="empty">Sin eventos registrados.</p>' : eventos.map((evento) => `
             <div class="bitacora-item">
-              <strong>${escapeHtml(evento.ACCION)}</strong>
-              <div><b>Fecha:</b> ${formatDate(evento.FECHA_ACCION)} | <b>Usuario:</b> ${escapeHtml(evento.USUARIO)} | <b>Rol:</b> ${escapeHtml(evento.ROL_USUARIO)}</div>
-              <div><b>Estado anterior:</b> ${escapeHtml(evento.ESTADO_ANTERIOR || '-')} | <b>Estado nuevo:</b> ${escapeHtml(evento.ESTADO_NUEVO || '-')}</div>
-              ${evento.OBSERVACION ? `<div><b>Observación:</b> ${escapeHtml(evento.OBSERVACION)}</div>` : ''}
+              <strong>${text(evento.accion)}</strong>
+              <div><b>Fecha:</b> ${formatDate(evento.fecha)} | <b>Usuario:</b> ${text(evento.usuario)} | <b>Rol:</b> ${text(evento.rol)}</div>
+              <div><b>Estado anterior:</b> ${text(evento.estadoAnterior) || '-'} | <b>Estado nuevo:</b> ${text(evento.estadoNuevo) || '-'}</div>
+              ${evento.observacion ? `<div><b>Observación:</b> ${text(evento.observacion)}</div>` : ''}
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    function renderReporte(descriptor) {
-      const funciones = descriptor.FORMATO === 'EXTENSO'
-        ? renderFuncionesExtenso(descriptor)
-        : renderFuncionesCorto(descriptor);
+    function generarHTMLVersionCorta(d) {
+      const fechaActual = new Date().toLocaleDateString('es-ES');
+      const logoHtml = LOGO_PATH ? `<img src="${LOGO_PATH}" height="45">` : '';
+      const funcionesClaves = filtrarObjetos(d.funcionesClaves, ['codigo', 'nombre']);
+      const funcionesSecundarias = filtrarTextos(d.funcionesSecundarias);
+      const kpis = filtrarObjetos(d.kpis, ['indicador', 'frecuencia', 'meta']);
+      const educacion = filtrarObjetos(d.educacion, ['requisito', 'especificaciones']);
+      const experiencia = filtrarObjetos(d.experiencia, ['requisito']);
+      const competenciasTecnicas = filtrarObjetos(d.competenciasTecnicas, ['nombre', 'nivel']);
+      const competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre']);
+      const perfil = d.perfil || {};
+      const responsabilidades = d.responsabilidades || {};
+      const entrenamiento = d.entrenamiento || {};
+      const edadDisplay = text(perfil.edadMin) + (hasText(perfil.edadMax) ? ` - ${text(perfil.edadMax)} años` : '');
+      const induccionText = (hasText(entrenamiento.duracion) ? `Duración: ${text(entrenamiento.duracion)}` : '') +
+        (hasText(entrenamiento.puestosResponsables) ? `<br>Responsable: ${text(entrenamiento.puestosResponsables)}` : '');
+
+      const funcionesClavesRows = funcionesClaves.length
+        ? funcionesClaves.map((item, index) => `<tr><td style="padding:2px 6px;border:none;">${index + 1}. ${text(item.nombre)}</td></tr>`).join('')
+        : '<tr><td style="padding:2px 6px;border:none;" class="empty-cell">Sin información registrada</td></tr>';
+      const funcionesSecRows = funcionesSecundarias.length
+        ? funcionesSecundarias.map((item, index) => `<tr><td style="padding:2px 6px;border:none;">${index + 1}. ${text(item)}</td></tr>`).join('')
+        : '<tr><td style="padding:2px 6px;border:none;" class="empty-cell">Sin información registrada</td></tr>';
+      const kpisRows = kpis.length
+        ? kpis.map((item) => {
+            const meta = hasText(item.meta) && String(item.meta).indexOf('%') === -1 ? `${text(item.meta)}%` : text(item.meta);
+            const freqMeta = item.frecuencia && meta ? `${text(item.frecuencia)} / ${meta}` : (text(item.frecuencia) || meta);
+            return `<tr><td style="border:1px solid #000;padding:5px 6px;height:18px;text-align:left;">${text(item.indicador)}</td><td style="border:1px solid #000;padding:5px 6px;text-align:center;">${freqMeta}</td></tr>`;
+          }).join('')
+        : emptyRow(2);
+      const eduRows = educacion.length
+        ? educacion.map((item) => `<tr><td style="border:1px solid #000;padding:5px 6px;height:18px;">${text(item.requisito)}</td><td style="border:1px solid #000;padding:5px 6px;">${text(item.especificaciones)}</td><td style="border:1px solid #000;padding:5px 6px;text-align:center;width:18%;">${item.requerido ? 'Requerido' : 'Deseable'}</td></tr>`).join('')
+        : emptyRow(3);
+      const expRows = experiencia.length
+        ? experiencia.map((item) => `<tr><td style="border:1px solid #000;padding:5px 6px;height:18px;">${text(item.requisito)}</td><td style="border:1px solid #000;padding:5px 6px;text-align:center;width:22%;">${item.requerido ? 'Requerido' : 'Deseable'}</td></tr>`).join('')
+        : emptyRow(2);
+      const compTechRows = competenciasTecnicas.length
+        ? competenciasTecnicas.map((item, index) => `<tr><td style="border:1px solid #000;padding:5px 6px;text-align:center;width:12%;height:18px;">${index + 1}</td><td style="border:1px solid #000;padding:5px 6px;">${text(item.nombre)}</td><td style="border:1px solid #000;padding:5px 6px;text-align:center;width:22%;">${text(item.nivel)}</td></tr>`).join('')
+        : emptyRow(3);
+      let compCondRows = '';
+      for (let i = 0; i < competenciasConductuales.length; i += 2) {
+        compCondRows += `<tr><td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">${text(competenciasConductuales[i]?.nombre)}</td><td style="border:1px solid #000;padding:5px 6px;height:22px;width:50%;">${text(competenciasConductuales[i + 1]?.nombre)}</td></tr>`;
+      }
+      if (!compCondRows) compCondRows = emptyRow(2);
+
+      return `
+        <div class="formato-corto">
+          <style>
+            .formato-corto { font-family: Arial, sans-serif; font-size: 10pt; color: #000; padding: 20px 25px; background:#fff; }
+            .formato-corto table { border-collapse: collapse; width: 100%; }
+            .formato-corto td, .formato-corto th { font-size: 10pt; }
+            .formato-corto .hdr td { border: 1.5px solid #002060; padding: 5px 8px; vertical-align: middle; }
+            .formato-corto .hdr-logo { width: 16%; text-align: center; }
+            .formato-corto .hdr-title { width: 52%; text-align: center; font-weight: bold; font-size: 11pt; color:#002060; border-left:none!important; border-right:none!important; }
+            .formato-corto .hdr-meta { width: 32%; font-size: 9pt; }
+            .formato-corto .sec { font-weight: bold; border: 1px solid #1f4e79; padding: 4px 7px; background: #eaf2f8; color:#002060; text-align:center; }
+            .formato-corto .t td { border: 1px solid #000; padding: 4px 7px; vertical-align: top; text-align:left; }
+            .formato-corto .lbl { font-weight:bold; color:#002060; }
+            .formato-corto .col-hdr th { border:1px solid #1f4e79; padding:4px 7px; font-weight:bold; background:#eaf2f8; color:#002060; text-align:left; }
+            .formato-corto .mt6 { margin-top:6px; }
+            .formato-corto .mt10 { margin-top:10px; }
+            .formato-corto .firma-t td { border:1px solid #000; padding:5px 8px; vertical-align:middle; }
+            .formato-corto .firma-title { font-weight:bold; border:none!important; padding:4px 0!important; color:#002060; }
+            .formato-corto .firma-lbl { width:22%; font-size:9.5pt; }
+            .formato-corto .firma-val { width:28%; }
+            .formato-corto .firma-lbl2 { width:20%; font-size:9.5pt; }
+            .formato-corto .firma-val2 { width:30%; min-height:26px; }
+            .formato-corto .footer { text-align:right; font-size:8pt; color:#444; margin-top:12px; }
+            .formato-corto .empty-cell { color:#777; font-style:italic; text-align:center; }
+          </style>
+          <table class="hdr" style="margin-bottom:8px;"><tr><td class="hdr-logo">${logoHtml}</td><td class="hdr-title">DEPARTAMENTO DE TALENTO HUMANO<br><span style="font-size:10pt;font-weight:normal;">DESCRIPTOR Y PERFIL DE PUESTO</span></td><td class="hdr-meta"><strong>Código:</strong> ${d.codigo}<br><strong>Fecha de Emisión:</strong> ${d.fechaEmision || fechaActual}<br><strong>Páginas:</strong> 1 de 2</td></tr></table>
+          <table class="t"><tr><td colspan="4" class="sec">GENERALIDADES DEL PUESTO</td></tr><tr><td class="lbl" style="width:22%;">TITULO DEL PUESTO:</td><td style="width:30%;">${text(d.puesto)}</td><td class="lbl" style="width:20%;">CODIGO:</td><td>${text(d.codigo)}</td></tr><tr><td class="lbl">DIRECCION / DEPTO:</td><td>${text(d.area)}</td><td class="lbl">FECHA DE EMISION:</td><td>${text(d.fechaEmision) || fechaActual}</td></tr><tr><td class="lbl">PUESTO AL QUE SE REPORTA:</td><td>${text(d.reportaA)}</td><td class="lbl">FECHA DE REVISION:</td><td>${fechaActual}</td></tr><tr><td class="lbl">N° de Personal a cargo:</td><td>${text(entrenamiento.personalCargo)}</td><td class="lbl">PAGINAS:</td><td>1 de 2</td></tr></table>
+          <table class="t mt6"><tr><td class="lbl" style="width:22%;vertical-align:top;">Objetivo del Puesto</td><td colspan="3">${text(d.objetivo)}</td></tr><tr><td class="lbl" style="vertical-align:top;">Funciones Claves</td><td colspan="3" style="padding:0;"><table>${funcionesClavesRows}</table></td></tr><tr><td class="lbl" style="vertical-align:top;">Funciones<br>Secundarias</td><td colspan="3" style="padding:0;"><table>${funcionesSecRows}</table></td></tr></table>
+          <table class="t mt6"><tr><td colspan="2" class="sec">Indicadores de Desempeño</td></tr><tr class="col-hdr"><th style="width:55%;">Indicador</th><th>Frecuencia / Meta</th></tr>${kpisRows}</table>
+          <table class="t mt6"><tr><td class="lbl" style="width:22%;vertical-align:top;">Supervisa a:</td><td>${text(responsabilidades.personal)}</td></tr><tr><td class="lbl" style="vertical-align:top;">Inducción Específica<br>al Puesto</td><td>${induccionText}</td></tr><tr><td class="lbl" style="vertical-align:top;">Impacto Económico<br>Institucional:</td><td>${text(responsabilidades.impactoEconomico)}</td></tr></table>
+          <table class="t mt6"><tr><td colspan="4" class="sec">PERFIL DE PUESTO</td></tr><tr><td class="lbl" style="width:14%;">Edad:</td><td colspan="3">${edadDisplay}</td></tr><tr><td class="lbl">Sexo:</td><td colspan="3">${enumText(perfil.sexo)}</td></tr><tr><td class="lbl">Modalidad de Trabajo:</td><td style="width:36%;">${enumText(perfil.modalidadTrabajo)}</td><td class="lbl" style="width:14%;">Otros:</td><td>${enumText(perfil.disponibilidadHorario)}</td></tr></table>
+          <table class="t mt6"><tr><td colspan="3" class="sec">EDUCACION</td></tr><tr class="col-hdr"><th style="width:36%;">Requisito</th><th style="width:46%;">Especificaciones</th><th style="width:18%;">Requerido</th></tr>${eduRows}</table>
+          <table class="t mt10"><tr><td colspan="2" class="sec">EXPERIENCIA</td></tr><tr class="col-hdr"><th>Requisito</th><th style="width:22%;">Requerido</th></tr>${expRows}</table>
+          <table class="t mt10"><tr><td colspan="3" class="sec">COMPETENCIAS TÉCNICAS</td></tr><tr class="col-hdr"><th style="width:12%;">Código</th><th>Competencias Técnicas Requeridas</th><th style="width:22%;">Nivel de Dominio</th></tr>${compTechRows}</table>
+          <table class="t mt10"><tr><td colspan="2" class="sec">Competencias Conductuales</td></tr>${compCondRows}</table>
+          <table class="firma-t mt10"><tr><td colspan="4" class="firma-title">FIRMAS</td></tr><tr><td class="firma-lbl">Nombre del Empleado:</td><td class="firma-val">${text(d.titular)}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${fechaActual}</td></tr><tr><td class="firma-lbl">Nombre de Jefatura:</td><td class="firma-val">${text(d.reportaA)}</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${fechaActual}</td></tr><tr><td class="firma-lbl">Jefe de Talento Humano:</td><td class="firma-val">Lic. Carlos Gómez</td><td class="firma-lbl2">Fecha y Firma:</td><td class="firma-val2">${fechaActual}</td></tr></table>
+          <div class="footer">Departamento de Talento Humano | 2025</div>
+        </div>`;
+    }
+
+    function generarHTMLVersionExtensa(d) {
+      const fechaActual = new Date().toLocaleDateString('es-ES');
+      const logoHtml = LOGO_PATH ? `<img src="${LOGO_PATH}" class="logo-img">` : '';
+      const funciones = filtrarObjetos(d.funcionesClaves, ['codigo', 'nombre']);
+      const actividadesPorFuncion = d.actividadesPorFuncion || [];
+      const responsabilidades = d.responsabilidades || {};
+      const entrenamiento = d.entrenamiento || {};
+      const perfil = d.perfil || {};
+      const relaciones = d.relacionesLaborales || {};
+      const riesgos = d.riesgosFisicos || {};
+      const requerimientos = filtrarTextos(d.requerimientosOrganizacionales).length ? filtrarTextos(d.requerimientosOrganizacionales) : ['Cumplir con los valores institucionales', 'Cumplir con los normativos institucionales', 'Cumplir con las competencias requeridas para el cargo'];
+      const relacionesInternas = filtrarObjetos(relaciones.internas, ['puesto', 'razon']);
+      const relacionesExternas = filtrarObjetos(relaciones.externas, ['entidad', 'razon']);
+      const riesgosLista = filtrarTextos(riesgos.riesgos);
+      const educacion = filtrarObjetos(d.educacion, ['requisito', 'especificaciones']);
+      const experiencia = filtrarObjetos(d.experiencia, ['requisito']);
+      const competenciasTecnicas = filtrarObjetos(d.competenciasTecnicas, ['nombre', 'nivel']);
+      const competenciasConductuales = filtrarObjetos(d.competenciasConductuales, ['nombre', 'descripcion']);
+
+      function headerPagina() {
+        return `<table class="header-tabla"><tr><td class="header-logo">${logoHtml}</td><td class="header-title">DEPARTAMENTO DE TALENTO HUMANO</td><td class="header-doc-title">DESCRIPTOR Y PERFIL DE PUESTO</td></tr></table>
+          <table class="tabla generalidades">
+            <tr><th colspan="4">GENERALIDADES DEL PUESTO</th></tr>
+            <tr><td class="label">TITULO DEL PUESTO:</td><td>${text(d.puesto)}</td><td class="label">CODIGO:</td><td>${text(d.codigo)}</td></tr>
+            <tr><td class="label">DIRECCION / DEPTO:</td><td>${text(d.area)}</td><td class="label">FECHA DE EMISION:</td><td>${text(d.fechaEmision)}</td></tr>
+            <tr><td class="label">PUESTO AL QUE SE REPORTA:</td><td>${text(d.reportaA)}</td><td class="label">FECHA DE REVISION:</td><td>${fechaActual}</td></tr>
+            <tr><td class="label">N° de Personal a cargo:</td><td>${text(entrenamiento.personalCargo)}</td><td class="label">PAGINAS:</td><td>1 de 1</td></tr>
+          </table>`;
+      }
+
+      const funcionesRows = funciones.map((funcion) => `<tr><td class="center code-col">${text(funcion.codigo)}</td><td>${text(funcion.nombre)}</td></tr>`).join('');
+      const actividadesHtml = funciones.map((funcion, index) => {
+        const actividades = filtrarTextos((actividadesPorFuncion[index] || {}).actividades || []);
+        if (!actividades.length) return '';
+        return `<table class="tabla compacta actividad-tabla flow-block"><tr><th class="funcion-col">Función Clave</th><th>${text(funcion.nombre)}</th></tr>${actividades.map((actividad, i) => `<tr><td class="center">${i + 1}</td><td>${text(actividad)}</td></tr>`).join('')}</table>`;
+      }).join('');
+      const responsabilidadesItems = [
+        ['De equipo', responsabilidades.equipo],
+        ['De fondos o valores', responsabilidades.fondos],
+        ['De documentos e información', responsabilidades.documentos],
+        ['Toma de decisiones', responsabilidades.tomaDecisiones],
+        ['De personal', responsabilidades.personal],
+        ['Impacto Económico Institucional', responsabilidades.impactoEconomico]
+      ].filter((item) => hasText(item[1])).map((item) => `<li><strong>${item[0]}:</strong> ${text(item[1])}</li>`).join('');
+
+      return `
+        <div class="formato-extenso">
+          <style>
+            .formato-extenso { font-family:"Arial Narrow", Arial, Helvetica, sans-serif; font-size:8pt; color:#000; background:#fff; width:8.5in; margin:0 auto; padding:0.13in 0.24in 0.38in; }
+            .formato-extenso table { border-collapse:collapse; width:100%; }
+            .formato-extenso .header-tabla { border:1px solid #002060; margin-bottom:7px; }
+            .formato-extenso .header-tabla td { border-left:1px solid #002060; padding:4px 8px; height:38px; vertical-align:middle; font-weight:700; }
+            .formato-extenso .header-tabla td:first-child { border-left:none; }
+            .formato-extenso .header-logo { width:13%; text-align:center; }
+            .formato-extenso .logo-img { max-height:30px; max-width:38px; }
+            .formato-extenso .header-title { width:55%; font-size:7.6pt; }
+            .formato-extenso .header-doc-title { width:32%; text-align:center; font-size:7.6pt; }
+            .formato-extenso .tabla th, .formato-extenso .tabla td { border:0.8px solid #000; padding:2px 5px; vertical-align:top; height:16px; line-height:1.08; }
+            .formato-extenso .tabla th { font-weight:700; background:#f1f1f1; }
+            .formato-extenso .generalidades th { text-align:left; color:#0b2e6d; background:#f1f1f1; }
+            .formato-extenso .generalidades .label { width:28%; font-weight:700; }
+            .formato-extenso .bar-title { background:#595959; color:#fff; font-weight:700; padding:4px 8px; margin-top:10px; font-size:9.5pt; }
+            .formato-extenso .section-label { font-weight:700; padding:3px 5px; line-height:1.05; }
+            .formato-extenso .indent { padding-left:33px; }
+            .formato-extenso .objective-box { border:0.8px solid #000; min-height:24px; padding:4px 6px; margin-bottom:4px; }
+            .formato-extenso .compacta th, .formato-extenso .compacta td { padding:2px 5px; height:16px; }
+            .formato-extenso .code-col { width:18%; }
+            .formato-extenso .funcion-col { width:18%; }
+            .formato-extenso .border-box { border:0.8px solid #000; padding:3px 8px; }
+            .formato-extenso .plain-list { margin:0 0 0 18px; padding:0; }
+            .formato-extenso .sub-label { border:0.8px solid #000; border-bottom:none; padding:2px 5px; font-weight:700; margin-top:2px; }
+            .formato-extenso .perfil th, .formato-extenso .perfil td { text-align:center; }
+            .formato-extenso .mt10 { margin-top:10px; }
+            .formato-extenso .mt14 { margin-top:14px; }
+            .formato-extenso .conductual-label { width:32%; text-align:center; font-weight:700; }
+            .formato-extenso .firmas-extensas { display:grid; grid-template-columns:1fr 1fr; gap:0.75in; margin-top:34px; }
+            .formato-extenso .firma-extensa-title { text-align:center; font-weight:700; margin-bottom:10px; }
+            .formato-extenso .firma-extensa-line { border-bottom:0.8px solid #000; height:28px; margin-top:14px; }
+            .formato-extenso .page-footer { text-align:right; color:#0b2e6d; font-weight:700; font-size:8.2pt; padding-top:8px; }
+            .formato-extenso .center { text-align:center; }
+            .formato-extenso .flow-block { break-inside:avoid; page-break-inside:avoid; }
+          </style>
+          ${headerPagina()}
+          <div class="flow-block"><div class="bar-title">DESCRIPTOR DE PUESTO</div></div>
+          <div class="flow-block"><div class="section-label indent">I. &nbsp; OBJETIVO DEL PUESTO</div><div class="objective-box">${text(d.objetivo)}</div></div>
+          ${funcionesRows ? `<div class="flow-block"><div class="section-label indent">II. &nbsp; FUNCIONES CLAVES CON RESPONSABILIDAD</div><table class="tabla compacta"><tr><th class="code-col">Código</th><th>Nombre</th></tr>${funcionesRows}</table></div>` : ''}
+          ${actividadesHtml ? `<div class="section-label indent">III. FUNCIONES CLAVES Y ACTIVIDADES</div>${actividadesHtml}` : ''}
+          ${responsabilidadesItems ? `<div class="flow-block"><div class="section-label">IV. RESPONSABILIDADES A CARGO</div><div class="border-box"><ul class="plain-list">${responsabilidadesItems}</ul></div></div>` : ''}
+          ${relacionesInternas.length || relacionesExternas.length ? `<div class="flow-block"><div class="section-label">V. &nbsp; RELACIONES LABORALES</div>${relacionesInternas.length ? `<div class="sub-label">INTERNAS:</div><table class="tabla compacta"><tr><th>Puesto/área</th><th>Razón</th></tr>${relacionesInternas.map((item) => `<tr><td>${text(item.puesto)}</td><td>${text(item.razon)}</td></tr>`).join('')}</table>` : ''}${relacionesExternas.length ? `<div class="sub-label">EXTERNAS:</div><table class="tabla compacta"><tr><th>Puesto/área</th><th>Razón</th></tr>${relacionesExternas.map((item) => `<tr><td>${text(item.entidad)}</td><td>${text(item.razon)}</td></tr>`).join('')}</table>` : ''}</div>` : ''}
+          <div class="flow-block"><div class="section-label">VI. &nbsp; REQUERIMIENTOS ORGANIZACIONALES</div><div class="border-box">${requerimientos.map((item, i) => `<div>${i + 1}.&nbsp; ${text(item)}</div>`).join('')}</div></div>
+          ${hasText(riesgos.esfuerzo) || hasText(riesgos.condiciones) || riesgosLista.length ? `<div class="flow-block"><div class="section-label">VII. RIESGOS FISICOS DEL PUESTO</div><div class="border-box">${hasText(riesgos.esfuerzo) ? `<div><strong>Esfuerzo físico y mental:</strong> ${text(riesgos.esfuerzo)}</div>` : ''}${hasText(riesgos.condiciones) ? `<div><strong>Condiciones ambientales:</strong> ${text(riesgos.condiciones)}</div>` : ''}${riesgosLista.length ? `<div><strong>Riesgos de accidente y/o enfermedad profesional:</strong></div>${riesgosLista.map((item) => `<div>- ${text(item)}</div>`).join('')}` : ''}</div></div>` : ''}
+          <div class="flow-block"><div class="section-label">VIII. &nbsp; ENTRENAMIENTO INICIAL EN EL PUESTO</div><table class="tabla compacta"><tr><th>ENTRENAMIENTOS</th><th>DURACIÓN</th><th>PUESTOS RESPONSABLES</th></tr><tr><td>${text(entrenamiento.tipoEntrenamiento)}</td><td class="center">${text(entrenamiento.duracion)}</td><td>${text(entrenamiento.puestosResponsables)}</td></tr></table></div>
+          <div class="flow-block"><div class="bar-title mt14">PERFIL DEL PUESTO</div><table class="tabla perfil"><tr><th>EDAD</th><th>SEXO</th><th>ESTADO FAMILIAR</th></tr><tr><td><strong>Mínima:</strong> ${text(perfil.edadMin)} &nbsp;&nbsp; <strong>Máxima:</strong> ${text(perfil.edadMax)}</td><td>${enumText(perfil.sexo)}</td><td>${enumText(perfil.estadoFamiliar)}</td></tr><tr><th>Disponibilidad de<br>Horario</th><th>Modalidad de Trabajo</th><th>Poseer Licencia<br>(de conducir)</th></tr><tr><td>${enumText(perfil.disponibilidadHorario)}</td><td>${enumText(perfil.modalidadTrabajo)}</td><td>${perfil.poseerLicencia ? 'Sí' : 'No'}</td></tr></table></div>
+          <div class="flow-block"><div class="section-label mt14">EDUCACION</div><table class="tabla compacta"><tr><th>Requisito</th><th>Especificaciones</th><th>Requerido</th></tr>${educacion.map((item) => `<tr><td>${text(item.requisito)}</td><td>${text(item.especificaciones)}</td><td class="center">${item.requerido ? 'Requerido' : 'Deseable'}</td></tr>`).join('') || emptyRow(3)}</table></div>
+          <div class="flow-block"><div class="section-label mt10">EXPERIENCIA</div><table class="tabla compacta"><tr><th>Requisito</th><th>Requerido</th></tr>${experiencia.map((item) => `<tr><td>${text(item.requisito)}</td><td class="center">${item.requerido ? 'Requerido' : 'Deseable'}</td></tr>`).join('') || emptyRow(2)}</table></div>
+          <table class="tabla compacta mt14 flow-block"><tr><th class="code-col">CÓDIGO</th><th>COMPETENCIAS TÉCNICAS REQUERIDAS</th><th>NIVEL DE DOMINIO</th></tr>${competenciasTecnicas.map((item, i) => `<tr><td class="center">${i + 1}</td><td>${text(item.nombre)}</td><td class="center">${text(item.nivel)}</td></tr>`).join('') || emptyRow(3)}</table>
+          <table class="tabla flow-block mt10"><tr><th class="conductual-label">COMPETENCIAS<br>CONDUCTUALES</th><th></th></tr>${competenciasConductuales.map((item) => `<tr><td class="conductual-label">${text(item.nombre)}</td><td>${text(item.descripcion)}</td></tr>`).join('') || emptyRow(2)}</table>
+          <div class="firmas-extensas flow-block"><div><div class="firma-extensa-title">Titular del Puesto</div><div><strong>Nombre:</strong> ${text(d.titular)}</div><div><strong>Fecha:</strong> ${fechaActual}</div><div class="firma-extensa-line"></div></div><div><div class="firma-extensa-title">Jefe Inmediato</div><div><strong>Nombre:</strong> ${text(d.reportaA)}</div><div><strong>Fecha:</strong> ${fechaActual}</div><div class="firma-extensa-line"></div></div></div>
+          <div class="page-footer">DEPARTAMENTO DE TALENTO HUMANO | 2025</div>
+        </div>`;
+    }
+
+    function renderReporte(rawDescriptor) {
+      const descriptor = normalizeDescriptor(rawDescriptor);
+      const html = descriptor.tipoFormato === 'EXTENSA'
+        ? generarHTMLVersionExtensa(descriptor)
+        : generarHTMLVersionCorta(descriptor);
 
       return `
         <div class="report-card">
           <div class="report-actions">
-            <button type="button" onclick="imprimirReporte('report-${descriptor.CORR_DESCRIPTOR_PUESTO}')">Imprimir / Guardar PDF</button>
+            <button type="button" onclick="imprimirReporte('report-${descriptor.id}')">Imprimir / Guardar PDF</button>
           </div>
-          <div class="report" id="report-${descriptor.CORR_DESCRIPTOR_PUESTO}">
-            ${renderHeader(descriptor)}
-            ${renderGeneralidades(descriptor)}
-            ${funciones}
-            ${renderPerfil(descriptor)}
-            ${renderCompetencias(descriptor)}
-            ${renderExtensoExtra(descriptor)}
-            ${renderResponsabilidades(descriptor)}
+          <div class="report" id="report-${descriptor.id}">
+            ${html}
             ${renderBitacora(descriptor)}
           </div>
         </div>
